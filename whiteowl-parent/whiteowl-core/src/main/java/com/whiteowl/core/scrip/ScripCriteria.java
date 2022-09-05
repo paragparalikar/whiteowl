@@ -9,7 +9,7 @@ public class ScripCriteria implements Predicate<Scrip> {
 	
 	private final Set<String> codes = new HashSet<>();
 	private final Set<Index> indices = new HashSet<>();
-	private final Set<String> segments = new HashSet<>();
+	private final Set<Segment> segments = new HashSet<>();
 	private final Set<Expiry> expiries = new HashSet<>();
 	private final Set<Exchange> exchanges = new HashSet<>();
 	private final Set<ScripType> scripTypes = new HashSet<>();
@@ -35,7 +35,7 @@ public class ScripCriteria implements Predicate<Scrip> {
 		return this;
 	}
 	
-	public ScripCriteria withSegment(String segment) {
+	public ScripCriteria withSegment(Segment segment) {
 		segments.add(segment);
 		return this;
 	}

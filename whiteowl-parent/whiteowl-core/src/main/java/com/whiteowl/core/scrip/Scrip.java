@@ -35,7 +35,7 @@ public class Scrip implements Comparable<Scrip> {
 	private double strike;
 	private double tickSize;
 	private int lotSize;
-	private String segment;
+	private Segment segment;
 	
 	@NonNull @NotNull
 	@Enumerated(EnumType.STRING)

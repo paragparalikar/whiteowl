@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import com.whiteowl.client.kite.model.Instrument;
 import com.whiteowl.core.scrip.Scrip;
+import com.whiteowl.core.scrip.Segment;
 import com.whiteowl.core.util.Strings;
 
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class ScripMapper {
 				.tickSize(instrument.getTickSize())
 				.lotSize(instrument.getLotSize())
 				.type(scripTypeMapper.toScripType(instrument.getInstrumentType()))
-				.segment(instrument.getSegment())
+				.segment(Segment.findByName(instrument.getSegment()))
 				.exchange(exchangeMapper.toExchange(instrument.getExchange()))
 				.build();
 	}
