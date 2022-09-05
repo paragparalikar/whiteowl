@@ -1,5 +1,7 @@
 package com.whiteowl.core.derivative.option;
 
+import com.whiteowl.core.scrip.Scrip;
+
 import lombok.Builder;
 import lombok.Value;
 
@@ -7,6 +9,6 @@ import lombok.Value;
 @Builder
 public class OptionChain {
 
-	
+	private Scrip scrip;
 
 }

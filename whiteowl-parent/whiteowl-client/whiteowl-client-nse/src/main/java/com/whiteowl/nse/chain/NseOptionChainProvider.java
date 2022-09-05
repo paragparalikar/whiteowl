@@ -1,4 +1,6 @@
-package com.whiteowl.data.chain.nse;
+package com.whiteowl.nse.chain;
+
+import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
@@ -8,11 +10,9 @@ import com.whiteowl.core.scrip.Scrip;
 
 @Component
 public class NseOptionChainProvider implements OptionChainProvider {
-
-	
 	
 	@Override
-	public OptionChain get(Scrip scrip) {
+	public Optional<OptionChain> get(Scrip scrip) {
 		return null;
 	}
 

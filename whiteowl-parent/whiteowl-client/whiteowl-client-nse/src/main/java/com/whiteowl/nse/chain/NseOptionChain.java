@@ -1,4 +1,4 @@
-package com.whiteowl.data.chain.nse;
+package com.whiteowl.nse.chain;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
