@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import com.whiteowl.core.derivative.option.OptionChainProvider;
 import com.whiteowl.core.derivative.option.OptionChainService;
+import com.whiteowl.core.scrip.Scrip;
+import com.whiteowl.core.scrip.ScripService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OptionChainDownloadJob {
 
+	private final ScripService scripService;
 	private final OptionChainService optionChainService;
 	private final OptionChainProvider optionChainProvider;
 	
@@ -26,7 +29,7 @@ public class OptionChainDownloadJob {
 	@EventListener(ApplicationReadyEvent.class)
 	public void run() {
 		if(shouldDownload()) {
-			getUnderlyingCodes()
+			getUnderlyings()
 				.map(optionChainProvider::get)
 				.filter(Optional::isPresent)
 				.map(Optional::get)
@@ -34,8 +37,8 @@ public class OptionChainDownloadJob {
 		}
 	}
 	
-	private Stream<String> getUnderlyingCodes(){
-		return Stream.of("NIFTY");
+	private Stream<Scrip> getUnderlyings(){
+		return Stream.of(scripService.findByCode("NIFTY 50"));
 	}
 	
 	private boolean shouldDownload() {
