@@ -11,7 +11,7 @@ import lombok.SneakyThrows;
 
 @Data
 @Component
-@ConfigurationProperties("mongoose.data-provider.kite")
+@ConfigurationProperties("whiteowl.data-provider.kite")
 public class KiteDataProviderCredentials {
 
 	private String pin;
@@ -20,7 +20,7 @@ public class KiteDataProviderCredentials {
 	
 	@SneakyThrows
 	public KiteCredentials toKiteCredentials() {
-		final String keyKey = "mongoose.crypto.key";
+		final String keyKey = "whiteowl.crypto.key";
 		final String key = System.getProperty(keyKey, System.getenv(keyKey));
 		return KiteCredentials.builder()
 		.pin(Crypto.decrypt(pin, key))
