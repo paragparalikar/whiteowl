@@ -1,16 +1,18 @@
 package com.whiteowl.nse.chain;
 
 import java.text.NumberFormat;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import com.whiteowl.core.derivative.option.OptionChainItem;
 import com.whiteowl.core.scrip.ScripType;
+import com.whiteowl.core.util.BlackScholes;
 
 import lombok.Data;
 
 @Data
-public class NseOptionInfo {
+public abstract class NseOptionInfo {
 	private static final DateTimeFormatter FO_DATETIMEFORMATTER = DateTimeFormatter.ofPattern("ddMMM");
 	private static final NumberFormat FO_NUMBERFORMAT = NumberFormat.getInstance();
 	
@@ -20,6 +22,7 @@ public class NseOptionInfo {
 		FO_NUMBERFORMAT.setMinimumIntegerDigits(0);
 	}
 
+	private final ScripType scripType;
 	private double strikePrice;
 	private LocalDate expiryDate;
 	private String underlying;
@@ -41,6 +44,15 @@ public class NseOptionInfo {
 	private double underlyingValue;
 	
 	public OptionChainItem toOptionChainItem() {
+		double delta = 0, gamma = 0, theta = 0, vega = 0;
+		if(0 < totalTradedVolume) {
+			final BlackScholes blackScholes = new BlackScholes(underlyingValue, strikePrice, 7, 
+					impliedVolatility, Duration.between(LocalDate.now(), expiryDate).toDays());
+			vega = blackScholes.getVega();
+			gamma = blackScholes.getGamma();
+			theta = ScripType.CE.equals(scripType) ? blackScholes.getCallTheta() : blackScholes.getPutTheta();
+			delta = ScripType.CE.equals(scripType) ? blackScholes.getCallDelta() : blackScholes.getPutDelta();
+		}
 		return OptionChainItem.builder()
 				.volume(totalTradedVolume)
 				.openItnterest(openInterest)
@@ -55,11 +67,15 @@ public class NseOptionInfo {
 				.bidPrice(bidprice)
 				.askQuantity(askQty)
 				.askPrice(askPrice)
+				.delta(delta)
+				.gamma(gamma)
+				.theta(theta)
+				.vega(vega)
 				.build();
 	}
 	
-	public String toScripCode(ScripType scripType) {
-		return underlying 
+	public String toScripCode() {
+		return underlying.toUpperCase() 
 				+ FO_DATETIMEFORMATTER.format(expiryDate)
 				+ FO_NUMBERFORMAT.format(strikePrice) 
 				+ scripType.name(); 

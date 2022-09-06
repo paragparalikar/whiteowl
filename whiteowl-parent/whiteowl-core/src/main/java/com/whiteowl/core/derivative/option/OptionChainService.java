@@ -19,7 +19,7 @@ public class OptionChainService {
 	}
 	
 	public void save(OptionChain optionChain) {
-		cache.put(optionChain.getScrip(), optionChain);
+		cache.put(optionChain.getUnderlying(), optionChain);
 	}
 	
 }

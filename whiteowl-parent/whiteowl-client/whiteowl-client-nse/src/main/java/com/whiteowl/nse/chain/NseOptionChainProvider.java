@@ -13,7 +13,6 @@ import com.whiteowl.core.derivative.option.OptionChainItem;
 import com.whiteowl.core.derivative.option.OptionChainProvider;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
-import com.whiteowl.core.scrip.ScripType;
 
 import lombok.SneakyThrows;
 
@@ -54,14 +53,14 @@ public class NseOptionChainProvider implements OptionChainProvider {
 		for(NseOptionChainItem item : response.getRecords().getData()) {
 			final NseOptionInfo callInfo = item.getCallOptionInfo();
 			if(null != callInfo) {
-				final String scripCode = callInfo.toScripCode(ScripType.CE);
+				final String scripCode = callInfo.toScripCode();
 				final Scrip scrip = scripService.findByCode(scripCode);
 				final OptionChainItem optionChainItem = callInfo.toOptionChainItem();
 				chain.getItems().put(scrip, optionChainItem);
 			}
 			final NseOptionInfo putInfo = item.getPutOptionInfo();
 			if(null != putInfo) {
-				final String scripCode = putInfo.toScripCode(ScripType.PE);
+				final String scripCode = putInfo.toScripCode();
 				final Scrip scrip = scripService.findByCode(scripCode);
 				final OptionChainItem optionChainItem = putInfo.toOptionChainItem();
 				chain.getItems().put(scrip, optionChainItem);
