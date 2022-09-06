@@ -1,7 +1,5 @@
 package com.whiteowl.job;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -30,24 +28,16 @@ public class OptionChainDownloadJob {
 	@Scheduled(cron = "0/15 * 9-17 * * MON-FRI")
 	@EventListener(ApplicationReadyEvent.class)
 	public void run() {
-		if(shouldDownload()) {
-			getUnderlyings()
-				.filter(Objects::nonNull)
-				.map(optionChainProvider::get)
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.forEach(optionChainService::save);
-		}
+		getUnderlyings()
+			.filter(Objects::nonNull)
+			.map(optionChainProvider::get)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.forEach(optionChainService::save);
 	}
 	
 	private Stream<Scrip> getUnderlyings(){
 		return Stream.of(scripService.findByCode(Index.NIFTY50.getCode()));
-	}
-	
-	private boolean shouldDownload() {
-		final LocalDate now = LocalDate.now();
-		return !DayOfWeek.SATURDAY.equals(now.getDayOfWeek()) &&
-				!DayOfWeek.SUNDAY.equals(now.getDayOfWeek());
 	}
 
 }

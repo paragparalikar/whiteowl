@@ -1,8 +1,10 @@
 package com.whiteowl.nse.chain;
 
-import java.time.LocalDate;
+import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 
 import lombok.Data;
 
@@ -11,7 +13,8 @@ public class NseOptionChainItem {
 
 	private double strikePrice;
 	
-	private LocalDate expiryDate;
+	@JsonFormat(shape = Shape.STRING, pattern = "dd-MMM-yyyy")
+	private Date expiryDate;
 	
 	@JsonProperty("PE")
 	private NsePutOptionInfo putOptionInfo;

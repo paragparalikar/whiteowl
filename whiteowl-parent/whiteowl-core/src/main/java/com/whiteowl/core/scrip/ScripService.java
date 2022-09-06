@@ -38,18 +38,13 @@ public class ScripService {
 	}
 	
 	@Caching(
-			put = @CachePut(key = "#a0.code", cacheNames = "scrips-by-code"),
-			evict = @CacheEvict(cacheNames = "scrips-all", allEntries =  true))
-	public Scrip save(Scrip scrip) {
-		return scripRepository.save(scrip);
-	}
-	
-	@CachePut(cacheNames = "scrips-all", key = "'all'")
+			put = @CachePut(key = "'all'", cacheNames = "scrips-all"),
+			evict = @CacheEvict(cacheNames = "scrips-by-code", allEntries =  true))
 	public List<Scrip> saveAll(List<Scrip> scrips) {
 		return scripRepository.saveAllAndFlush(scrips);
 	}
 
-	@Cacheable(cacheNames = "scrips-by-code")
+	//@Cacheable(cacheNames = "scrips-by-code")
 	public Scrip findByCode(String code) {
 		return scripRepository.findByCode(code).orElse(null);
 	}
