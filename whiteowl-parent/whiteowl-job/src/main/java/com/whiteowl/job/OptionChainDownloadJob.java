@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.whiteowl.core.derivative.option.OptionChainProvider;
 import com.whiteowl.core.derivative.option.OptionChainService;
+import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
 
@@ -38,7 +39,7 @@ public class OptionChainDownloadJob {
 	}
 	
 	private Stream<Scrip> getUnderlyings(){
-		return Stream.of(scripService.findByCode("NIFTY 50"));
+		return Stream.of(scripService.findByCode(Index.NIFTY50.getCode()));
 	}
 	
 	private boolean shouldDownload() {

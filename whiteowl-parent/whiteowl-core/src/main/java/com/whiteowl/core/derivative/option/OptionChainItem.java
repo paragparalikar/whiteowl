@@ -10,15 +10,19 @@ public class OptionChainItem {
 	private long volume;
 	private long openItnterest;
 	private long changeInOpenItnterest;
+	private double changeInOpenInterestPercentage;
 	private double impliedVolatility;
 	private double lastTradedPrice;
 	private double change;
+	private double changePercentage;
+	private double underlyingValue;
 	private long bidQuantity;
 	private double bidPrice;
 	private long askQuantity;
-	private long askPrice;
+	private double askPrice;
 
 	private double delta;
 	private double gamma;
 	private double theta;
+	private double vega;
 }

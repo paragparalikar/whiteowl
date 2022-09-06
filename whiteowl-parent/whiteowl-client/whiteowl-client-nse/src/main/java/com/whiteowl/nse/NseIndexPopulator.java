@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -38,7 +39,9 @@ public class NseIndexPopulator implements IndexPopulator {
 	
 	@SneakyThrows
 	private Set<String> resolveComponents(Index index) {
-		final InputStream stream = new URL(resolveUrl(index)).openStream();
+		final String url = resolveUrl(index);
+		if(null == url) return Collections.emptySet();
+		final InputStream stream = new URL(url).openStream();
 		final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 		return reader.lines()
 				.skip(1)
@@ -55,7 +58,7 @@ public class NseIndexPopulator implements IndexPopulator {
 		case NIFTY100: return "https://www1.nseindia.com/content/indices/ind_nifty100list.csv";
 		case NIFTY200: return "https://www1.nseindia.com/content/indices/ind_nifty200list.csv";
 		case NIFTY500: return "https://www1.nseindia.com/content/indices/ind_nifty500list.csv";
-		default: throw new IllegalArgumentException(String.format("Index %s is not supported", index.name()));
+		default: return null;
 		}
 	}
 
