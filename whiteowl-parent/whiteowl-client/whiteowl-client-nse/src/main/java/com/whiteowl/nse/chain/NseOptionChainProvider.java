@@ -10,6 +10,7 @@ import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +47,7 @@ public class NseOptionChainProvider implements OptionChainProvider {
 	}
 	
 	@Override
+	@Retryable
 	@SneakyThrows
 	public OptionChain get(Scrip underlying) {
 		try {
