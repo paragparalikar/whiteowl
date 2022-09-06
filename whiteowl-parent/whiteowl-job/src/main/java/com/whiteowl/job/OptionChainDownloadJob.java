@@ -2,6 +2,7 @@ package com.whiteowl.job;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -26,11 +27,12 @@ public class OptionChainDownloadJob {
 	private final OptionChainService optionChainService;
 	private final OptionChainProvider optionChainProvider;
 	
-	@Scheduled(cron = "0/15 * 9-16 * * MON-FRI")
+	@Scheduled(cron = "0/15 * 9-17 * * MON-FRI")
 	@EventListener(ApplicationReadyEvent.class)
 	public void run() {
 		if(shouldDownload()) {
 			getUnderlyings()
+				.filter(Objects::nonNull)
 				.map(optionChainProvider::get)
 				.filter(Optional::isPresent)
 				.map(Optional::get)
