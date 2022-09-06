@@ -259,7 +259,13 @@
     "@vaadin/common-frontend": "$@vaadin/common-frontend",
     "construct-style-sheets-polyfill": "$construct-style-sheets-polyfill",
     "lit": "$lit",
-    "@polymer/polymer": "$@polymer/polymer"
+    "@polymer/polymer": "$@polymer/polymer",
+    "@polymer/paper-button": "$@polymer/paper-button",
+    "@polymer/paper-icon-button": "$@polymer/paper-icon-button",
+    "date-fns": "$date-fns",
+    "line-awesome": "$line-awesome",
+    "lit-element": "$lit-element",
+    "lit-html": "$lit-html"
   },
   "vaadin": {
     "dependencies": {
@@ -405,6 +411,6 @@
       "workbox-precaching": "6.5.0",
       "workbox-webpack-plugin": "6.5.0"
     },
-    "hash": "6f441651720fc5821628153c1e57cb5daa2f796832279c5c602a420a1e5ebda4"
+    "hash": "1dd9f411ee171f7cd9845fc9267effa725ffac7c496e386508da5c37de03f0ca"
   }
 }
