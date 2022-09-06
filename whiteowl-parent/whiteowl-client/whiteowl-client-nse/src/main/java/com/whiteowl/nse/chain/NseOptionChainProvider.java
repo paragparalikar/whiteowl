@@ -10,6 +10,7 @@ import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
@@ -47,31 +48,32 @@ public class NseOptionChainProvider implements OptionChainProvider {
 	}
 	
 	@Override
-	@Retryable
+	@Retryable(recover = "recover")
 	@SneakyThrows
 	public OptionChain get(Scrip underlying) {
-		try {
-			final URL url = new URL(resolveUrl(underlying));
-			HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-			connection.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
-			connection.setRequestProperty("accept-encoding", "gzip");
+		final URL url = new URL(resolveUrl(underlying));
+		HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+		connection.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
+		connection.setRequestProperty("accept-encoding", "gzip");
+		connection.setConnectTimeout(1000);
+		connection.setReadTimeout(3000);
+		if(401 == connection.getResponseCode()) {
+			final String cookie = connection.getHeaderField("set-cookie");
+			connection.disconnect();
+			connection = (HttpsURLConnection) url.openConnection();
+			connection.setRequestProperty("cookie", cookie);
 			connection.setConnectTimeout(1000);
 			connection.setReadTimeout(3000);
-			if(401 == connection.getResponseCode()) {
-				final String cookie = connection.getHeaderField("set-cookie");
-				connection.disconnect();
-				connection = (HttpsURLConnection) url.openConnection();
-				connection.setRequestProperty("cookie", cookie);
-				connection.setConnectTimeout(1000);
-				connection.setReadTimeout(3000);
-			}
-			final InputStream inputStream = new GZIPInputStream(connection.getInputStream());
-			final NseOptionChainResponse response = objectMapper.readValue(inputStream, NseOptionChainResponse.class);
-			return map(underlying, response);
-		} catch(Exception e) {
-			log.error("", e);
-			return null;
 		}
+		final InputStream inputStream = new GZIPInputStream(connection.getInputStream());
+		final NseOptionChainResponse response = objectMapper.readValue(inputStream, NseOptionChainResponse.class);
+		return map(underlying, response);
+	}
+	
+	@Recover
+	public OptionChain recover(Throwable throwable, Scrip underlying) {
+		log.error("Failed to fetch option chain for " + underlying.getName(), throwable);
+		return null;
 	}
 	
 	private OptionChain map(Scrip underlying, NseOptionChainResponse response) {
