@@ -24,6 +24,7 @@ public abstract class NseOptionInfo {
 		FO_NUMBERFORMAT.setMaximumFractionDigits(2);
 		FO_NUMBERFORMAT.setMinimumFractionDigits(0);
 		FO_NUMBERFORMAT.setMinimumIntegerDigits(0);
+		FO_NUMBERFORMAT.setGroupingUsed(false);
 	}
 
 	private final ScripType scripType;
@@ -82,10 +83,10 @@ public abstract class NseOptionInfo {
 	}
 	
 	public String toScripCode() {
-		return underlying.toUpperCase() 
+		return (underlying.toUpperCase() 
 				+ FO_DATETIMEFORMATTER.format(expiryDate)
 				+ FO_NUMBERFORMAT.format(strikePrice) 
-				+ scripType.name(); 
+				+ scripType.name()).toUpperCase(); 
 	}
 	
 }

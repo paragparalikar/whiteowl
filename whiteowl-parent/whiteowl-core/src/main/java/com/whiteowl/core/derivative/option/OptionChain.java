@@ -1,5 +1,6 @@
 package com.whiteowl.core.derivative.option;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ import lombok.Value;
 public class OptionChain {
 
 	private final Scrip underlying;
+	private final LocalDateTime downloadTimestamp;
 	private final Map<Scrip, OptionChainItem> items = new HashMap<>(); 
 
 }

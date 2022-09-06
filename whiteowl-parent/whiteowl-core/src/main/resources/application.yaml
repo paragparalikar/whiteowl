@@ -19,7 +19,8 @@ spring:
     hibernate:
       ddl-auto: create
   datasource:
-    url: jdbc:h2:mem:whiteowl
+    #url: jdbc:h2:mem:whiteowl
+    url: jdbc:h2:~/whiteowl/database/h2
     username: sa
     password: 
     driver-class-name: org.h2.Driver

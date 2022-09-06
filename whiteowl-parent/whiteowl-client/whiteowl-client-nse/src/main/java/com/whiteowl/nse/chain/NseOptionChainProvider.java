@@ -1,6 +1,8 @@
 package com.whiteowl.nse.chain;
 
+import java.io.InputStream;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -43,59 +45,56 @@ public class NseOptionChainProvider implements OptionChainProvider {
 				.orElseGet(() -> "https://www.nseindia.com/api/option-chain-equities?symbol=" + underlying.getCode());
 	}
 	
-	public static void main(String[] args) throws Exception {
-		final URL url = new URL("https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY");
-		HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-		connection.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
-		connection.setRequestProperty("accept-encoding", "gzip");
-		connection.setConnectTimeout(1000);
-		connection.setReadTimeout(3000);
-		if(401 == connection.getResponseCode()) {
-			final String cookie = connection.getHeaderField("set-cookie");
-			connection.disconnect();
-			connection = (HttpsURLConnection) url.openConnection();
-			connection.setRequestProperty("cookie", cookie);
-			connection.setConnectTimeout(1000);
-			connection.setReadTimeout(3000);
-		}
-		
-		final ObjectMapper objectMapper = new ObjectMapper();
-		final NseOptionChainResponse response = objectMapper.readValue(new GZIPInputStream(connection.getInputStream()), NseOptionChainResponse.class);
-		
-		System.out.println(response);
-	}
-	
 	@Override
 	@SneakyThrows
-	public Optional<OptionChain> get(Scrip underlying) {
+	public OptionChain get(Scrip underlying) {
 		try {
 			final URL url = new URL(resolveUrl(underlying));
-			final NseOptionChainResponse response = objectMapper.readValue(url, NseOptionChainResponse.class);
-			return Optional.of(map(underlying, response));
+			HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+			connection.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
+			connection.setRequestProperty("accept-encoding", "gzip");
+			connection.setConnectTimeout(1000);
+			connection.setReadTimeout(3000);
+			if(401 == connection.getResponseCode()) {
+				final String cookie = connection.getHeaderField("set-cookie");
+				connection.disconnect();
+				connection = (HttpsURLConnection) url.openConnection();
+				connection.setRequestProperty("cookie", cookie);
+				connection.setConnectTimeout(1000);
+				connection.setReadTimeout(3000);
+			}
+			final InputStream inputStream = new GZIPInputStream(connection.getInputStream());
+			final NseOptionChainResponse response = objectMapper.readValue(inputStream, NseOptionChainResponse.class);
+			return map(underlying, response);
 		} catch(Exception e) {
 			log.error("", e);
-			return Optional.empty();
+			return null;
 		}
 	}
 	
 	private OptionChain map(Scrip underlying, NseOptionChainResponse response) {
 		final OptionChain chain = OptionChain.builder()
 				.underlying(underlying)
+				.downloadTimestamp(LocalDateTime.now())
 				.build();
 		for(NseOptionChainItem item : response.getRecords().getData()) {
 			final NseOptionInfo callInfo = item.getCallOptionInfo();
 			if(null != callInfo) {
 				final String scripCode = callInfo.toScripCode();
 				final Scrip scrip = scripService.findByCode(scripCode);
-				final OptionChainItem optionChainItem = callInfo.toOptionChainItem();
-				chain.getItems().put(scrip, optionChainItem);
+				if(null != scrip) {
+					final OptionChainItem optionChainItem = callInfo.toOptionChainItem();
+					chain.getItems().put(scrip, optionChainItem);
+				}
 			}
 			final NseOptionInfo putInfo = item.getPutOptionInfo();
 			if(null != putInfo) {
 				final String scripCode = putInfo.toScripCode();
 				final Scrip scrip = scripService.findByCode(scripCode);
-				final OptionChainItem optionChainItem = putInfo.toOptionChainItem();
-				chain.getItems().put(scrip, optionChainItem);
+				if(null != scrip) {
+					final OptionChainItem optionChainItem = putInfo.toOptionChainItem();
+					chain.getItems().put(scrip, optionChainItem);
+				}
 			}
 		}
 		return chain;
