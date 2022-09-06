@@ -2,6 +2,7 @@ target/
 .settings/
 .classpath
 .project
+.factorypath
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
