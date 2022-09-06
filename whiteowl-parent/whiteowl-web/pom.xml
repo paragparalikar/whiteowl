@@ -6,11 +6,4 @@
     <version>0.0.1-SNAPSHOT</version>
   </parent>
   <artifactId>whiteowl-web</artifactId>
-  <dependencies>
-  	<dependency>
-  		<groupId>com.whiteowl</groupId>
-  		<artifactId>whiteowl-job</artifactId>
-  		<version>${project.version}</version>
-  	</dependency>
-  </dependencies>
 </project>
