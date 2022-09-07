@@ -8,6 +8,8 @@ public interface TradingStrategyConfig {
 	
 	boolean isEnabled();
 	
+	Integer getMinBarCount();
+	
 	String getTradingStrategyId();
 	
 	ScripCriteria getScripCriteria();

@@ -20,6 +20,7 @@ public class ShortStrangleConfig implements TradingStrategyConfig {
 	private final String tradingStrategyId = TradingStrategyConstants.ID_SHORT_STRANGLE;
 	private final ScripCriteria scripCriteria = new ScripCriteria().withCode(Index.NIFTY50.getCode());
 	
+	private Integer minBarCount = 0;
 	private boolean enabled = Boolean.TRUE;
 	private LocalTime minPositionOpenTime = LocalTime.of(9, 20);
 	private LocalTime maxPositionOpenTime = LocalTime.of(14, 0);

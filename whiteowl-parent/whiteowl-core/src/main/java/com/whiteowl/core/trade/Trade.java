@@ -14,7 +14,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 
 import org.ta4j.core.Trade.TradeType;
@@ -44,8 +43,6 @@ public class Trade {
 	private String brokerTradeId;
 	private String exchangeTradeId;
 	
-	@Positive private double targetPrice;
-	@Positive private double stopLossPrice;
 	@PositiveOrZero private double price;
 	@PositiveOrZero private double triggerPrice;
 	@PositiveOrZero private double averagePrice;
@@ -109,8 +106,6 @@ public class Trade {
 				.timestamp(timestamp)
 				.exchangeTimestamp(exchangeTimestamp)
 				.price(price)
-				.targetPrice(targetPrice)
-				.stopLossPrice(stopLossPrice)
 				.triggerPrice(triggerPrice)
 				.averagePrice(averagePrice)
 				.quantity(quantity)

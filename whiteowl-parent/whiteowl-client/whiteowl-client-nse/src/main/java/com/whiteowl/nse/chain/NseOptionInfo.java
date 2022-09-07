@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.whiteowl.core.derivative.option.OptionChainItem;
+import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripType;
 import com.whiteowl.core.util.BlackScholes;
 
@@ -50,7 +51,7 @@ public abstract class NseOptionInfo {
 	private double askPrice;
 	private double underlyingValue;
 	
-	public OptionChainItem toOptionChainItem() {
+	public OptionChainItem toOptionChainItem(Scrip scrip) {
 		double delta = 0, gamma = 0, theta = 0, vega = 0;
 		if(0 < totalTradedVolume) {
 			final long diff = expiryDate.getTime() - System.currentTimeMillis();
@@ -62,6 +63,7 @@ public abstract class NseOptionInfo {
 			delta = ScripType.CE.equals(scripType) ? blackScholes.getCallDelta() : blackScholes.getPutDelta();
 		}
 		return OptionChainItem.builder()
+				.scrip(scrip)
 				.volume(totalTradedVolume)
 				.openItnterest(openInterest)
 				.changeInOpenItnterest(changeinOpenInterest)

@@ -87,7 +87,7 @@ public class NseOptionChainProvider implements OptionChainProvider {
 				final String scripCode = callInfo.toScripCode();
 				final Scrip scrip = scripService.findByCode(scripCode);
 				if(null != scrip) {
-					final OptionChainItem optionChainItem = callInfo.toOptionChainItem();
+					final OptionChainItem optionChainItem = callInfo.toOptionChainItem(scrip);
 					chain.getItems().put(scrip, optionChainItem);
 				}
 			}
@@ -96,7 +96,7 @@ public class NseOptionChainProvider implements OptionChainProvider {
 				final String scripCode = putInfo.toScripCode();
 				final Scrip scrip = scripService.findByCode(scripCode);
 				if(null != scrip) {
-					final OptionChainItem optionChainItem = putInfo.toOptionChainItem();
+					final OptionChainItem optionChainItem = putInfo.toOptionChainItem(scrip);
 					chain.getItems().put(scrip, optionChainItem);
 				}
 			}
