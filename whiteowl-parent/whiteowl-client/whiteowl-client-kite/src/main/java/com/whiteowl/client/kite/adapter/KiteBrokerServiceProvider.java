@@ -54,24 +54,24 @@ public class KiteBrokerServiceProvider implements BrokerServiceProvider {
 	}
 	
 	@Override
-	public void create(Trade trade) {
+	public void create(Trade trade, Portfolio portfolio) {
 		final Order order = kiteMapper.toOrder(trade);
-		final KiteConnectApi api = getKiteConnectApi(trade.getPosition().getPortfolio());
+		final KiteConnectApi api = getKiteConnectApi(portfolio);
 		final OrderId orderId = api.createOrder(order);
 		trade.setBrokerTradeId(orderId.getOrderId());
 	}
 	
 	@Override
-	public void update(Trade trade) {
+	public void update(Trade trade, Portfolio portfolio) {
 		final Order order = kiteMapper.toOrder(trade);
-		final KiteConnectApi api = getKiteConnectApi(trade.getPosition().getPortfolio());
+		final KiteConnectApi api = getKiteConnectApi(portfolio);
 		api.update(order);
 	}
 	
 	@Override
-	public void cancel(Trade trade) {
+	public void cancel(Trade trade, Portfolio portfolio) {
 		final Order order = kiteMapper.toOrder(trade);
-		final KiteConnectApi api = getKiteConnectApi(trade.getPosition().getPortfolio());
+		final KiteConnectApi api = getKiteConnectApi(portfolio);
 		api.cancel(order);
 	}
 	

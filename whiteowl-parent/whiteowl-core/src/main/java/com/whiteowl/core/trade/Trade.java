@@ -19,7 +19,6 @@ import javax.validation.constraints.PositiveOrZero;
 
 import org.ta4j.core.Trade.TradeType;
 
-import com.whiteowl.core.position.Position;
 import com.whiteowl.core.scrip.Scrip;
 
 import lombok.AllArgsConstructor;
@@ -95,11 +94,7 @@ public class Trade {
 	@Enumerated(EnumType.STRING)
 	private TradeStatus status;
 	
-	@Valid
-	@ManyToOne(optional = false)
-	private Position position;
-	
-	public Trade withPosition(Position position) {
+	public Trade clone() {
 		return Trade.builder()
 				.id(id)
 				.brokerTradeId(brokerTradeId)
@@ -111,7 +106,6 @@ public class Trade {
 				.validity(validity)
 				.product(product)
 				.status(status)
-				.position(position)
 				.timestamp(timestamp)
 				.exchangeTimestamp(exchangeTimestamp)
 				.price(price)
@@ -135,7 +129,6 @@ public class Trade {
 				.validity(validity)
 				.product(product)
 				.status(TradeStatus.NEW)
-				.position(position)
 				.quantity(filledQuantity)
 				.build();
 	}

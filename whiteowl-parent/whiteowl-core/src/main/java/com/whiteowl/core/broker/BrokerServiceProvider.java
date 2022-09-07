@@ -14,11 +14,11 @@ public interface BrokerServiceProvider {
 
 	List<Trade> findAllTrades(Portfolio portfolio);
 	
-	void create(Trade trade);
+	void create(Trade trade, Portfolio portfolio);
 
-	void update(Trade trade);
+	void update(Trade trade, Portfolio portfolio);
 
-	void cancel(Trade trade);
+	void cancel(Trade trade, Portfolio portfolio);
 	
 	int getAvailableQuantity(Scrip scrip, Exchange exchange, TradeProduct product, Portfolio portfolio);
 	

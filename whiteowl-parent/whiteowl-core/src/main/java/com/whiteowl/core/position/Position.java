@@ -81,12 +81,8 @@ public class Position {
 		position.setScrip(scrip);
 		position.setStatus(status);
 		position.setTradingStrategyConfigId(tradingStrategyConfigId);
-		entryTrades.stream()
-			.map(trade -> trade.withPosition(position))
-			.forEach(position.getEntryTrades()::add);
-		exitTrades.stream()
-			.map(trade -> trade.withPosition(position))
-			.forEach(position.getExitTrades()::add);
+		entryTrades.stream().map(Trade::clone).forEach(position.getEntryTrades()::add);
+		exitTrades.stream().map(Trade::clone).forEach(position.getExitTrades()::add);
 		return position;
 	}
 	

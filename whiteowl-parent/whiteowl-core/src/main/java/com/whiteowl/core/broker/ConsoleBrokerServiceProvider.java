@@ -35,7 +35,7 @@ public class ConsoleBrokerServiceProvider implements BrokerServiceProvider {
 	}
 
 	@Override
-	public void create(Trade trade) {
+	public void create(Trade trade, Portfolio portfolio) {
 		trade.setStatus(TradeStatus.COMPLETE);
 		trade.setTimestamp(LocalDateTime.now());
 		trade.setFilledQuantity(trade.getQuantity());
@@ -47,12 +47,12 @@ public class ConsoleBrokerServiceProvider implements BrokerServiceProvider {
 	}
 
 	@Override
-	public void update(Trade trade) {
+	public void update(Trade trade, Portfolio portfolio) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void cancel(Trade trade) {
+	public void cancel(Trade trade, Portfolio portfolio) {
 		throw new UnsupportedOperationException();
 	}
 
