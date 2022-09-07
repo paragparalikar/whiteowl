@@ -1,7 +1,6 @@
 package com.whiteowl.core.trade;
 
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -46,16 +45,25 @@ public class Trade {
 	private String brokerTradeId;
 	private String exchangeTradeId;
 	
+	@Positive private double targetPrice;
+	@Positive private double stopLossPrice;
+	@PositiveOrZero private double price;
+	@PositiveOrZero private double triggerPrice;
+	@PositiveOrZero private double averagePrice;
+	
+	@PositiveOrZero private int quantity;
+	@PositiveOrZero private int pendingQuantity;
+	@PositiveOrZero private int filledQuantity;
+	@PositiveOrZero private int disclosedQuantity;
+	
+	private String statusMessage;
+	private LocalDateTime timestamp;
+	private LocalDateTime exchangeTimestamp;
+	
 	@Valid
 	@NonNull @NotNull
 	@ManyToOne(optional = false, fetch = FetchType.EAGER)
 	private Scrip scrip;
-	
-	@NonNull @NotNull
-	@Column(nullable = false, updatable = false)
-	private String tradingStrategyId;
-	
-	private String tradingStrategyConfig;
 	
 	@NonNull @NotNull
 	@Enumerated(EnumType.STRING)
@@ -91,23 +99,6 @@ public class Trade {
 	@ManyToOne(optional = false)
 	private Position position;
 	
-	private LocalDateTime timestamp;
-	private LocalDateTime exchangeTimestamp;
-	private ZonedDateTime signalBarBeginTime;
-	
-	@Positive private double targetPrice;
-	@Positive private double stopLossPrice;
-	@PositiveOrZero private double price;
-	@PositiveOrZero private double triggerPrice;
-	@PositiveOrZero private double averagePrice;
-	
-	@PositiveOrZero private int quantity;
-	@PositiveOrZero private int pendingQuantity;
-	@PositiveOrZero private int filledQuantity;
-	@PositiveOrZero private int disclosedQuantity;
-	
-	private String statusMessage;
-	
 	public boolean isEntryTrade() {
 		return type.equals(position.getType());
 	}
@@ -122,7 +113,6 @@ public class Trade {
 				.brokerTradeId(brokerTradeId)
 				.exchangeTradeId(exchangeTradeId)
 				.scrip(scrip)
-				.tradingStrategyId(tradingStrategyId)
 				.type(type)
 				.limitType(limitType)
 				.variety(variety)
@@ -132,7 +122,6 @@ public class Trade {
 				.position(position)
 				.timestamp(timestamp)
 				.exchangeTimestamp(exchangeTimestamp)
-				.signalBarBeginTime(signalBarBeginTime)
 				.price(price)
 				.targetPrice(targetPrice)
 				.stopLossPrice(stopLossPrice)
@@ -148,8 +137,6 @@ public class Trade {
 	public Trade complement() {
 		return Trade.builder()
 				.scrip(scrip)
-				.tradingStrategyId(tradingStrategyId)
-				.tradingStrategyConfig(tradingStrategyConfig)
 				.type(type.complementType())
 				.limitType(limitType)
 				.variety(variety)

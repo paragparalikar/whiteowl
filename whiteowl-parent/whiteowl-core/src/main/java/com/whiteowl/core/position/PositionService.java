@@ -21,8 +21,8 @@ public class PositionService {
 		return positionRepository.findByStatusNot(status);
 	}
 	
-	public Set<Position> findByTradingStrategyIdAndStatusNot(String tradingStrategyId, PositionStatus status){
-		return positionRepository.findByTradingStrategyIdAndStatusNot(tradingStrategyId, status);
+	public Set<Position> findByTradingStrategyConfigIdAndStatusNot(String tradingStrategyId, PositionStatus status){
+		return positionRepository.findByTradingStrategyConfigIdAndStatusNot(tradingStrategyId, status);
 	}
 
 	public Set<Position> findByStatusIn(Collection<PositionStatus> statuses) {

@@ -2,15 +2,19 @@ package com.whiteowl.core.portfolio;
 
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import com.whiteowl.core.broker.Broker;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class PortfolioService {
 
@@ -20,7 +24,7 @@ public class PortfolioService {
 		return portfolioRepository.findAll();
 	}
 	
-	public Portfolio save(Portfolio portfolio) {
+	public Portfolio save(@Valid Portfolio portfolio) {
 		return  portfolioRepository.saveAndFlush(portfolio);
 	}
 

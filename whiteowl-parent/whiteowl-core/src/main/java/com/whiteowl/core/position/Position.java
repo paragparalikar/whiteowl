@@ -25,7 +25,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
-import org.ta4j.core.Bar;
 import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.portfolio.Portfolio;
@@ -43,9 +42,9 @@ import lombok.NonNull;
 @NoArgsConstructor
 @Table(name = "position", indexes = {
 		@Index(columnList = "status"),
-		@Index(columnList = "tradingStrategyId")
+		@Index(columnList = "tradingStrategyConfigId")
 	})
-@EqualsAndHashCode(of = {"id", "scrip", "portfolio", "type", "tradingStrategyId"})
+@EqualsAndHashCode(of = {"id", "scrip", "portfolio", "type", "tradingStrategyConfigId"})
 public class Position {
 
 	@Id
@@ -74,11 +73,7 @@ public class Position {
 	
 	@NotNull @NonNull
 	@Column(nullable = false, updatable = false)
-	private String tradingStrategyId;
-	
-	private Double targetPrice;
-	private Double initialStopLossPrice;
-	private Double trailingStopLossPrice;
+	private String tradingStrategyConfigId;
 	
 	@NotEmpty
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true, mappedBy = "position")
@@ -93,7 +88,7 @@ public class Position {
 		position.setScrip(scrip);
 		position.setType(type);
 		position.setStatus(status);
-		position.setTradingStrategyId(tradingStrategyId);
+		position.setTradingStrategyConfigId(tradingStrategyConfigId);
 		entryTrades.stream()
 			.map(trade -> trade.withPosition(position))
 			.forEach(position.getEntryTrades()::add);
@@ -117,24 +112,6 @@ public class Position {
 	
 	public boolean isOpen() {
 		return !isClosed();
-	}
-	
-	public boolean isInitialStopHit(Bar bar) {
-		return null != initialStopLossPrice && 
-				((TradeType.BUY.equals(type) && (getAverageEntryPrice() - initialStopLossPrice) >= bar.getLowPrice().doubleValue()) ||
-				(TradeType.SELL.equals(type) && (getAverageEntryPrice() + initialStopLossPrice) <= bar.getHighPrice().doubleValue()));
-	}
-	
-	public boolean isTargetHit(Bar bar) {
-		return null != targetPrice &&
-				((TradeType.BUY.equals(type) && (getAverageEntryPrice() + targetPrice) <= bar.getHighPrice().doubleValue()) ||
-				(TradeType.SELL.equals(type) && (getAverageEntryPrice() - targetPrice) >= bar.getLowPrice().doubleValue()));
-	}
-	
-	public boolean isTrailingStopHit(Bar bar) {
-		return null != trailingStopLossPrice &&
-				((TradeType.BUY.equals(type) && (getAverageEntryPrice() - trailingStopLossPrice) >= bar.getClosePrice().doubleValue()) ||
-				(TradeType.SELL.equals(type) && (getAverageEntryPrice() + trailingStopLossPrice) <= bar.getClosePrice().doubleValue()));
 	}
 	
 	public Optional<LocalDateTime> getEntryTimestamp() {

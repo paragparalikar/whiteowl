@@ -1,6 +1,5 @@
 package com.whiteowl.ui.vaadin.portfolio.validator;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.springframework.util.StringUtils;
