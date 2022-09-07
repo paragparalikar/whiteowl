@@ -34,6 +34,13 @@ public class Portfolio {
 	@NotBlank
 	@Size(min = 3, max = 255)
 	private String name;
+	
+	private String nameLowerCase;
+	
+	public void setName(String name) {
+		this.name = name;
+		this.nameLowerCase = null == name ? null : name.toLowerCase();
+	}
 
 	@NonNull
 	@NotNull

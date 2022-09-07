@@ -20,7 +20,6 @@ import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.ui.vaadin.common.TitledFormEditor;
 import com.whiteowl.ui.vaadin.portfolio.validator.PortfolioAmountValidator;
 import com.whiteowl.ui.vaadin.portfolio.validator.PortfolioNameValidator;
-import com.whiteowl.ui.vaadin.portfolio.validator.PortfolioUsernameValidator;
 import com.whiteowl.ui.vaadin.util.VaadinUtils;
 
 public class PortfolioEditor extends TitledFormEditor<Portfolio> {
@@ -46,8 +45,11 @@ public class PortfolioEditor extends TitledFormEditor<Portfolio> {
 		nameField.setPrefixComponent(VaadinUtils.toIcon(VaadinIcon.USER));
 		
 		final ComboBox<Broker> brokerComboBox = new ComboBox<>("Broker", Arrays.asList(Broker.values()));
+		brokerComboBox.setValue(Broker.CONSOLE);
 		brokerComboBox.setWidthFull();
-		binder.forField(brokerComboBox).bind(Portfolio::getBroker, Portfolio::setBroker);
+		binder.forField(brokerComboBox)
+			.asRequired()
+			.bind(Portfolio::getBroker, Portfolio::setBroker);
 		
 		final NumberField amountField = new NumberField("Amount");
 		amountField.setWidthFull();
@@ -61,7 +63,6 @@ public class PortfolioEditor extends TitledFormEditor<Portfolio> {
 		usernameField.setWidthFull();
 		binder.forField(usernameField)
 			.asRequired("Username is required")
-			.withValidator(new PortfolioUsernameValidator(portfolioService, this::getValue, brokerComboBox::getValue))
 			.bind(portfolio -> Optional.ofNullable(portfolio).map(Portfolio::getCredentials).map(Credentials::getUsername).orElse(null), 
 					(portfolio, usernamme) -> portfolio.getCredentials().setUsername(usernamme));
 		usernameField.setPrefixComponent(VaadinUtils.toIcon(VaadinIcon.USER));

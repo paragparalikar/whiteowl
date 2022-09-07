@@ -1,6 +1,5 @@
 package com.whiteowl.ui.vaadin.portfolio.validator;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.springframework.util.StringUtils;
@@ -26,13 +25,12 @@ public class PortfolioNameValidator implements Validator<String> {
 			return ValidationResult.error("Name can not be null/empty");
 		}
 		
-		final String oldValue = Optional.ofNullable(portfolioSupplier.get())
-				.map(Portfolio::getName)
-				.orElse(null);
-		if(!value.equalsIgnoreCase(oldValue) && portfolioService.existsByName(value)) {
+		final Portfolio portfolio = portfolioSupplier.get();
+		final String id = null == portfolio ? null : portfolio.getId();
+		final String oldValue = null == portfolio ? null : portfolio.getName();
+		if(!value.equalsIgnoreCase(oldValue) && portfolioService.existsByNameAndIdNot(value, id)) {
 			return ValidationResult.error("Portfolio with this name already exists");
 		}
-		
 		return ValidationResult.ok();
 	}
 

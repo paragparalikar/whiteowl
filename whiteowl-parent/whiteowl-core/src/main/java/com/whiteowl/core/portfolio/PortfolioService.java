@@ -4,15 +4,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import javax.validation.Valid;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import com.whiteowl.core.broker.Broker;
+import org.springframework.validation.annotation.Validated;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class PortfolioService {
 
@@ -23,7 +25,9 @@ public class PortfolioService {
 				.collect(Collectors.toList());
 	}
 	
-	public Portfolio save(Portfolio portfolio) {
+	public Portfolio save(@Valid Portfolio portfolio) {
+		final Credentials credentials = portfolio.getCredentials();
+		credentials.setUsername(credentials.getUsername().toUpperCase());
 		return  portfolioRepository.save(portfolio);
 	}
 
@@ -39,12 +43,10 @@ public class PortfolioService {
 		portfolioRepository.delete(portfolio);
 	}
 	
-	public boolean existsByName(String name) {
-		return portfolioRepository.existsByName(name);
-	}
-	
-	public boolean existsByCredentialsUsernameAndBroker(String username, Broker broker) {
-		return portfolioRepository.existsByCredentialsUsernameAndBroker(username, broker);
+	public boolean existsByNameAndIdNot(String name, String id) {
+		id = null == id ? "null" : id;
+		name = null == name ? null : name.toLowerCase();
+		return portfolioRepository.existsByNameLowerCaseAndIdNot(name, id);
 	}
 	
 }
