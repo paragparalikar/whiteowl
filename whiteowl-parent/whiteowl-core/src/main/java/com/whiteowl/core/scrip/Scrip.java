@@ -2,7 +2,6 @@ package com.whiteowl.core.scrip;
 
 import java.time.LocalDate;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -56,9 +55,8 @@ public class Scrip implements Comparable<Scrip> {
 	@DynamoDBTypeConvertedEnum
 	private Exchange exchange;
 	
-	@Builder.Default
 	@DynamoDBTyped(DynamoDBAttributeType.SS)
-	private Set<Index> indices = new HashSet<>();
+	private Set<Index> indices;
 	
 	@Override
 	public int compareTo(Scrip other) {

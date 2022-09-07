@@ -29,7 +29,7 @@ public class PortfolioNameValidator implements Validator<String> {
 		final String oldValue = Optional.ofNullable(portfolioSupplier.get())
 				.map(Portfolio::getName)
 				.orElse(null);
-		if(!value.equalsIgnoreCase(oldValue) && portfolioService.existsByNameIgnoreCase(value)) {
+		if(!value.equalsIgnoreCase(oldValue) && portfolioService.existsByName(value)) {
 			return ValidationResult.error("Portfolio with this name already exists");
 		}
 		

@@ -12,8 +12,8 @@ import com.whiteowl.core.broker.Broker;
 @EnableScanCount
 public interface PortfolioRepository extends PagingAndSortingRepository<Portfolio, String> {
 
-	boolean existsByNameIgnoreCase(String name);
+	boolean existsByName(String name);
 	
-	boolean existsByCredentialsUsernameIgnoreCaseAndBroker(String username, Broker broker);
+	boolean existsByCredentialsUsernameAndBroker(String username, Broker broker);
 	
 }

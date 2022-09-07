@@ -34,7 +34,7 @@ public class PortfolioUsernameValidator implements Validator<String> {
 				.map(Credentials::getUsername)
 				.orElse(null);
 		if(!value.equalsIgnoreCase(oldValue) && 
-				portfolioService.existsByCredentialsUsernameIgnoreCaseAndBroker(value, brokerSupplier.get())) {
+				portfolioService.existsByCredentialsUsernameAndBroker(value, brokerSupplier.get())) {
 			return ValidationResult.error("Portfolio with this username already exits");
 		}
 		

@@ -39,12 +39,12 @@ public class PortfolioService {
 		portfolioRepository.delete(portfolio);
 	}
 	
-	public boolean existsByNameIgnoreCase(String name) {
-		return portfolioRepository.existsByNameIgnoreCase(name);
+	public boolean existsByName(String name) {
+		return portfolioRepository.existsByName(name);
 	}
 	
-	public boolean existsByCredentialsUsernameIgnoreCaseAndBroker(String username, Broker broker) {
-		return portfolioRepository.existsByCredentialsUsernameIgnoreCaseAndBroker(username, broker);
+	public boolean existsByCredentialsUsernameAndBroker(String username, Broker broker) {
+		return portfolioRepository.existsByCredentialsUsernameAndBroker(username, broker);
 	}
 	
 }

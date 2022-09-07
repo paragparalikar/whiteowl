@@ -4,7 +4,7 @@ import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
 import org.springframework.data.repository.CrudRepository;
 
 @EnableScan
-public interface BarRepository extends CrudRepository<PersistentBar, String> {
+public interface BarRepository extends CrudRepository<PersistentBar, PersistentBarId> {
 	
 	
 }

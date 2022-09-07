@@ -10,8 +10,8 @@ amazon:
     access-key: dummy
     secret-key: dummy
   dynamodb:
-    endpoint: asd
-    signing-region: asfd
+    endpoint: http://localhost:8000
+    signing-region: ap-south-1
       
 spring:
   h2:

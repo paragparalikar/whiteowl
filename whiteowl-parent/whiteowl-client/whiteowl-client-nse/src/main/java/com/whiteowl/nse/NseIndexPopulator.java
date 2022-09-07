@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -34,7 +35,10 @@ public class NseIndexPopulator implements IndexPopulator {
 				resolveComponents(index).stream()
 						.map(code -> scripsByCode.get(code))
 						.filter(Objects::nonNull)
-						.forEach(scrip -> scrip.getIndices().add(index)));
+						.forEach(scrip -> {
+							if(null == scrip.getIndices()) scrip.setIndices(new HashSet<>());
+							scrip.getIndices().add(index);
+						}));
 	}
 	
 	@SneakyThrows
