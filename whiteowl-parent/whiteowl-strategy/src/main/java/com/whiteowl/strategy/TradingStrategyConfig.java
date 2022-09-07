@@ -10,7 +10,4 @@ public interface TradingStrategyConfig {
 	
 	ScripCriteria getScripCriteria();
 	
-	TradingStrategyType getTradingStrategyType();
-	
-	
 }

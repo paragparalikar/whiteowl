@@ -62,7 +62,7 @@ public class Position {
 	@NotNull @NonNull
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private PositionStatus status;
+	private PositionStatus status = PositionStatus.NEW;
 	
 	@NotNull @NonNull
 	@Column(nullable = false, updatable = false)

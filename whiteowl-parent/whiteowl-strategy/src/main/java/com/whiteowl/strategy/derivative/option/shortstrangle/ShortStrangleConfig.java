@@ -4,9 +4,8 @@ import java.time.LocalTime;
 
 import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.ScripCriteria;
+import com.whiteowl.strategy.TradingStrategyConfig;
 import com.whiteowl.strategy.TradingStrategyConstants;
-import com.whiteowl.strategy.TradingStrategyType;
-import com.whiteowl.strategy.derivative.option.OptionTradingStrategyConfig;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,10 +14,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShortStrangleOptionTradingStrategyConfig implements OptionTradingStrategyConfig {
+public class ShortStrangleConfig implements TradingStrategyConfig {
 
 	private String id;
-	private final TradingStrategyType tradingStrategyType = TradingStrategyType.OPTION;
 	private final String tradingStrategyId = TradingStrategyConstants.ID_SHORT_STRANGLE;
 	private final ScripCriteria scripCriteria = new ScripCriteria().withCode(Index.NIFTY50.getCode());
 	
