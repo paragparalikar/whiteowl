@@ -1,6 +1,5 @@
 package com.whiteowl.ui.vaadin.portfolio.validator;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.springframework.util.StringUtils;
@@ -29,12 +28,12 @@ public class PortfolioUsernameValidator implements Validator<String> {
 			return ValidationResult.error("Username can not be null/empty");
 		}
 		
-		final String oldValue = Optional.ofNullable(portfolioSupplier.get())
-				.map(Portfolio::getCredentials)
-				.map(Credentials::getUsername)
-				.orElse(null);
+		final Portfolio portfolio = portfolioSupplier.get();
+		final Credentials credentials = null == portfolio ? null : portfolio.getCredentials();
+		final String oldValue = null == credentials ? null : credentials.getUsername();
+		final Long id = null == portfolio ? null : portfolio.getId();
 		if(!value.equalsIgnoreCase(oldValue) && 
-				portfolioService.existsByCredentialsUsernameIgnoreCaseAndBroker(value, brokerSupplier.get())) {
+				portfolioService.existsByCredentialsUsernameIgnoreCaseAndBrokerAndIdNot(value, brokerSupplier.get(), id)) {
 			return ValidationResult.error("Portfolio with this username already exits");
 		}
 		

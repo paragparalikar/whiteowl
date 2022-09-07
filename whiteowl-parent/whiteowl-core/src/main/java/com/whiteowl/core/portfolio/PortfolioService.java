@@ -36,12 +36,14 @@ public class PortfolioService {
 		portfolioRepository.delete(portfolio);
 	}
 	
-	public boolean existsByNameIgnoreCase(String name) {
-		return portfolioRepository.existsByNameIgnoreCase(name);
+	public boolean existsByNameIgnoreCaseAndIdNot(String name, Long id) {
+		id = null == id ? -1l : id;
+		return portfolioRepository.existsByNameIgnoreCaseAndIdNot(name, id);
 	}
 	
-	public boolean existsByCredentialsUsernameIgnoreCaseAndBroker(String username, Broker broker) {
-		return portfolioRepository.existsByCredentialsUsernameIgnoreCaseAndBroker(username, broker);
+	public boolean existsByCredentialsUsernameIgnoreCaseAndBrokerAndIdNot(String username, Broker broker, Long id) {
+		id = null == id ? -1l : id;
+		return portfolioRepository.existsByCredentialsUsernameIgnoreCaseAndBrokerAndIdNot(username, broker, id);
 	}
 	
 }

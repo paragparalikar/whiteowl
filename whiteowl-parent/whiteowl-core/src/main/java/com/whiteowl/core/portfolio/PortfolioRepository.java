@@ -8,8 +8,8 @@ import com.whiteowl.core.broker.Broker;
 @Repository
 public interface PortfolioRepository extends JpaRepository<Portfolio, String> {
 
-	boolean existsByNameIgnoreCase(String name);
+	boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
 	
-	boolean existsByCredentialsUsernameIgnoreCaseAndBroker(String username, Broker broker);
+	boolean existsByCredentialsUsernameIgnoreCaseAndBrokerAndIdNot(String username, Broker broker, Long id);
 	
 }

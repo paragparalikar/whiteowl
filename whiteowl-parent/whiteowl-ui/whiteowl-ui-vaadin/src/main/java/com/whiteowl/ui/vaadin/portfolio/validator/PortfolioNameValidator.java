@@ -26,10 +26,10 @@ public class PortfolioNameValidator implements Validator<String> {
 			return ValidationResult.error("Name can not be null/empty");
 		}
 		
-		final String oldValue = Optional.ofNullable(portfolioSupplier.get())
-				.map(Portfolio::getName)
-				.orElse(null);
-		if(!value.equalsIgnoreCase(oldValue) && portfolioService.existsByNameIgnoreCase(value)) {
+		final Portfolio portfolio = portfolioSupplier.get();
+		final String oldValue = null == portfolio ? null : portfolio.getName();
+		final Long id = null == portfolio ? null : portfolio.getId();
+		if(!value.equalsIgnoreCase(oldValue) && portfolioService.existsByNameIgnoreCaseAndIdNot(value, id)) {
 			return ValidationResult.error("Portfolio with this name already exists");
 		}
 		
