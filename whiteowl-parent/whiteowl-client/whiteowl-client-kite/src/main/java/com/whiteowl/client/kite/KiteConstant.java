@@ -3,12 +3,11 @@ package com.whiteowl.client.kite;
 import java.text.SimpleDateFormat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-@SuppressWarnings("deprecation")
 public class KiteConstant {
 	
 	public static final String APIKEY = "kitefront";
@@ -48,7 +47,7 @@ public class KiteConstant {
 	public static final String FORMAT_TIMESTAMP = "yyyy-MM-dd HH:mm:ss";
 	
 	static {
-		KiteConstant.JSON.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+		KiteConstant.JSON.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 		KiteConstant.JSON.setDateFormat(new SimpleDateFormat(FORMAT_TIMESTAMP));
 	}
 

@@ -1,13 +1,9 @@
 package com.whiteowl.ui.vaadin.portfolio;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 import com.vaadin.flow.data.provider.AbstractBackEndDataProvider;
-import com.vaadin.flow.data.provider.DataProviderListener;
 import com.vaadin.flow.data.provider.Query;
-import com.vaadin.flow.data.provider.QuerySortOrder;
-import com.vaadin.flow.shared.Registration;
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.ui.vaadin.util.VaadinUtils;

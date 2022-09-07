@@ -48,7 +48,7 @@ public class NseOptionChainProvider implements OptionChainProvider {
 	}
 	
 	@Override
-	@Retryable(recover = "recover")
+	@Retryable
 	@SneakyThrows
 	public OptionChain get(Scrip underlying) {
 		final URL url = new URL(resolveUrl(underlying));

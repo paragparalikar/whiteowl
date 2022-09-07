@@ -11,7 +11,7 @@
 		<vaadin.version>23.0.9</vaadin.version>
 		<javalite.version>2.6-j8</javalite.version>
 		<nv-websocket.version>2.3</nv-websocket.version>
-		<spring.boot.version>2.6.7</spring.boot.version>
+		<spring.boot.version>2.7.3</spring.boot.version>
 		<resilience4j.version>1.7.0</resilience4j.version>
 		<spring-data-dynamodb.version>5.1.0</spring-data-dynamodb.version>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>

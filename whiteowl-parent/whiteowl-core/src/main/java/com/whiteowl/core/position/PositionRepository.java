@@ -15,7 +15,7 @@ public interface PositionRepository extends PagingAndSortingRepository<Position,
 	
 	Set<Position> findByStatusNot(PositionStatus status);
 	
-	Set<Position> findByTradingStrategyIdAndStatusNot(String tradingStrategyId, PositionStatus status);
+	Set<Position> findByTradingStrategyConfigIdAndStatusNot(String tradingStrategyId, PositionStatus status);
 
 	Set<Position> findByStatusIn(Collection<PositionStatus> statuses);
 	

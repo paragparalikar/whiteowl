@@ -21,17 +21,10 @@ spring:
   main:
     banner-mode: off
     log-startup-info: false
-  jpa:
-    show-sql: false
-    generate-ddl: true
-    hibernate:
-      ddl-auto: update
-  datasource:
-    #url: jdbc:h2:mem:whiteowl
-    url: jdbc:h2:~/whiteowl/database/h2
-    username: sa
-    password: 
-    driver-class-name: org.h2.Driver
-    hikari:
-      minimum-idle: 1
-      maximum-pool-size: 20
+  data:
+    dynamodb:
+      entity2ddl:
+        auto: create
+        gsiProjectionType: ALL
+        readCapacity: 10
+        writeCapacity: 1
