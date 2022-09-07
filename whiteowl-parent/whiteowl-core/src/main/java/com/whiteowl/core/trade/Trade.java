@@ -99,14 +99,6 @@ public class Trade {
 	@ManyToOne(optional = false)
 	private Position position;
 	
-	public boolean isEntryTrade() {
-		return type.equals(position.getType());
-	}
-	
-	public boolean isExitTrade() {
-		return type.equals(position.getType().complementType());
-	}
-	
 	public Trade withPosition(Position position) {
 		return Trade.builder()
 				.id(id)

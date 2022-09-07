@@ -25,8 +25,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
-import org.ta4j.core.Trade.TradeType;
-
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.trade.Trade;
@@ -44,7 +42,7 @@ import lombok.NonNull;
 		@Index(columnList = "status"),
 		@Index(columnList = "tradingStrategyConfigId")
 	})
-@EqualsAndHashCode(of = {"id", "scrip", "portfolio", "type", "tradingStrategyConfigId"})
+@EqualsAndHashCode(of = {"id", "scrip", "portfolio", "tradingStrategyConfigId"})
 public class Position {
 
 	@Id
@@ -60,11 +58,6 @@ public class Position {
 	@NotNull @NonNull
 	@ManyToOne(optional = false)
 	private Portfolio portfolio;
-	
-	@NotNull @NonNull
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, updatable = false)
-	private TradeType type;
 	
 	@NotNull @NonNull
 	@Enumerated(EnumType.STRING)
@@ -86,7 +79,6 @@ public class Position {
 		final Position position = new Position();
 		position.setPortfolio(portfolio);
 		position.setScrip(scrip);
-		position.setType(type);
 		position.setStatus(status);
 		position.setTradingStrategyConfigId(tradingStrategyConfigId);
 		entryTrades.stream()
@@ -157,34 +149,6 @@ public class Position {
 				.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
 				.map(trade -> trade.getQuantity() * trade.getAveragePrice())
 				.collect(Collectors.summingDouble(Double::doubleValue));
-	}
-	
-	public double getGrossProfitLoss() {
-		if(isClosed()) {
-			final double change = getExitAmount() - getEntryAmount();
-			return TradeType.BUY.equals(type) ? change : -1 * change;
-		}
-		return 0;
-	}
-	
-	public double getPercentageGrossProfitLoss() {
-		return getGrossProfitLoss() * 100 / getEntryAmount();
-	}
-	
-	public double getGrossProfit() {
-		return Math.max(0, getGrossProfitLoss());
-	}
-	
-	public double getPercentageGrossProfit() {
-		return getGrossProfit() * 100 / getEntryAmount();
-	}
-	
-	public double getGrossLoss() {
-		return Math.min(0, getGrossProfitLoss());
-	}
-	
-	public double getPercentageGrossLoss() {
-		return getGrossLoss() * 100 / getEntryAmount();
 	}
 	
 }
