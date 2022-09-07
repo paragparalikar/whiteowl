@@ -13,6 +13,7 @@
 		<nv-websocket.version>2.3</nv-websocket.version>
 		<spring.boot.version>2.6.7</spring.boot.version>
 		<resilience4j.version>1.7.0</resilience4j.version>
+		<spring-data-dynamodb.version>5.1.0</spring-data-dynamodb.version>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>

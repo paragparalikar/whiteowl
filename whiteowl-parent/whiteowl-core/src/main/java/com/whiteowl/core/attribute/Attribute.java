@@ -4,22 +4,24 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@DynamoDBTable(tableName = "attribute")
 public class Attribute {
 
-	@Id
+	@DynamoDBHashKey
 	private String key;
 	
+	@DynamoDBAttribute
 	private String value;
 	
 	public Integer getInteger() {

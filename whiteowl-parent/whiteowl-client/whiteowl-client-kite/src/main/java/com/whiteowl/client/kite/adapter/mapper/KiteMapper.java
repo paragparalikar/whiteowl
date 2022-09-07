@@ -3,7 +3,6 @@ package com.whiteowl.client.kite.adapter.mapper;
 import org.springframework.stereotype.Component;
 
 import com.whiteowl.client.kite.adapter.KiteInstrumentService;
-import com.whiteowl.core.trade.TradeService;
 
 import lombok.experimental.Delegate;
 
@@ -29,8 +28,8 @@ public class KiteMapper {
 	@Delegate private final TradeMapper tradeMapper;
 	@Delegate private final QuoteMapper quoteMapper;
 	
-	public KiteMapper(TradeService tradeService, KiteInstrumentService kiteInstrumentService) {
-		this.tradeMapper = new TradeMapper(this, tradeService);
+	public KiteMapper(KiteInstrumentService kiteInstrumentService) {
+		this.tradeMapper = new TradeMapper(this);
 		this.quoteMapper = new QuoteMapper(ohlcMapper, marketDepthMapper, kiteInstrumentService);
 	}
 	

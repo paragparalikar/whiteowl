@@ -1,9 +1,11 @@
 package com.whiteowl.core.attribute;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface AttributeRepository extends JpaRepository<Attribute, String> {
+@EnableScan
+public interface AttributeRepository extends CrudRepository<Attribute, String> {
 
 }

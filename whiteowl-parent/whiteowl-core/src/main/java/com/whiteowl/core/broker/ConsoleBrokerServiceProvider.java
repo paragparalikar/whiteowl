@@ -1,10 +1,10 @@
 package com.whiteowl.core.broker;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class ConsoleBrokerServiceProvider implements BrokerServiceProvider {
 	
-	private final Map<Long, Trade> trades = new HashMap<>();
+	private final Set<Trade> trades = new HashSet<>();
 	
 	@Override
 	public Broker getBrokerType() {
@@ -31,28 +31,28 @@ public class ConsoleBrokerServiceProvider implements BrokerServiceProvider {
 
 	@Override
 	public List<Trade> findAllTrades(Portfolio portfolio) {
-		return new ArrayList<>(trades.values());
+		return new ArrayList<>(trades);
 	}
 
 	@Override
-	public void create(Trade trade) {
+	public void create(Trade trade, Portfolio portfolio) {
 		trade.setStatus(TradeStatus.COMPLETE);
-		trade.setTimestamp(LocalDateTime.now());
+		trade.setTimestamp(ZonedDateTime.now());
 		trade.setFilledQuantity(trade.getQuantity());
-		trade.setExchangeTimestamp(LocalDateTime.now());
+		trade.setExchangeTimestamp(ZonedDateTime.now());
 		trade.setBrokerTradeId(UUID.randomUUID().toString());
 		trade.setExchangeTradeId(UUID.randomUUID().toString());
-		trades.put(trade.getId(), trade);
+		trades.add(trade);
 		log.info("Created trade {}", trade);
 	}
 
 	@Override
-	public void update(Trade trade) {
+	public void update(Trade trade, Portfolio portfolio) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void cancel(Trade trade) {
+	public void cancel(Trade trade, Portfolio portfolio) {
 		throw new UnsupportedOperationException();
 	}
 

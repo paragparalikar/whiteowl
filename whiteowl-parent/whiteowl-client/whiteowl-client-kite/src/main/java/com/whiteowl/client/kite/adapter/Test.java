@@ -39,7 +39,7 @@ public class Test {
 		final KiteDataProviderCredentials kiteDataProviderCredentials = buildKiteDataProviderCredentials();
 		this.kiteClient = kiteClientProvider.getClient(kiteDataProviderCredentials.toKiteCredentials());
 		this.kiteInstrumentService = new KiteInstrumentService();
-		this.kiteMapper = new KiteMapper(null, kiteInstrumentService);
+		this.kiteMapper = new KiteMapper(kiteInstrumentService);
 	}
 	
 	private KiteDataProviderCredentials buildKiteDataProviderCredentials() {

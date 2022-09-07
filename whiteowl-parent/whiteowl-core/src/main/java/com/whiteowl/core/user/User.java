@@ -3,28 +3,26 @@ package com.whiteowl.core.user;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
 import lombok.Data;
 
 @Data
-@Entity
+@DynamoDBTable(tableName = "user")
 public class User implements UserDetails {
 	private static final long serialVersionUID = -8229302054396449750L;
 
-	@Id
+	@DynamoDBHashKey
 	private String username;
 	
 	private String firstName;
 	
 	private String lastName;
 	
-	@Column(nullable = false)
 	private String password;
 	
 	public String getDisplayName() {

@@ -13,8 +13,8 @@ public class PositionService {
 
 	private final PositionRepository positionRepository;
 	
-	public Position saveAndFlush(Position position) {
-		return positionRepository.saveAndFlush(position);
+	public Position save(Position position) {
+		return positionRepository.save(position);
 	}
 	
 	public Set<Position> findByStatusNot(PositionStatus status) {

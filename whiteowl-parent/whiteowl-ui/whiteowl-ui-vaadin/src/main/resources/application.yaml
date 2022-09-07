@@ -5,6 +5,14 @@ whiteowl:
       password: StYLdA7W+uC4BRHDt2idyQ==
       pin: excpHxV4+vwDF69SHj3JPA==
       
+amazon:
+  aws:
+    access-key: dummy
+    secret-key: dummy
+  dynamodb:
+    endpoint: asd
+    signing-region: asfd
+      
 spring:
   h2:
     console:

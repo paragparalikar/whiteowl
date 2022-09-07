@@ -1,140 +1,70 @@
 package com.whiteowl.core.trade;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.PositiveOrZero;
 
 import org.ta4j.core.Trade.TradeType;
 
-import com.whiteowl.core.position.Position;
-import com.whiteowl.core.scrip.Scrip;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDocument;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConvertedEnum;
+import com.whiteowl.core.common.ZonedDateTimeDynamoDBTypeConverter;
+import com.whiteowl.core.scrip.Exchange;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 @Data
-@Entity
+@DynamoDBDocument
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@Table(name = "trade", indexes = {
-	@Index(columnList = "status"),
-	@Index(columnList = "scrip_code")
-})
 public class Trade {
 
-	@Id
-	@GeneratedValue
-	private Long id;
+	private String scripCode;
 	private String brokerTradeId;
 	private String exchangeTradeId;
-	
-	@Valid
-	@NonNull @NotNull
-	@ManyToOne(optional = false, fetch = FetchType.EAGER)
-	private Scrip scrip;
-	
-	@NonNull @NotNull
-	@Column(nullable = false, updatable = false)
-	private String tradingStrategyId;
-	
-	private String tradingStrategyConfig;
-	
-	@NonNull @NotNull
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, updatable = false)
-	private TradeType type;
-	
-	@NonNull @NotNull
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, updatable = false)
-	private TradeLimitType limitType;
-	
-	@NonNull @NotNull
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, updatable = false)
-	private TradeVariety variety;
-	
-	@NonNull @NotNull
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, updatable = false)
-	private TradeProduct product;
-	
-	@NonNull @NotNull
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, updatable = false)
-	private TradeValidity validity;
-	
-	@NonNull @NotNull
-	@Column(nullable = false)
-	@Enumerated(EnumType.STRING)
-	private TradeStatus status;
-	
-	@Valid
-	@ManyToOne(optional = false)
-	private Position position;
-	
-	private LocalDateTime timestamp;
-	private LocalDateTime exchangeTimestamp;
-	private ZonedDateTime signalBarBeginTime;
-	
-	@Positive private double targetPrice;
-	@Positive private double stopLossPrice;
-	@PositiveOrZero private double price;
-	@PositiveOrZero private double triggerPrice;
-	@PositiveOrZero private double averagePrice;
-	
-	@PositiveOrZero private int quantity;
-	@PositiveOrZero private int pendingQuantity;
-	@PositiveOrZero private int filledQuantity;
-	@PositiveOrZero private int disclosedQuantity;
-	
+	private String tradingStrategyConfigId;
 	private String statusMessage;
+	private double stopLossPrice;
+	private double price;
+	private double triggerPrice;
+	private double averagePrice;
+	private int quantity;
+	private int pendingQuantity;
+	private int filledQuantity;
+	private int disclosedQuantity;
 	
-	public boolean isEntryTrade() {
-		return type.equals(position.getType());
-	}
+	@DynamoDBTypeConvertedEnum private TradeType type;
+	@DynamoDBTypeConvertedEnum private TradeLimitType limitType;
+	@DynamoDBTypeConvertedEnum private TradeVariety variety;
+	@DynamoDBTypeConvertedEnum private TradeProduct product;
+	@DynamoDBTypeConvertedEnum private TradeValidity validity;
+	@DynamoDBTypeConvertedEnum private TradeStatus status;
+	@DynamoDBTypeConvertedEnum private Exchange exchange;
+
+	@DynamoDBTypeConverted(converter = ZonedDateTimeDynamoDBTypeConverter.class)
+	private ZonedDateTime timestamp;
 	
-	public boolean isExitTrade() {
-		return type.equals(position.getType().complementType());
-	}
+	@DynamoDBTypeConverted(converter = ZonedDateTimeDynamoDBTypeConverter.class)
+	private ZonedDateTime exchangeTimestamp;
 	
-	public Trade withPosition(Position position) {
+	public Trade clone() {
 		return Trade.builder()
-				.id(id)
+				.type(type)
+				.scripCode(scripCode)
 				.brokerTradeId(brokerTradeId)
 				.exchangeTradeId(exchangeTradeId)
-				.scrip(scrip)
-				.tradingStrategyId(tradingStrategyId)
-				.type(type)
+				.tradingStrategyConfigId(tradingStrategyConfigId)
 				.limitType(limitType)
 				.variety(variety)
 				.validity(validity)
 				.product(product)
 				.status(status)
-				.position(position)
 				.timestamp(timestamp)
 				.exchangeTimestamp(exchangeTimestamp)
-				.signalBarBeginTime(signalBarBeginTime)
 				.price(price)
-				.targetPrice(targetPrice)
 				.stopLossPrice(stopLossPrice)
 				.triggerPrice(triggerPrice)
 				.averagePrice(averagePrice)
@@ -142,21 +72,20 @@ public class Trade {
 				.pendingQuantity(pendingQuantity)
 				.filledQuantity(filledQuantity)
 				.disclosedQuantity(disclosedQuantity)
+				.statusMessage(statusMessage)
 				.build();
 	}
 	
 	public Trade complement() {
 		return Trade.builder()
-				.scrip(scrip)
-				.tradingStrategyId(tradingStrategyId)
-				.tradingStrategyConfig(tradingStrategyConfig)
+				.scripCode(scripCode)
+				.tradingStrategyConfigId(tradingStrategyConfigId)
 				.type(type.complementType())
 				.limitType(limitType)
 				.variety(variety)
 				.validity(validity)
 				.product(product)
 				.status(TradeStatus.NEW)
-				.position(position)
 				.quantity(filledQuantity)
 				.build();
 	}

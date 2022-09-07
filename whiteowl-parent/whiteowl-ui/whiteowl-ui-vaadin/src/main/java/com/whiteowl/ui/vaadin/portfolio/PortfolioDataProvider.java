@@ -1,31 +1,34 @@
 package com.whiteowl.ui.vaadin.portfolio;
 
+import java.util.List;
 import java.util.stream.Stream;
 
-import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.AbstractBackEndDataProvider;
+import com.vaadin.flow.data.provider.DataProviderListener;
 import com.vaadin.flow.data.provider.Query;
+import com.vaadin.flow.data.provider.QuerySortOrder;
+import com.vaadin.flow.shared.Registration;
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.ui.vaadin.util.VaadinUtils;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.Delegate;
 
 @RequiredArgsConstructor
-public class PortfolioDataProvider implements DataProvider<Portfolio, Void> {
+public class PortfolioDataProvider extends AbstractBackEndDataProvider<Portfolio, Void> {
 	private static final long serialVersionUID = 1L;
 
 	@NonNull private final PortfolioService portfolioService;
-	@Delegate private final DataProvider<Portfolio, Void> delegate = 
-			DataProvider.fromCallbacks(this::findByQuery, this::countByQuery);
-	
-	private int countByQuery(Query<Portfolio, Void> query) {
-		return (int) portfolioService.count();
+
+	@Override
+	protected Stream<Portfolio> fetchFromBackEnd(Query<Portfolio, Void> query) {
+		return portfolioService.findAll(VaadinUtils.toPageable(query)).get();
 	}
 
-	private Stream<Portfolio> findByQuery(Query<Portfolio, Void> query) {
-		return portfolioService.findAll(VaadinUtils.toPageable(query)).stream();
+	@Override
+	protected int sizeInBackEnd(Query<Portfolio, Void> query) {
+		return portfolioService.count();
 	}
 
 }

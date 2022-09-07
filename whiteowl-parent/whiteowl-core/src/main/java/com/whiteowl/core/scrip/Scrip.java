@@ -6,14 +6,16 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperFieldModel.DynamoDBAttributeType;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConvertedEnum;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTyped;
+import com.whiteowl.core.common.LocalDateDynamoDBTypeConverter;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,32 +24,40 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @Data
-@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@DynamoDBTable(tableName = "scrip")
 public class Scrip implements Comparable<Scrip> {
 
-	@Id @NotBlank
+	@NotBlank
+	@DynamoDBHashKey
 	private String code;
+	
 	private String name;
+	
+	@DynamoDBTypeConverted(converter = LocalDateDynamoDBTypeConverter.class)
 	private LocalDate expiry;
+	
 	private double strike;
+	
 	private double tickSize;
+	
 	private int lotSize;
+	
+	@DynamoDBTypeConvertedEnum
 	private Segment segment;
 	
 	@NonNull @NotNull
-	@Enumerated(EnumType.STRING)
+	@DynamoDBTypeConvertedEnum
 	private ScripType type;
 	
 	@NonNull @NotNull
-	@Enumerated(EnumType.STRING)
+	@DynamoDBTypeConvertedEnum
 	private Exchange exchange;
 	
 	@Builder.Default
-	@Enumerated(EnumType.STRING)
-	@ElementCollection(fetch = FetchType.EAGER)
+	@DynamoDBTyped(DynamoDBAttributeType.SS)
 	private Set<Index> indices = new HashSet<>();
 	
 	@Override

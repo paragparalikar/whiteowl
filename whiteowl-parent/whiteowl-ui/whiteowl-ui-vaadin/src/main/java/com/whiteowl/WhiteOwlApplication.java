@@ -1,5 +1,6 @@
 package com.whiteowl;
 
+import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
@@ -23,6 +24,7 @@ import com.vaadin.flow.theme.lumo.Lumo;
 @EnableRetry
 @EnableCaching
 @EnableScheduling
+@EnableDynamoDBRepositories
 @EnableTransactionManagement
 @EnableConfigurationProperties
 @EnableAsync(proxyTargetClass = true)

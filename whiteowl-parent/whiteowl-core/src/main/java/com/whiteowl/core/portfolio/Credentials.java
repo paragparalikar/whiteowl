@@ -1,9 +1,9 @@
 package com.whiteowl.core.portfolio;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDocument;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +13,7 @@ import lombok.NonNull;
 
 @Data
 @Builder
-@Embeddable
+@DynamoDBDocument
 @NoArgsConstructor
 @AllArgsConstructor
 public class Credentials {
@@ -21,19 +21,17 @@ public class Credentials {
 	@NonNull
 	@NotBlank
 	@Size(min = 3, max = 255)
-	@Column(nullable = false)
 	private String username;
 	
 	@NonNull
 	@NotBlank
 	@Size(min = 3, max = 255)
-	@Column(nullable = false)
 	private String password;
 	
 	@NonNull
 	@NotBlank
 	@Size(min = 3, max = 255)
-	@Column(nullable = false)
 	private String pin;
 	
 }
+	

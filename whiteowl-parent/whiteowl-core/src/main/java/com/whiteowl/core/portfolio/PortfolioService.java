@@ -1,6 +1,8 @@
 package com.whiteowl.core.portfolio;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,11 +19,12 @@ public class PortfolioService {
 	private final PortfolioRepository portfolioRepository;
 	
 	public List<Portfolio> findAll(){
-		return portfolioRepository.findAll();
+		return StreamSupport.stream(portfolioRepository.findAll().spliterator(), false)
+				.collect(Collectors.toList());
 	}
 	
 	public Portfolio save(Portfolio portfolio) {
-		return  portfolioRepository.saveAndFlush(portfolio);
+		return  portfolioRepository.save(portfolio);
 	}
 
 	public Page<Portfolio> findAll(Pageable pageable) {

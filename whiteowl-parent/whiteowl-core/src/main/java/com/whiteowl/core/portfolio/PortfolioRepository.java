@@ -1,12 +1,16 @@
 package com.whiteowl.core.portfolio;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
+import org.socialsignin.spring.data.dynamodb.repository.EnableScanCount;
+import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
 import com.whiteowl.core.broker.Broker;
 
 @Repository
-public interface PortfolioRepository extends JpaRepository<Portfolio, String> {
+@EnableScan
+@EnableScanCount
+public interface PortfolioRepository extends PagingAndSortingRepository<Portfolio, String> {
 
 	boolean existsByNameIgnoreCase(String name);
 	

@@ -3,11 +3,15 @@ package com.whiteowl.core.position;
 import java.util.Collection;
 import java.util.Set;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
+import org.socialsignin.spring.data.dynamodb.repository.EnableScanCount;
+import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PositionRepository extends JpaRepository<Position, Long> {
+@EnableScan
+@EnableScanCount
+public interface PositionRepository extends PagingAndSortingRepository<Position, Long> {
 	
 	Set<Position> findByStatusNot(PositionStatus status);
 	
