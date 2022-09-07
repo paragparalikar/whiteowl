@@ -6,8 +6,7 @@ import com.whiteowl.strategy.TradingStrategy;
 
 public class ShortStrangleTradingStrategy implements TradingStrategy {
 
-	public void run(Position position, OptionChain optionChain, 
-			ShortStrangleConfig config) {
+	public void run(Position position, OptionChain optionChain, ShortStrangleConfig config) {
 		
 	}
 	

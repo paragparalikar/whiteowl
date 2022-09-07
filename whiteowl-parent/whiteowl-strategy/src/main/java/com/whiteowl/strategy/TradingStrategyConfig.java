@@ -6,6 +6,8 @@ public interface TradingStrategyConfig {
 
 	String getId();
 	
+	boolean isEnabled();
+	
 	String getTradingStrategyId();
 	
 	ScripCriteria getScripCriteria();
