@@ -2,8 +2,7 @@ package com.whiteowl.core.bar;
 
 import java.time.ZonedDateTime;
 
-import javax.validation.constraints.NotNull;
-
+import org.springframework.data.annotation.Id;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BaseBar;
 import org.ta4j.core.num.DoubleNum;
@@ -20,7 +19,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 @Data
 @Builder
@@ -29,20 +27,17 @@ import lombok.NonNull;
 @DynamoDBTable(tableName = "bar")
 @EqualsAndHashCode(of = {"code", "timeframe", "beginTime"})
 public class PersistentBar implements Comparable<PersistentBar> {
+	
+	@Id
+	private PersistentBarId id;
 
-	@NonNull
-	@NotNull
 	@DynamoDBHashKey
 	private String code;
 
-	@NonNull
-	@NotNull
 	@DynamoDBRangeKey
 	@DynamoDBTypeConvertedEnum
 	private Timeframe timeframe;
 	
-	@NonNull
-	@NotNull
 	@DynamoDBTypeConverted(converter = ZonedDateTimeDynamoDBTypeConverter.class)
 	private ZonedDateTime beginTime;
 	
