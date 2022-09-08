@@ -94,6 +94,7 @@ public class NseOptionChainProvider implements OptionChainProvider {
 	}
 	
 	private Optional<OptionChainItem> map(NseOptionInfo info) {
+		if(null == info) return Optional.empty();
 		return Optional.ofNullable(info)
 			.map(NseOptionInfo::toScripCode)
 			.map(scripService::findByCode)
