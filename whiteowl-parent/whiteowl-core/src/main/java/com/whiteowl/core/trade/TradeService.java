@@ -17,6 +17,10 @@ public class TradeService {
 	private final TradeRepository tradeRepository;
 	private final BrokerServiceProvider brokerServiceProvider;
 	
+	public Trade save(Trade trade) {
+		return tradeRepository.saveAndFlush(trade);
+	}
+	
 	public Optional<Trade> findByBrokerTradeId(String brokerTradeId){
 		return tradeRepository.findByBrokerTradeId(brokerTradeId);
 	}

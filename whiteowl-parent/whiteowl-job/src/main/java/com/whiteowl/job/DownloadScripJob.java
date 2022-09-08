@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ScripDownloadJob {
+public class DownloadScripJob {
 	private static final String KEY = "whiteowl.data.download.scrips.nse.date";
 	private final ScripService scripService;
 	private final AttributeService attributeService;

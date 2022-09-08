@@ -26,6 +26,10 @@ public class PositionService {
 		return position;
 	}
 	
+	public List<Position> findByPortfolioAndStatusNot(Portfolio portfolio, PositionStatus status) {
+		return positionRepository.findByPortfolioAndStatusNot(portfolio, status);
+	}
+	
 	public List<Position> findByScripAndTradingStrategyConfigIdAndStatus(Scrip scrip, Long configId, PositionStatus status){
 		return positionRepository.findByScripAndTradingStrategyConfigIdAndStatus(scrip, configId, status);
 	}
