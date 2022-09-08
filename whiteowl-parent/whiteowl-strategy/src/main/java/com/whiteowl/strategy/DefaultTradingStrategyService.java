@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
 import org.springframework.stereotype.Service;
 
 import com.whiteowl.core.derivative.option.OptionChainService;
+import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
 import com.whiteowl.core.position.PositionStatus;
@@ -26,8 +28,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultTradingStrategyService implements TradingStrategyService {
 	
-	private final ScripService scripService;
+	private final ScripService scripService;	
 	private final PositionService positionService;
+	private final PortfolioService portfolioService;
 	private final OptionChainService optionChainService;
 	private final Map<TradingStrategyTemplate, BiFunction<Scrip, TradingStrategyConfig, 
 		Optional<TradingStrategy>>> builders = new HashMap<>();
@@ -53,6 +56,9 @@ public class DefaultTradingStrategyService implements TradingStrategyService {
 	private void execute(Scrip scrip, TradingStrategyConfig config, TradingStrategy tradingStrategy) {
 		resolvePositions(scrip, config).stream()
 			.filter(tradingStrategy::handle)
+			.flatMap(position -> PositionStatus.NEW.equals(position.getStatus()) ?
+						portfolioService.findAll().stream().map(position::withPortfolio) :
+						Stream.of(position))
 			.map(positionService::save);
 	}
 	
