@@ -1,7 +1,5 @@
 package com.whiteowl.job;
 
-import java.util.Objects;
-
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class DownloadOptionChainJob {
+public class OptionChainDownloadJob {
 
 	private final ScripService scripService;
 	private final OptionChainService optionChainService;
@@ -29,8 +27,7 @@ public class DownloadOptionChainJob {
 		scripService.findAll().stream()
 			.filter(getScripCriteria())
 			.map(optionChainProvider::get)
-			.filter(Objects::nonNull)
-			.forEach(optionChainService::save);
+			.forEach(future -> future.thenAccept(optionChainService::save));
 	}
 	
 	private ScripCriteria getScripCriteria() {

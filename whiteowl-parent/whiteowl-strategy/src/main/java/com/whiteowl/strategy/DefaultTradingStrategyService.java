@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.whiteowl.core.derivative.option.OptionChainService;
@@ -40,6 +41,7 @@ public class DefaultTradingStrategyService implements TradingStrategyService {
 		builders.put(TradingStrategyTemplate.SHORT_STRADDLE, this::buildShortStraddle);
 	}
 	
+	@Async
 	@Override
 	public void execute(@NonNull TradingStrategyConfig config) {
 		final BiFunction<Scrip, TradingStrategyConfig, Optional<TradingStrategy>>

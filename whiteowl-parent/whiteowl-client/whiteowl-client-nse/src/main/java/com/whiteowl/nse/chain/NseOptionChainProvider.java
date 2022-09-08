@@ -6,12 +6,14 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,10 +49,11 @@ public class NseOptionChainProvider implements OptionChainProvider {
 				.orElseGet(() -> "https://www.nseindia.com/api/option-chain-equities?symbol=" + underlying.getCode());
 	}
 	
+	@Async
 	@Override
-	@Retryable(recover = "recover")
 	@SneakyThrows
-	public OptionChain get(Scrip underlying) {
+	@Retryable(recover = "recover")
+	public CompletableFuture<OptionChain> get(Scrip underlying) {
 		final URL url = new URL(resolveUrl(underlying));
 		HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
 		connection.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
@@ -67,13 +70,14 @@ public class NseOptionChainProvider implements OptionChainProvider {
 		}
 		final InputStream inputStream = new GZIPInputStream(connection.getInputStream());
 		final NseOptionChainResponse response = objectMapper.readValue(inputStream, NseOptionChainResponse.class);
-		return map(underlying, response);
+		final OptionChain optionChain = map(underlying, response);
+		return CompletableFuture.completedFuture(optionChain);
 	}
 	
 	@Recover
-	public OptionChain recover(Throwable throwable, Scrip underlying) {
+	public CompletableFuture<OptionChain> recover(Throwable throwable, Scrip underlying) {
 		log.error("Failed to fetch option chain for " + underlying.getName(), throwable);
-		return null;
+		return CompletableFuture.failedFuture(throwable);
 	}
 	
 	private OptionChain map(Scrip underlying, NseOptionChainResponse response) {
@@ -83,26 +87,16 @@ public class NseOptionChainProvider implements OptionChainProvider {
 				.build();
 		chain.getExpiryDates().addAll(response.getRecords().getExpiryDates());
 		for(NseOptionChainItem item : response.getRecords().getData()) {
-			final NseOptionInfo callInfo = item.getCallOptionInfo();
-			if(null != callInfo) {
-				final String scripCode = callInfo.toScripCode();
-				final Scrip scrip = scripService.findByCode(scripCode);
-				if(null != scrip) {
-					final OptionChainItem optionChainItem = callInfo.toOptionChainItem(scrip);
-					chain.getItems().add(optionChainItem);
-				}
-			}
-			final NseOptionInfo putInfo = item.getPutOptionInfo();
-			if(null != putInfo) {
-				final String scripCode = putInfo.toScripCode();
-				final Scrip scrip = scripService.findByCode(scripCode);
-				if(null != scrip) {
-					final OptionChainItem optionChainItem = putInfo.toOptionChainItem(scrip);
-					chain.getItems().add(optionChainItem);
-				}
-			}
+			map(item.getPutOptionInfo()).ifPresent(chain.getItems()::add);
+			map(item.getCallOptionInfo()).ifPresent(chain.getItems()::add);
 		}
 		return chain;
 	}
 	
+	private Optional<OptionChainItem> map(NseOptionInfo info) {
+		return Optional.ofNullable(info)
+			.map(NseOptionInfo::toScripCode)
+			.map(scripService::findByCode)
+			.map(info::toOptionChainItem);
+	}
 }
