@@ -2,18 +2,15 @@ package com.whiteowl.nse.chain;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,11 +46,10 @@ public class NseOptionChainProvider implements OptionChainProvider {
 				.orElseGet(() -> "https://www.nseindia.com/api/option-chain-equities?symbol=" + underlying.getCode());
 	}
 	
-	@Async
 	@Override
 	@SneakyThrows
 	@Retryable(recover = "recover")
-	public CompletableFuture<OptionChain> get(Scrip underlying) {
+	public Optional<OptionChain> get(Scrip underlying) {
 		final URL url = new URL(resolveUrl(underlying));
 		HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
 		connection.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
@@ -71,19 +67,18 @@ public class NseOptionChainProvider implements OptionChainProvider {
 		final InputStream inputStream = new GZIPInputStream(connection.getInputStream());
 		final NseOptionChainResponse response = objectMapper.readValue(inputStream, NseOptionChainResponse.class);
 		final OptionChain optionChain = map(underlying, response);
-		return CompletableFuture.completedFuture(optionChain);
+		return Optional.of(optionChain);
 	}
 	
 	@Recover
-	public CompletableFuture<OptionChain> recover(Throwable throwable, Scrip underlying) {
+	public Optional<OptionChain> recover(Throwable throwable, Scrip underlying) {
 		log.error("Failed to fetch option chain for " + underlying.getName(), throwable);
-		return CompletableFuture.failedFuture(throwable);
+		return Optional.empty();
 	}
 	
 	private OptionChain map(Scrip underlying, NseOptionChainResponse response) {
 		final OptionChain chain = OptionChain.builder()
 				.underlying(underlying)
-				.downloadTimestamp(LocalDateTime.now())
 				.build();
 		chain.getExpiryDates().addAll(response.getRecords().getExpiryDates());
 		for(NseOptionChainItem item : response.getRecords().getData()) {

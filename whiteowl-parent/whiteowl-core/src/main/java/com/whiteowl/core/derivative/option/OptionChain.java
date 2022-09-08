@@ -1,7 +1,6 @@
 package com.whiteowl.core.derivative.option;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -21,7 +20,6 @@ import lombok.Value;
 public class OptionChain {
 
 	private final Scrip underlying;
-	private final LocalDateTime downloadTimestamp;
 	private final Set<OptionChainItem> items = new HashSet<>(); 
 	private final List<LocalDate> expiryDates = new ArrayList<>();
 	
