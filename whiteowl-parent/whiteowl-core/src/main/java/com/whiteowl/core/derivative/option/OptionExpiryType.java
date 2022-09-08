@@ -14,8 +14,8 @@ public enum OptionExpiryType {
 			final LocalDate now = LocalDate.now();
 			return expiryDates.stream()
 				.filter(date -> !date.isBefore(now))
-				.sorted()
 				.filter(date -> date.plusWeeks(1).getMonthValue() > date.getMonthValue())
+				.sorted()
 				.skip(index)
 				.findFirst();
 		}
