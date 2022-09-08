@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.scrip.Scrip;
-import com.whiteowl.core.trade.TradeService;
+import com.whiteowl.core.trade.TradeExecutor;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -15,14 +15,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PositionService {
 
-	private final TradeService tradeService;
+	private final TradeExecutor tradeExecutor;
 	private final PositionRepository positionRepository;
 	
 	public Position save(@NonNull Position position) {
 		position = positionRepository.saveAndFlush(position);
 		final Portfolio portfolio = position.getPortfolio();
-		position.getEntryTrades().forEach(trade -> tradeService.execute(trade, portfolio));
-		position.getExitTrades().forEach(trade -> tradeService.execute(trade, portfolio));
+		position.getEntryTrades().forEach(trade -> tradeExecutor.execute(trade, portfolio));
+		position.getExitTrades().forEach(trade -> tradeExecutor.execute(trade, portfolio));
 		return position;
 	}
 	

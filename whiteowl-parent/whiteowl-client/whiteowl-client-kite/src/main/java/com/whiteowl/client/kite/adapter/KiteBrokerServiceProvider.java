@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +27,7 @@ import com.whiteowl.core.trade.TradeProduct;
 
 import lombok.RequiredArgsConstructor;
 
+@Primary
 @Component
 @RequiredArgsConstructor
 public class KiteBrokerServiceProvider implements BrokerServiceProvider {

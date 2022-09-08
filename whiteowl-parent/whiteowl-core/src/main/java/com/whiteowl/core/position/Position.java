@@ -1,11 +1,11 @@
 package com.whiteowl.core.position;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,10 +70,10 @@ public class Position {
 	
 	@NotEmpty
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	private List<@Valid Trade> entryTrades = new ArrayList<>();
+	private Set<@Valid Trade> entryTrades = new HashSet<>();
 	
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	private List<@Valid Trade> exitTrades = new ArrayList<>();
+	private Set<@Valid Trade> exitTrades = new HashSet<>();
 	
 	public Position withPortfolio(Portfolio portfolio) {
 		final Position position = new Position();
