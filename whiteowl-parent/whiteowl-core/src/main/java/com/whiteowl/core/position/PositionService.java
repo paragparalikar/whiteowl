@@ -19,10 +19,11 @@ public class PositionService {
 	private final PositionRepository positionRepository;
 	
 	public Position save(@NonNull Position position) {
-		position = positionRepository.saveAndFlush(position);
 		final Portfolio portfolio = position.getPortfolio();
 		position.getEntryTrades().forEach(trade -> tradeExecutor.execute(trade, portfolio));
 		position.getExitTrades().forEach(trade -> tradeExecutor.execute(trade, portfolio));
+		if(PositionStatus.NEW.equals(position.getStatus())) position.setStatus(PositionStatus.OPENING);
+		position = positionRepository.saveAndFlush(position);
 		return position;
 	}
 	

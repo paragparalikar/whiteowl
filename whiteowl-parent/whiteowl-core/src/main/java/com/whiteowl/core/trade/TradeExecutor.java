@@ -22,6 +22,7 @@ public class TradeExecutor {
 		} else if(TradeStatus.CANCELLABLE.equals(trade.getStatus())) {
 			brokerServiceProvider.cancel(trade, portfolio);
 		}
+		trade.setStatus(TradeStatus.PENDING);
 	}
 	
 }

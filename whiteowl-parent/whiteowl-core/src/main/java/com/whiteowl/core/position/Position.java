@@ -147,4 +147,37 @@ public class Position {
 				.collect(Collectors.summingDouble(Double::doubleValue));
 	}
 	
+	public boolean areAllEntryTradesCompleted() {
+		return entryTrades.stream()
+				.map(Trade::getStatus)
+				.allMatch(TradeStatus::isTerminal);
+	}
+	
+	public boolean areAllExitTradesCompleted() {
+		return exitTrades.stream()
+				.map(Trade::getStatus)
+				.allMatch(TradeStatus::isTerminal);
+	}
+	
+	public void updateStatus() {
+		if(exitTrades.isEmpty()) {
+			if(entryTrades.isEmpty()) {
+				status = PositionStatus.NEW;
+			} else if(areAllEntryTradesCompleted()) {
+				status = PositionStatus.OPEN;
+			} else {
+				status = PositionStatus.OPENING;
+			}
+		} else {
+			if(areAllEntryTradesCompleted()) {
+				if(areAllExitTradesCompleted()) {
+					status = PositionStatus.CLOSED;
+				} else {
+					status = PositionStatus.CLOSING;
+				}
+			} else {
+				status = PositionStatus.OPEN;
+			}
+		}
+	}
 }
