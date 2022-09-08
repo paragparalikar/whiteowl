@@ -69,10 +69,10 @@ public class Position {
 	private Long tradingStrategyConfigId;
 	
 	@NotEmpty
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true, mappedBy = "position")
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private List<@Valid Trade> entryTrades = new ArrayList<>();
 	
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true, mappedBy = "position")
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private List<@Valid Trade> exitTrades = new ArrayList<>();
 	
 	public Position withPortfolio(Portfolio portfolio) {

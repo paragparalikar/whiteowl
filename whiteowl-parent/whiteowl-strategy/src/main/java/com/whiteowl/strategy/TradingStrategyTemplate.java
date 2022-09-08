@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum TradingStrategyTemplate {
 
-	SHORT_STRANGLE("short-strangle", "Short Strangle");
+	SHORT_STRADDLE("short-strangle", "Short Strangle");
 	
 	private final String id;
 	private final String displayName;

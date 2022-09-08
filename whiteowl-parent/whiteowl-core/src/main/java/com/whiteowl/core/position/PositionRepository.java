@@ -1,18 +1,15 @@
 package com.whiteowl.core.position;
 
-import java.util.Collection;
-import java.util.Set;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.whiteowl.core.scrip.Scrip;
+
 @Repository
 public interface PositionRepository extends JpaRepository<Position, Long> {
 	
-	Set<Position> findByStatusNot(PositionStatus status);
-	
-	Set<Position> findByTradingStrategyConfigIdAndStatusNot(String tradingStrategyId, PositionStatus status);
-
-	Set<Position> findByStatusIn(Collection<PositionStatus> statuses);
+	List<Position> findByScripAndTradingStrategyConfigIdAndStatus(Scrip scrip, Long configId, PositionStatus status);
 	
 }

@@ -15,9 +15,9 @@ import com.whiteowl.core.scrip.Scrip;
 @Service
 public class OptionChainService {
 	
-	// TODO : Use hazelcast cache when jet is used
 	@Autowired private OptionChainProvider optionChainProvider;
 	@Value("${whiteowl.option-chain.delay.seconds:15}") private int delaySeconds;
+	// TODO : Use hazelcast cache when jet is used
 	private final Map<Scrip, OptionChain> cache = new HashMap<>();
 	
 	public Optional<OptionChain> findByScrip(Scrip scrip) {

@@ -3,6 +3,7 @@ package com.whiteowl.strategy.shortstrangle;
 import java.time.LocalTime;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.ta4j.core.Trade.TradeType;
@@ -21,11 +22,13 @@ import com.whiteowl.core.trade.TradeValidity;
 import com.whiteowl.core.trade.TradeVariety;
 import com.whiteowl.strategy.TradingStrategy;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Getter
 @RequiredArgsConstructor
 public class ShortStraddleTradingStrategy implements TradingStrategy {
 
@@ -33,32 +36,36 @@ public class ShortStraddleTradingStrategy implements TradingStrategy {
 	private final ShortStraddleConfig config;
 	
 	@Override
-	public void handle(@NonNull Position position) {
+	public boolean handle(@NonNull Position position) {
 		if(PositionStatus.NEW.equals(position.getStatus())) {
-			handleNewPosition(position);
+			return handleNewPosition(position);
 		} else if(PositionStatus.OPEN.equals(position.getStatus())) {
-			handleOpenPosition(position);
+			return handleOpenPosition(position);
 		} else {
 			log.error("Position with status {} should not reach this point : {}", position.getStatus(), position);
+			return false;
 		}
 	}
 	
-	private void handleNewPosition(Position position) {
+	private boolean handleNewPosition(Position position) {
 		final LocalTime now = LocalTime.now();
 		if(now.isAfter(config.getMinPositionOpenTime()) 
 				&& now.isBefore(config.getMaxPositionOpenTime())) {
 			open(position);
+			return true;
 		}
+		return false;
 	}
 	
-	private void handleOpenPosition(Position position) {
+	private boolean handleOpenPosition(Position position) {
 		final Set<Scrip> exitScrips = position.getExitTrades().stream()
 				.map(Trade::getScrip).collect(Collectors.toSet());
-		position.getEntryTrades().stream()
+		return position.getEntryTrades().stream()
 			.filter(trade -> !exitScrips.contains(trade.getScrip()))
 			.filter(this::shouldClose)
 			.map(Trade::complement)
-			.forEach(position.getExitTrades()::add);
+			.map(exitTrade -> position.getExitTrades().add(exitTrade))
+			.anyMatch(Predicate.isEqual(Boolean.TRUE));
 	}
 	
 	private boolean shouldClose(Trade trade) {

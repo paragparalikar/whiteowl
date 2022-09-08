@@ -21,7 +21,7 @@ import lombok.NonNull;
 public class ShortStraddleConfig implements TradingStrategyConfig {
 
 	private Long id;
-	private final TradingStrategyTemplate template = TradingStrategyTemplate.SHORT_STRANGLE;
+	private final TradingStrategyTemplate template = TradingStrategyTemplate.SHORT_STRADDLE;
 	private final ScripCriteria scripCriteria = new ScripCriteria().withCode(Index.NIFTY50.getCode());
 	
 	private boolean enabled = Boolean.TRUE;
