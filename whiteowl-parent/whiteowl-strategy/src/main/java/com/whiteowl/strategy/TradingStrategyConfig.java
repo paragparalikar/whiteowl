@@ -4,14 +4,14 @@ import com.whiteowl.core.scrip.ScripCriteria;
 
 public interface TradingStrategyConfig {
 
-	String getId();
+	Long getId();
 	
 	boolean isEnabled();
 	
 	Integer getMinBarCount();
 	
-	String getTradingStrategyId();
-	
 	ScripCriteria getScripCriteria();
+	
+	TradingStrategyTemplate getTemplate();
 	
 }

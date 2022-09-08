@@ -66,7 +66,7 @@ public class Position {
 	
 	@NotNull @NonNull
 	@Column(nullable = false, updatable = false)
-	private String tradingStrategyConfigId;
+	private Long tradingStrategyConfigId;
 	
 	@NotEmpty
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true, mappedBy = "position")

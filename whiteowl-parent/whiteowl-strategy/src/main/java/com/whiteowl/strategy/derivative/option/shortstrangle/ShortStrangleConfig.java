@@ -2,38 +2,36 @@ package com.whiteowl.strategy.derivative.option.shortstrangle;
 
 import java.time.LocalTime;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
+
 import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.ScripCriteria;
 import com.whiteowl.strategy.TradingStrategyConfig;
-import com.whiteowl.strategy.TradingStrategyConstants;
+import com.whiteowl.strategy.TradingStrategyTemplate;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShortStrangleConfig implements TradingStrategyConfig {
 
-	private String id;
-	private final String tradingStrategyId = TradingStrategyConstants.ID_SHORT_STRANGLE;
+	private Long id;
+	private final TradingStrategyTemplate template = TradingStrategyTemplate.SHORT_STRANGLE;
 	private final ScripCriteria scripCriteria = new ScripCriteria().withCode(Index.NIFTY50.getCode());
 	
-	private Integer minBarCount = 0;
 	private boolean enabled = Boolean.TRUE;
-	private LocalTime minPositionOpenTime = LocalTime.of(9, 20);
-	private LocalTime maxPositionOpenTime = LocalTime.of(14, 0);
-	private LocalTime maxPositionCloseTime = LocalTime.of(15, 25);
-	
-	private Double callDelta = 0.5D;
-	private Integer callQuantity = 1;
-	private Double callPercentageTarget = 40D;
-	private Double callPercentageStopLoss = 20D;
-	
-	private Double putDelta = 0.5D;
-	private Integer putQuantity = 1;
-	private Double putPercentageTarget = 40D;
-	private Double putPercentageStopLoss = 20D;
+	@PositiveOrZero private Double delta = 0.5D;
+	@PositiveOrZero private Integer quantity = 1;
+	@PositiveOrZero private Integer minBarCount = 0;
+	@PositiveOrZero private Double percentageTarget = 40D;
+	@PositiveOrZero private Double percentageStopLoss = 20D;
+	@NotNull @NonNull private LocalTime minPositionOpenTime = LocalTime.of(9, 20);
+	@NotNull @NonNull private LocalTime maxPositionOpenTime = LocalTime.of(14, 0);
+	@NotNull @NonNull private LocalTime maxPositionCloseTime = LocalTime.of(15, 25);
 	
 }
