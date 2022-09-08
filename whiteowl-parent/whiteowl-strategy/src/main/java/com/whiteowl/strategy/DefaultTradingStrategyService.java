@@ -23,7 +23,7 @@ public class DefaultTradingStrategyService implements TradingStrategyService {
 		
 	}
 	
-	private Optional<TradingStrategy> buildShortStrangle(Scrip scrip) {
+	private Optional<TradingStrategy> buildShortStraddle(Scrip scrip) {
 		return null;
 	}
 	

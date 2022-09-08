@@ -1,4 +1,4 @@
-package com.whiteowl.strategy.derivative.option.shortstrangle;
+package com.whiteowl.strategy.shortstrangle;
 
 import java.time.LocalTime;
 import java.util.Optional;
@@ -27,10 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class ShortStrangleTradingStrategy implements TradingStrategy {
+public class ShortStraddleTradingStrategy implements TradingStrategy {
 
 	private final OptionChain optionChain;
-	private final ShortStrangleConfig config;
+	private final ShortStraddleConfig config;
 	
 	@Override
 	public void handle(@NonNull Position position) {
@@ -85,7 +85,7 @@ public class ShortStrangleTradingStrategy implements TradingStrategy {
 	}
 	
 	private Optional<Trade> createEntryTrade(ScripType scripType) {
-		return optionChain.findByDeltaAndScripType(config.getDelta(), scripType)
+		return optionChain.findByDeltaAndScripType(0.5, scripType)
 			.map(optionChainItem -> Trade.builder()
 				.limitType(TradeLimitType.MARKET)
 				.product(TradeProduct.MIS)

@@ -25,7 +25,17 @@ public class OptionChain {
 	private final Set<OptionChainItem> items = new HashSet<>(); 
 	private final List<LocalDate> expiryDates = new ArrayList<>();
 	
+	public Optional<OptionChainItem> findByExpiryAndScripType(int skip, OptionExpiryType expiryType, ScripType scripType){
+		return expiryType.resolve(skip, expiryDates)
+				.flatMap(date -> findByExpiryAndScripType(date, scripType));
+	}
 	
+	public Optional<OptionChainItem> findByExpiryAndScripType(LocalDate expiryDate, ScripType scripType){
+		return items.stream()
+				.filter(item -> scripType.equals(item.getScrip().getType()))
+				.filter(item -> item.getScrip().getExpiry().equals(expiryDate))
+				.findFirst();
+	}
 	
 	public Optional<OptionChainItem> findByScrip(@NonNull Scrip scrip){
 		return items.stream()

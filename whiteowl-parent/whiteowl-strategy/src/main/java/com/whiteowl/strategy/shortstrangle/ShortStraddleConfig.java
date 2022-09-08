@@ -1,4 +1,4 @@
-package com.whiteowl.strategy.derivative.option.shortstrangle;
+package com.whiteowl.strategy.shortstrangle;
 
 import java.time.LocalTime;
 
@@ -18,14 +18,13 @@ import lombok.NonNull;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShortStrangleConfig implements TradingStrategyConfig {
+public class ShortStraddleConfig implements TradingStrategyConfig {
 
 	private Long id;
 	private final TradingStrategyTemplate template = TradingStrategyTemplate.SHORT_STRANGLE;
 	private final ScripCriteria scripCriteria = new ScripCriteria().withCode(Index.NIFTY50.getCode());
 	
 	private boolean enabled = Boolean.TRUE;
-	@PositiveOrZero private Double delta = 0.5D;
 	@PositiveOrZero private Integer quantity = 1;
 	@PositiveOrZero private Integer minBarCount = 0;
 	@PositiveOrZero private Double percentageTarget = 40D;
