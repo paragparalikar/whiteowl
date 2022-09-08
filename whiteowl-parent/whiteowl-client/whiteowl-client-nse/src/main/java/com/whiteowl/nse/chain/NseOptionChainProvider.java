@@ -81,6 +81,7 @@ public class NseOptionChainProvider implements OptionChainProvider {
 				.underlying(underlying)
 				.downloadTimestamp(LocalDateTime.now())
 				.build();
+		chain.getExpiryDates().addAll(response.getRecords().getExpiryDates());
 		for(NseOptionChainItem item : response.getRecords().getData()) {
 			final NseOptionInfo callInfo = item.getCallOptionInfo();
 			if(null != callInfo) {
