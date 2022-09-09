@@ -12,13 +12,18 @@ import javax.annotation.PostConstruct;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.whiteowl.core.broker.BrokerServiceProvider;
+import com.whiteowl.core.broker.BrokerServiceProviderFactory;
 import com.whiteowl.core.derivative.option.OptionChainService;
+import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
 import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
+import com.whiteowl.core.trade.Trade;
+import com.whiteowl.core.trade.TradeStatus;
 import com.whiteowl.strategy.shortstrangle.ShortStraddleConfig;
 import com.whiteowl.strategy.shortstrangle.ShortStraddleTradingStrategy;
 
@@ -27,12 +32,13 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class DefaultTradingStrategyService implements TradingStrategyService {
+public class DefaultTradingStrategyExecutor implements TradingStrategyExecutor {
 	
 	private final ScripService scripService;	
 	private final PositionService positionService;
 	private final PortfolioService portfolioService;
 	private final OptionChainService optionChainService;
+	private final BrokerServiceProviderFactory brokerServiceProviderFactory;
 	private final Map<TradingStrategyTemplate, BiFunction<Scrip, TradingStrategyConfig, 
 		Optional<TradingStrategy>>> builders = new HashMap<>();
 	
@@ -61,7 +67,31 @@ public class DefaultTradingStrategyService implements TradingStrategyService {
 			.flatMap(position -> PositionStatus.NEW.equals(position.getStatus()) ?
 						portfolioService.findAll().stream().map(position::withPortfolio) :
 						Stream.of(position))
+			.map(this::execute)
 			.map(positionService::save);
+	}
+	
+	private Position execute(Position position) {
+		final Portfolio portfolio = position.getPortfolio();
+		position.getExitTrades().forEach(trade -> execute(trade, portfolio));
+		position.getEntryTrades().forEach(trade -> execute(trade, portfolio));
+		if(PositionStatus.NEW.equals(position.getStatus())) position.setStatus(PositionStatus.OPEN);
+		return position;
+	}
+	
+	public void execute(@NonNull Trade trade, @NonNull Portfolio portfolio) {
+		final BrokerServiceProvider brokerServiceProvider = 
+				brokerServiceProviderFactory.getBrokerServiceProvider(portfolio.getBroker());
+		if(TradeStatus.NEW.equals(trade.getStatus())) {
+			brokerServiceProvider.create(trade, portfolio);
+			trade.setStatus(TradeStatus.PENDING);
+		} else if(TradeStatus.UPDATABLE.equals(trade.getStatus())) {
+			brokerServiceProvider.update(trade, portfolio);
+			trade.setStatus(TradeStatus.PENDING);
+		} else if(TradeStatus.CANCELLABLE.equals(trade.getStatus())) {
+			brokerServiceProvider.cancel(trade, portfolio);
+			trade.setStatus(TradeStatus.PENDING);
+		}
 	}
 	
 	private List<Position> resolvePositions(Scrip scrip, TradingStrategyConfig config){

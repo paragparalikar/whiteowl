@@ -163,18 +163,16 @@ public class Position {
 		if(exitTrades.isEmpty()) {
 			if(entryTrades.isEmpty()) {
 				status = PositionStatus.NEW;
-			} else if(areAllEntryTradesCompleted()) {
-				status = PositionStatus.OPEN;
 			} else {
-				status = PositionStatus.OPENING;
-			}
+				status = PositionStatus.OPEN;
+			} 
 		} else {
 			if(areAllEntryTradesCompleted()) {
 				if(areAllExitTradesCompleted()) {
 					status = PositionStatus.CLOSED;
 				} else {
-					status = PositionStatus.CLOSING;
-				}
+					status = PositionStatus.OPEN;
+				} 
 			} else {
 				status = PositionStatus.OPEN;
 			}

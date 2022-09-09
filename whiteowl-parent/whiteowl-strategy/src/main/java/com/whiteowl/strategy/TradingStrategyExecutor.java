@@ -1,6 +1,6 @@
 package com.whiteowl.strategy;
 
-public interface TradingStrategyService {
+public interface TradingStrategyExecutor {
 	
 	void execute(TradingStrategyConfig config);
 

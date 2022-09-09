@@ -8,9 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum PositionStatus {
 
 	NEW(false), 
-	OPENING(false), 
 	OPEN(false), 
-	CLOSING(false), 
 	CLOSED(true);
 	
 	private final boolean terminal;
