@@ -56,7 +56,7 @@ public abstract class NseOptionInfo {
 		if(0 < totalTradedVolume) {
 			final long diff = expiryDate.getTime() - System.currentTimeMillis();
 			final BlackScholes blackScholes = new BlackScholes(underlyingValue, strikePrice, 7, 
-					impliedVolatility, Duration.ofMillis(diff).toDays());
+					impliedVolatility / 100d, Duration.ofMillis(diff).toDays());
 			vega = blackScholes.getVega();
 			gamma = blackScholes.getGamma();
 			theta = ScripType.CE.equals(scripType) ? blackScholes.getCallTheta() : blackScholes.getPutTheta();
