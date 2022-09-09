@@ -25,7 +25,9 @@ import com.whiteowl.strategy.TradingStrategy;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 @RequiredArgsConstructor
 public class ShortStraddleTradingStrategy implements TradingStrategy {
@@ -40,18 +42,34 @@ public class ShortStraddleTradingStrategy implements TradingStrategy {
 		} else if(PositionStatus.OPEN.equals(position.getStatus())) {
 			return handleOpenPosition(position);
 		}
+		log.error("A position with status {} reached a point where it shouldn't : {}", 
+				position.getStatus(), position);
 		return false;
 	}
 	
 	private boolean handleNewPosition(Position position) {
-		final LocalTime now = LocalTime.now();
-		if(position.getEntryTrades().isEmpty() && 
-				now.isAfter(config.getMinPositionOpenTime()) && 
-				now.isBefore(config.getMaxPositionOpenTime())) {
-			open(position);
-			return true;
+		if(!position.getEntryTrades().isEmpty()) {
+			// This position has already been populated with trades. It should not have made till
+			// this point. We will just log and return false to indicate no action is required.
+			log.error("A new position with existing entry trades reache a point where it shouldn't : {}", position);
+			return false;
 		}
-		return false;
+		
+		final LocalTime now = LocalTime.now();
+		
+		if(now.isBefore(config.getMinPositionOpenTime())) {
+			// We are not allowed to take any trades just yet. 
+			// We need to wait till market settles down.
+			return false;
+		}
+		
+		if(now.isAfter(config.getMaxPositionOpenTime())) {
+			// It is too late to take any more trades in market.
+			return false;
+		}
+		
+		open(position);
+		return true;
 	}
 	
 	private boolean handleOpenPosition(Position position) {
