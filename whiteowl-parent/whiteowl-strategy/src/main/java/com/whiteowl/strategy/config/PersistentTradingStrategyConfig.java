@@ -60,6 +60,7 @@ public class PersistentTradingStrategyConfig {
 	@PostLoad
 	public void postLoad() {
 		this.delegate = null == payload ? null : XmlUtils.decode(payload);
+		if(null != delegate) delegate.setId(id);
 	}
 	
 	@PostPersist

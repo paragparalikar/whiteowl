@@ -51,13 +51,23 @@ public class NseOptionChainProvider implements OptionChainProvider {
 	@SneakyThrows
 	@Retryable(recover = "recover")
 	public Optional<OptionChain> get(Scrip underlying) {
-		final URL url = new URL(resolveUrl(underlying));
-		final String cookie = Optional.ofNullable(this.cookie).orElseGet(() -> fetchCookie(url));
-		final HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-		connection.setRequestProperty("cookie", cookie);
-		final InputStream inputStream = new GZIPInputStream(connection.getInputStream());
-		final NseOptionChainResponse response = objectMapper.readValue(inputStream, NseOptionChainResponse.class);
-		return Optional.of(map(underlying, response));
+		try {
+			final URL url = new URL(resolveUrl(underlying));
+			final String cookie = Optional.ofNullable(this.cookie).orElseGet(() -> fetchCookie(url));
+			final HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+			connection.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
+			connection.setRequestProperty("accept-encoding", "gzip");
+			connection.setRequestProperty("cookie", cookie);
+			connection.setReadTimeout(3000);	
+			connection.setConnectTimeout(3000);
+			final InputStream inputStream = new GZIPInputStream(connection.getInputStream());
+			this.cookie = connection.getHeaderField("set-cookie");
+			final NseOptionChainResponse response = objectMapper.readValue(inputStream, NseOptionChainResponse.class);
+			return Optional.of(map(underlying, response));
+		} catch(Exception e) {
+			log.error("", e);
+			throw e;
+		}
 	}
 	
 	@SneakyThrows
