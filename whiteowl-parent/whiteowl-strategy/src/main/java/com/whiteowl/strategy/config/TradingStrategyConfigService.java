@@ -9,6 +9,8 @@ import com.whiteowl.strategy.TradingStrategyConfig;
 import lombok.NonNull;
 
 public interface TradingStrategyConfigService {
+	
+	public long count();
 
 	public TradingStrategyConfig save(@NonNull @Valid TradingStrategyConfig config);
 

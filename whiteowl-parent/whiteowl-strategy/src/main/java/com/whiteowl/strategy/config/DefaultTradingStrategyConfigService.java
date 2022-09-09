@@ -18,6 +18,11 @@ import lombok.RequiredArgsConstructor;
 public class DefaultTradingStrategyConfigService implements TradingStrategyConfigService {
 
 	private final TradingStrategyConfigRepository tradingStrategyConfigRepository;
+	
+	@Override
+	public long count() {
+		return tradingStrategyConfigRepository.count();
+	}
 
 	@Override
 	public TradingStrategyConfig save(@NonNull @Valid TradingStrategyConfig config) {
