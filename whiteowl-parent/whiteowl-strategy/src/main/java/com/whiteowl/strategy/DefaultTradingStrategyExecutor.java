@@ -1,12 +1,13 @@
 package com.whiteowl.strategy;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
@@ -67,13 +68,18 @@ public class DefaultTradingStrategyExecutor implements TradingStrategyExecutor {
 	}
 	
 	private void execute(Scrip scrip, TradingStrategyConfig config, TradingStrategy tradingStrategy) {
-		resolvePositions(scrip, config).stream()
-			.filter(tradingStrategy::handle)
-			.flatMap(position -> PositionStatus.NEW.equals(position.getStatus()) ?
-						portfolioService.findAll().stream().map(position::withPortfolio) :
-						Stream.of(position))
-			.map(this::execute)
-			.map(positionService::save);
+		for(Position position : resolvePositions(scrip, config)) {
+			if(tradingStrategy.handle(position)) {
+				log.debug("Trading strategy {} has modified position #{}", config.getTemplate(), position.getId());
+				final Collection<Position> positions = PositionStatus.NEW.equals(position.getStatus()) ?
+						portfolioService.findAll().stream().map(position::withPortfolio).collect(Collectors.toList()) :
+						Collections.singletonList(position);
+				for(Position positionWithPortfolio : positions) {
+					execute(positionWithPortfolio);
+					positionService.save(positionWithPortfolio);
+				}
+			}
+		}
 	}
 	
 	private Position execute(Position position) {
