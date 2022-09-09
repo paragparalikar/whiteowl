@@ -54,17 +54,21 @@ public class ShortStraddleTradingStrategy implements TradingStrategy {
 		final LocalTime now = LocalTime.now();
 		
 		if(now.isBefore(config.getMinPositionOpenTime())) {
-			// We are not allowed to take any trades just yet. 
-			// We need to wait till market settles down.
+			log.debug("We are not allowed to take any trades just yet. Current time {}, min open time {}",
+					now, config.getMinPositionOpenTime());
 			return false;
 		}
 		
 		if(now.isAfter(config.getMaxPositionOpenTime())) {
-			// It is too late to take any more trades in market.
+			log.debug("It is too late to take any more trades in market. Current time {}, max open time {}", 
+					now, config.getMaxPositionOpenTime());
 			return false;
 		}
 		
 		open(position);
+		
+		log.info("Opening a new position for {} with config {} and template {}", 
+				optionChain.getUnderlying().getName(), config.getId(), config.getTemplate());
 		return true;
 	}
 	

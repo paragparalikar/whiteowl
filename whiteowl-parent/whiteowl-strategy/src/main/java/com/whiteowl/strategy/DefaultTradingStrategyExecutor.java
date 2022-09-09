@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
@@ -29,7 +30,9 @@ import com.whiteowl.strategy.shortstrangle.ShortStraddleTradingStrategy;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DefaultTradingStrategyExecutor implements TradingStrategyExecutor {
@@ -54,7 +57,9 @@ public class DefaultTradingStrategyExecutor implements TradingStrategyExecutor {
 			builder = builders.get(config.getTemplate());
 		if(null != builder) {
 			for(Scrip scrip : scripService.findAll().stream()
-					.filter(config.getScripCriteria()).toList()) {
+					.filter(config.getScripCriteria()).collect(Collectors.toList())) {
+				log.debug("Executing config {} for template {} for scrip {}", config.getId(),
+						config.getTemplate(), scrip.getName());
 				final TradingStrategy strategy = builder.apply(scrip, config).orElse(null);
 				if(null != strategy) execute(scrip, config, strategy);
 			}

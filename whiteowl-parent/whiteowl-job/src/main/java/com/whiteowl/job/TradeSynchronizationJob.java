@@ -35,7 +35,7 @@ public class TradeSynchronizationJob {
 	private final ApplicationEventPublisher eventPublisher;
 	private final BrokerServiceProvider brokerServiceProvider;
 
-	@Scheduled(cron = "0/15 0 9-18 * * MON-FRI")
+	@Scheduled(cron = "0/15 0 9-20 * * MON-FRI")
 	@EventListener(ApplicationReadyEvent.class)
 	public void tryDownload() {
 		try {

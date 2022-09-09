@@ -21,6 +21,7 @@ public class TradingStrategyExecutionJob {
 	@EventListener(TradesSynchronizedEvent.class)
 	public void tryExecute() {
 		try {
+			log.debug("Starting trading strategy execution job");
 			tradingStrategyConfigService.findByEnabled(true).stream()
 			.forEach(tradingStrategyExecutor::execute);
 		} catch(Exception e) {

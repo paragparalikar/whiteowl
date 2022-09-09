@@ -1,6 +1,7 @@
 package com.whiteowl.strategy.config;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -35,14 +36,14 @@ public class DefaultTradingStrategyConfigService implements TradingStrategyConfi
 	public List<TradingStrategyConfig> findAll() {
 		return tradingStrategyConfigRepository.findAll().stream()
 				.map(PersistentTradingStrategyConfig::getDelegate)
-				.toList();
+				.collect(Collectors.toList());
 	}
 
 	@Override
 	public List<TradingStrategyConfig> findByEnabled(boolean value) {
 		return tradingStrategyConfigRepository.findByEnabled(value).stream()
 				.map(PersistentTradingStrategyConfig::getDelegate)
-				.toList();
+				.collect(Collectors.toList());
 	}
 
 	@Override
