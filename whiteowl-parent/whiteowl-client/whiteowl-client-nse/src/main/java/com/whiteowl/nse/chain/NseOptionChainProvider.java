@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class NseOptionChainProvider implements OptionChainProvider {
 	
+	private volatile String cookie;
 	private final ScripService scripService;
 	private final ObjectMapper objectMapper;
 	private final Map<String, String> underlyingSymbolMapping = new HashMap<>();
@@ -51,23 +52,29 @@ public class NseOptionChainProvider implements OptionChainProvider {
 	@Retryable(recover = "recover")
 	public Optional<OptionChain> get(Scrip underlying) {
 		final URL url = new URL(resolveUrl(underlying));
-		HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-		connection.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
-		connection.setRequestProperty("accept-encoding", "gzip");
+		final String cookie = Optional.ofNullable(this.cookie).orElseGet(() -> fetchCookie(url));
+		final HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+		connection.setRequestProperty("cookie", cookie);
 		connection.setConnectTimeout(1000);
 		connection.setReadTimeout(3000);
-		if(401 == connection.getResponseCode()) {
-			final String cookie = connection.getHeaderField("set-cookie");
-			connection.disconnect();
-			connection = (HttpsURLConnection) url.openConnection();
-			connection.setRequestProperty("cookie", cookie);
-			connection.setConnectTimeout(1000);
-			connection.setReadTimeout(3000);
-		}
 		final InputStream inputStream = new GZIPInputStream(connection.getInputStream());
 		final NseOptionChainResponse response = objectMapper.readValue(inputStream, NseOptionChainResponse.class);
-		final OptionChain optionChain = map(underlying, response);
-		return Optional.of(optionChain);
+		return Optional.of(map(underlying, response));
+	}
+	
+	@SneakyThrows
+	private synchronized String fetchCookie(URL url) {
+		if(null == cookie) {
+			HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+			connection.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
+			connection.setRequestProperty("accept-encoding", "gzip");
+			connection.setConnectTimeout(1000);
+			connection.setReadTimeout(3000);
+			connection.getResponseCode();
+			cookie = connection.getHeaderField("set-cookie");
+			connection.disconnect();
+		}
+		return cookie;
 	}
 	
 	@Recover
