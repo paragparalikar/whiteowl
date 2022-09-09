@@ -103,25 +103,25 @@ public class ShortStraddleTradingStrategy implements TradingStrategy {
 					// We can only act on completed trades.
 					continue;
 				} else {
-					
-					
-					
+					final OptionChainItem item = optionChain.findByScrip(entryTrade.getScrip()).orElse(null);
+					if(null == item) {
+						// We could not procure the option chain, so we are in the dark now.
+						// Do not take any action unless we have some data to base our decision.
+						return false; 
+					}
+					final double entryPrice = entryTrade.getAveragePrice();
+					final double targetPrice = entryPrice * (1 + config.getPercentageTarget() / 100);
+					final double stopLossPercentage = position.getExitTrades().isEmpty() ? 
+							config.getPercentageStopLoss() : 0;
+					final double stopLossPrice = entryPrice * (1 - stopLossPercentage / 100);
+					final double currentPrice = item.getLastTradedPrice();
+					if(currentPrice >= targetPrice || currentPrice <= stopLossPrice) {
+						position.getExitTrades().add(entryTrade.complement());
+					}
 				}
 			}
 			return result;
 		}
-	}
-	
-	private boolean shouldClose(Trade trade, boolean adjustStopLoss) {
-		if(LocalTime.now().isAfter(config.getMaxPositionCloseTime())) return true;
-		final OptionChainItem item = optionChain.findByScrip(trade.getScrip()).orElse(null);
-		if(null == item) return false; 
-		final double entryPrice = trade.getAveragePrice();
-		final double targetPrice = entryPrice * (1 + config.getPercentageTarget() / 100);
-		final double stopLossPercentage = adjustStopLoss ? 0 : config.getPercentageStopLoss();
-		final double stopLossPrice = entryPrice * (1 - stopLossPercentage / 100);
-		final double currentPrice = item.getLastTradedPrice();
-		return currentPrice >= targetPrice || currentPrice <= stopLossPrice;
 	}
 	
 	private void open(Position position) {
