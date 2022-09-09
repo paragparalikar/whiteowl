@@ -6,6 +6,8 @@ public interface TradingStrategyConfig {
 
 	Long getId();
 	
+	void setId(Long id);
+	
 	boolean isEnabled();
 	
 	Integer getMinBarCount();

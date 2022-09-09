@@ -1,7 +1,5 @@
 package com.whiteowl.strategy.config;
 
-import java.lang.reflect.Field;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -61,15 +59,13 @@ public class PersistentTradingStrategyConfig {
 	
 	@PostLoad
 	public void postLoad() {
-		this.delegate = XmlUtils.decode(payload);
+		this.delegate = null == payload ? null : XmlUtils.decode(payload);
 	}
 	
 	@PostPersist
 	@SneakyThrows
 	public void postPersist() {
-		final Field field = delegate.getClass().getField("id");
-		field.setAccessible(true);
-		field.set(delegate, id);
+		if(null != delegate) delegate.setId(id);
 	}
 	
 }

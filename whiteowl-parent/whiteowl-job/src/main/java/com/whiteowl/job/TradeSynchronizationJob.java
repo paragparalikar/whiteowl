@@ -21,7 +21,9 @@ import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.trade.Trade;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TradeSynchronizationJob {
@@ -36,18 +38,22 @@ public class TradeSynchronizationJob {
 	@Scheduled(cron = "0/15 0 9-16 * * MON-FRI")
 	@EventListener(ApplicationReadyEvent.class)
 	public void tryDownload() {
-		for(Portfolio portfolio : portfolioService.findAll()) {
-			final Map<String, Trade> trades = brokerServiceProvider.findAllTrades(portfolio).stream()
-					.collect(Collectors.toMap(Trade::getBrokerTradeId, Function.identity()));
-			final List<Position> positions = positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED);
-			for(Position position : positions) {
-				synchronize(position.getExitTrades(), trades);
-				synchronize(position.getEntryTrades(), trades);
-				position.updateStatus();
-				positionService.save(position);
+		try {
+			for(Portfolio portfolio : portfolioService.findAll()) {
+				final Map<String, Trade> trades = brokerServiceProvider.findAllTrades(portfolio).stream()
+						.collect(Collectors.toMap(Trade::getBrokerTradeId, Function.identity()));
+				final List<Position> positions = positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED);
+				for(Position position : positions) {
+					synchronize(position.getExitTrades(), trades);
+					synchronize(position.getEntryTrades(), trades);
+					position.updateStatus();
+					positionService.save(position);
+				}
 			}
+			eventPublisher.publishEvent(new TradesSynchronizedEvent());
+		} catch(Exception e) {
+			log.error("", e);
 		}
-		eventPublisher.publishEvent(new TradesSynchronizedEvent());
 	}
 	
 	private void synchronize(Iterable<Trade> localTrades, Map<String, Trade> brokerTrades) {

@@ -55,8 +55,6 @@ public class NseOptionChainProvider implements OptionChainProvider {
 		final String cookie = Optional.ofNullable(this.cookie).orElseGet(() -> fetchCookie(url));
 		final HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
 		connection.setRequestProperty("cookie", cookie);
-		connection.setConnectTimeout(1000);
-		connection.setReadTimeout(3000);
 		final InputStream inputStream = new GZIPInputStream(connection.getInputStream());
 		final NseOptionChainResponse response = objectMapper.readValue(inputStream, NseOptionChainResponse.class);
 		return Optional.of(map(underlying, response));

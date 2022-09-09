@@ -8,7 +8,9 @@ import com.whiteowl.strategy.TradingStrategyExecutor;
 import com.whiteowl.strategy.config.TradingStrategyConfigService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TradingStrategyExecutionJob {
@@ -18,8 +20,12 @@ public class TradingStrategyExecutionJob {
 	
 	@EventListener(TradesSynchronizedEvent.class)
 	public void tryExecute() {
-		tradingStrategyConfigService.findByEnabled(true).stream()
+		try {
+			tradingStrategyConfigService.findByEnabled(true).stream()
 			.forEach(tradingStrategyExecutor::execute);
+		} catch(Exception e) {
+			log.error("", e);
+		}
 	}
 
 }
