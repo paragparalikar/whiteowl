@@ -2,9 +2,6 @@ package com.whiteowl.strategy.shortstrangle;
 
 import java.time.LocalTime;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import org.ta4j.core.Trade.TradeType;
 
@@ -12,7 +9,6 @@ import com.whiteowl.core.derivative.option.OptionChain;
 import com.whiteowl.core.derivative.option.OptionChainItem;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionStatus;
-import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripType;
 import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.TradeLimitType;
@@ -73,17 +69,47 @@ public class ShortStraddleTradingStrategy implements TradingStrategy {
 	}
 	
 	private boolean handleOpenPosition(Position position) {
-		if(2 > position.getExitTrades().size()) {
-			final Set<Scrip> exitScrips = position.getExitTrades().stream()
-					.map(Trade::getScrip).collect(Collectors.toSet());
-			return position.getEntryTrades().stream()
-				.filter(trade -> !exitScrips.contains(trade.getScrip()))
-				.filter(trade -> shouldClose(trade, !exitScrips.isEmpty()))
-				.map(Trade::complement)
-				.map(exitTrade -> position.getExitTrades().add(exitTrade))
-				.anyMatch(Predicate.isEqual(Boolean.TRUE));
+		final LocalTime now = LocalTime.now();
+		if(position.getEntryTrades().size() == position.getExitTrades().size()) {
+			// All entry trades have their corresponding exit trades, nothing to do here.
+			return false;
 		}
-		return false;
+		if(now.isAfter(config.getMaxPositionCloseTime())) {
+			boolean result = false;
+			// It is post max time to keep the trade open. 
+			//All open trades must be closed at this point.
+			for(Trade entryTrade : position.getEntryTrades()) {
+				if(position.hasExitTrade(entryTrade.getScrip())) {
+					continue;	
+				} else if(TradeStatus.NEW.equals(entryTrade.getStatus())) {
+					entryTrade.setStatus(TradeStatus.CANCELLED);
+				} else if(TradeStatus.COMPLETE.equals(entryTrade.getStatus())) {
+					position.getExitTrades().add(entryTrade.complement());
+					result = true;
+				} else if(!entryTrade.getStatus().isTerminal()) {
+					entryTrade.setStatus(TradeStatus.CANCELLABLE);
+					result = true;
+				} 
+			}
+			return result;
+		} else {
+			boolean result = false;
+			for(Trade entryTrade : position.getEntryTrades()) {
+				if(position.hasExitTrade(entryTrade.getScrip())) {
+					continue;	
+				} else if(!TradeStatus.COMPLETE.equals(entryTrade.getStatus())) {
+					// Current entry is not completed yet, it could be CANCELLED, REJECTED or 
+					// one of the actionable states like NEW, CANCELLABLE, UPDATABLE.
+					// We can only act on completed trades.
+					continue;
+				} else {
+					
+					
+					
+				}
+			}
+			return result;
+		}
 	}
 	
 	private boolean shouldClose(Trade trade, boolean adjustStopLoss) {

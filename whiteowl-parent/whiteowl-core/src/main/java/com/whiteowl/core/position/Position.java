@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -157,6 +158,20 @@ public class Position {
 		return exitTrades.stream()
 				.map(Trade::getStatus)
 				.allMatch(TradeStatus::isTerminal);
+	}
+	
+	public boolean hasEntryTrade(Scrip scrip) {
+		return null != scrip && entryTrades.stream()
+				.map(Trade::getScrip)
+				.map(Scrip::getCode)
+				.anyMatch(Predicate.isEqual(scrip.getCode()));
+	}
+	
+	public boolean hasExitTrade(Scrip scrip) {
+		return null != scrip && exitTrades.stream()
+				.map(Trade::getScrip)
+				.map(Scrip::getCode)
+				.anyMatch(Predicate.isEqual(scrip.getCode()));
 	}
 	
 	public void updateStatus() {
