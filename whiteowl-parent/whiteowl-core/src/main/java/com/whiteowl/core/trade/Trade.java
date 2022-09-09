@@ -91,6 +91,29 @@ public class Trade {
 	@Enumerated(EnumType.STRING)
 	private TradeStatus status;
 	
+	public void copy(Trade trade) {
+		this.id = trade.getId();
+		this.brokerTradeId = trade.getBrokerTradeId();
+		this.exchangeTradeId = trade.getExchangeTradeId();
+		this.scrip = trade.getScrip();
+		this.type = trade.getType();
+		this.limitType = trade.getLimitType();
+		this.variety = trade.getVariety();
+		this.validity = trade.getValidity();
+		this.product = trade.getProduct();
+		this.status = trade.getStatus();
+		this.statusMessage = trade.getStatusMessage();
+		this.timestamp = trade.getTimestamp();
+		this.exchangeTimestamp = trade.getExchangeTimestamp();
+		this.price = trade.getPrice();
+		this.triggerPrice = trade.getTriggerPrice();
+		this.averagePrice = trade.getAveragePrice();
+		this.quantity = trade.getQuantity();
+		this.pendingQuantity = trade.getPendingQuantity();
+		this.filledQuantity = trade.getFilledQuantity();
+		this.disclosedQuantity = trade.getDisclosedQuantity();
+	}
+	
 	public Trade clone() {
 		return Trade.builder()
 				.id(id)

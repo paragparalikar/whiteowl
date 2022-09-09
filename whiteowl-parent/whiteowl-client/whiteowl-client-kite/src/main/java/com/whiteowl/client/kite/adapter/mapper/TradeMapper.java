@@ -39,17 +39,17 @@ public class TradeMapper {
 	public Trade toTrade(Order order) {
 		if(null == order) return null;
 		Strings.requireText(order.getOrderId(), "Order coming from kite can not have null id");
-		final Trade trade = tradeService.findByBrokerTradeId(order.getOrderId()).orElse(null);
-		if(null != trade) {
-			trade.setStatus(kiteMapper.toTradeStatus(order.getStatus()));
-			trade.setTimestamp(LocalDateTime.parse(order.getOrderTimestamp()));
-			trade.setExchangeTimestamp(LocalDateTime.parse(order.getExhangeTimestamp()));
-			trade.setAveragePrice(order.getAveragePrice());
-			trade.setStatusMessage(order.getStatusMessage());
-			trade.setFilledQuantity(order.getFilledQuantity());
-			trade.setPendingQuantity(order.getPendingQuantity());
-		}
-		return trade;
+		return tradeService.findByBrokerTradeId(order.getOrderId())
+			.map(trade -> {
+				trade.setAveragePrice(order.getAveragePrice());
+				trade.setStatusMessage(order.getStatusMessage());
+				trade.setFilledQuantity(order.getFilledQuantity());
+				trade.setPendingQuantity(order.getPendingQuantity());
+				trade.setStatus(kiteMapper.toTradeStatus(order.getStatus()));
+				trade.setTimestamp(LocalDateTime.parse(order.getOrderTimestamp()));
+				trade.setExchangeTimestamp(LocalDateTime.parse(order.getExhangeTimestamp()));
+				return trade;
+			}).orElse(null);
 	}
 	
 }

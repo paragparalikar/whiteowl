@@ -3,7 +3,6 @@ package com.whiteowl.job;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -42,8 +41,8 @@ public class TradeSynchronizationJob {
 					.collect(Collectors.toMap(Trade::getBrokerTradeId, Function.identity()));
 			final List<Position> positions = positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED);
 			for(Position position : positions) {
-				sync(position.getExitTrades(), trades);
-				sync(position.getEntryTrades(), trades);
+				synchronize(position.getExitTrades(), trades);
+				synchronize(position.getEntryTrades(), trades);
 				position.updateStatus();
 				positionService.save(position);
 			}
@@ -51,20 +50,10 @@ public class TradeSynchronizationJob {
 		eventPublisher.publishEvent(new TradesSynchronizedEvent());
 	}
 	
-	private void sync(Set<Trade> localTrades, Map<String, Trade> brokerTrades) {
+	private void synchronize(Iterable<Trade> localTrades, Map<String, Trade> brokerTrades) {
 		localTrades.forEach(localTrade -> 
 			Optional.ofNullable(brokerTrades.get(localTrade.getBrokerTradeId()))
-				.ifPresent(brokerTrade -> copy(brokerTrade, localTrade)));
-	}
-	
-	private void copy(Trade from, Trade to) {
-		to.setStatus(from.getStatus());
-		to.setTimestamp(from.getTimestamp());
-		to.setAveragePrice(from.getAveragePrice());
-		to.setFilledQuantity(from.getFilledQuantity());
-		to.setPendingQuantity(from.getPendingQuantity());
-		to.setExchangeTradeId(from.getExchangeTradeId());
-		to.setExchangeTimestamp(from.getExchangeTimestamp());
+				.ifPresent(localTrade::copy));
 	}
 	
 }
