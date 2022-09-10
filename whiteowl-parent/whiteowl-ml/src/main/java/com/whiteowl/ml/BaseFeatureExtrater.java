@@ -1,13 +1,19 @@
 package com.whiteowl.ml;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.ta4j.core.BarSeries;
+import org.ta4j.core.BaseBarSeries;
 import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.ATRIndicator;
+import org.ta4j.core.indicators.ChopIndicator;
+import org.ta4j.core.indicators.ROCIndicator;
+import org.ta4j.core.indicators.RSIIndicator;
 import org.ta4j.core.indicators.SMAIndicator;
+import org.ta4j.core.indicators.StochasticOscillatorKIndicator;
 import org.ta4j.core.indicators.helpers.CloseLocationValueIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.indicators.helpers.DifferenceIndicator;
@@ -19,6 +25,8 @@ import org.ta4j.core.indicators.helpers.TRIndicator;
 import org.ta4j.core.indicators.helpers.TransformIndicator;
 import org.ta4j.core.indicators.helpers.TypicalPriceIndicator;
 import org.ta4j.core.indicators.helpers.VolumeIndicator;
+import org.ta4j.core.indicators.statistics.StandardDeviationIndicator;
+import org.ta4j.core.num.DoubleNum;
 import org.ta4j.core.num.Num;
 
 import com.whiteowl.core.indicator.GapIndicator;
@@ -27,8 +35,22 @@ import com.whiteowl.core.indicator.RatioIndicator;
 import com.whiteowl.core.indicator.UpperWickIndicator;
 
 public class BaseFeatureExtrater implements FeatureExtracter {
+	private static final List<String> ATTRIBUTE_NAMES = new LinkedList<>();
+	public static final int MIN_BAR_COUNT = 145;
+	private static final int baseLength = 8;
+	private static final List<Integer> lengths = Arrays.asList(5, 8, 13, 21, 34, 55, 89, 144);
+	
+	public static List<String> getAttributeNames(){
+		if(ATTRIBUTE_NAMES.isEmpty()) {
+			final BarSeries series = new BaseBarSeries("", DoubleNum::valueOf);
+			final BaseFeatureExtrater extracter = new BaseFeatureExtrater(series);
+			for(int index = 0; index < extracter.indicators.size(); index++) {
+				ATTRIBUTE_NAMES.add("attr-" + index);
+			}
+		}
+		return ATTRIBUTE_NAMES;
+	}
 
-	private final int baseLength = 8;
 	private final List<Indicator<Num>> indicators = new LinkedList<>();
 	
 	public BaseFeatureExtrater(BarSeries series) {
@@ -93,6 +115,25 @@ public class BaseFeatureExtrater implements FeatureExtracter {
 			indicators.add(new PreviousValueIndicator(volumeDiffIndicator, index));
 		}
 		
+		final int availableBarCount = MIN_BAR_COUNT;
+		for(int barCount : lengths) {
+			final Indicator<Num> atrIndicator = new ATRIndicator(normalSeries, barCount);
+			final Indicator<Num> rsiIndicator = new RSIIndicator(typicalPriceIndicator, barCount);
+			final Indicator<Num> rocIndicator = new ROCIndicator(typicalPriceIndicator, barCount);
+			final Indicator<Num> stoIndicator = new StochasticOscillatorKIndicator(normalSeries, barCount);
+			final Indicator<Num> stdDevIndicator = new StandardDeviationIndicator(typicalPriceIndicator, barCount);
+			final Indicator<Num> chopIndicator = new ChopIndicator(normalSeries, barCount, 100);
+			for(int offset : lengths) {
+				if(availableBarCount > barCount + offset) {
+					indicators.add(new PreviousValueIndicator(atrIndicator, offset));
+					indicators.add(new PreviousValueIndicator(rsiIndicator, offset));
+					indicators.add(new PreviousValueIndicator(rocIndicator, offset));
+					indicators.add(new PreviousValueIndicator(stoIndicator, offset));
+					indicators.add(new PreviousValueIndicator(stdDevIndicator, offset));
+					indicators.add(new PreviousValueIndicator(chopIndicator, offset));
+				}
+			}
+		}
 		
 	}
 	
