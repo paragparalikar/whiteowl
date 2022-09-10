@@ -34,16 +34,16 @@ import com.whiteowl.core.indicator.LowerWickIndicator;
 import com.whiteowl.core.indicator.RatioIndicator;
 import com.whiteowl.core.indicator.UpperWickIndicator;
 
-public class BaseFeatureExtrater implements FeatureExtracter {
+public class BaseFeatureExtracter implements FeatureExtracter {
 	private static final List<String> ATTRIBUTE_NAMES = new LinkedList<>();
-	public static final int MIN_BAR_COUNT = 145;
+	public static final int MIN_BAR_COUNT = 69;
 	private static final int baseLength = 8;
-	private static final List<Integer> lengths = Arrays.asList(5, 8, 13, 21, 34, 55, 89, 144);
+	private static final List<Integer> lengths = Arrays.asList(2, 3, 5, 8, 13, 21, 34);
 	
 	public static List<String> getAttributeNames(){
 		if(ATTRIBUTE_NAMES.isEmpty()) {
 			final BarSeries series = new BaseBarSeries("", DoubleNum::valueOf);
-			final BaseFeatureExtrater extracter = new BaseFeatureExtrater(series);
+			final BaseFeatureExtracter extracter = new BaseFeatureExtracter(series);
 			for(int index = 0; index < extracter.indicators.size(); index++) {
 				ATTRIBUTE_NAMES.add("attr-" + index);
 			}
@@ -53,7 +53,7 @@ public class BaseFeatureExtrater implements FeatureExtracter {
 
 	private final List<Indicator<Num>> indicators = new LinkedList<>();
 	
-	public BaseFeatureExtrater(BarSeries series) {
+	public BaseFeatureExtracter(BarSeries series) {
 		final BarSeriesNormaliser seriesNormaliser = new BarSeriesNormaliser();
 		final BarSeries normalSeries = seriesNormaliser.normalise(series);
 		
