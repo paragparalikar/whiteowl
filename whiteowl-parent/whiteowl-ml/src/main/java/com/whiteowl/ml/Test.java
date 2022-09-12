@@ -55,7 +55,7 @@ public class Test {
 		final BarSeries barSeries = getBars(scripCode);
 		final BarSeriesNormaliser barSeriesNormalizer = new BarSeriesNormaliser();
 		final BarSeries normalSeries = barSeriesNormalizer.normalise(barSeries);
-		final BuyTradeRule buyTradeule = new BuyTradeRule(barSeries);
+		final BuyTradeRule buyTradeule = new BuyTradeRule(barSeries, 10, 10, 5);
 		
 		final TypicalPriceIndicator typicalPriceIndicator = new TypicalPriceIndicator(normalSeries);
 		final SMAIndicator smaIndicator = new SMAIndicator(typicalPriceIndicator, 21);

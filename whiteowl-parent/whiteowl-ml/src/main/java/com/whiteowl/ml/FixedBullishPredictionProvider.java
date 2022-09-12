@@ -57,7 +57,7 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 	private static final double targetPercentage = 10;
 	private static final double stopLossPercentage = 5;
 	
-	private final int minBarCount = 150;
+	private final int minBarCount = 155;
 	private final BarService barService;
 	private final ScripService scripService;
 	private final String modelIdPrefix = "fixed-bullish";
