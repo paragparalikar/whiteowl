@@ -3,6 +3,7 @@ package com.whiteowl.ml.feature;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBar;
@@ -10,6 +11,7 @@ import org.ta4j.core.BaseBarSeries;
 import org.ta4j.core.num.DoubleNum;
 import org.ta4j.core.num.Num;
 
+@Component
 public class BarSeriesNormaliser {
 	private static final Num HUNDRED = DoubleNum.valueOf(100);
 	

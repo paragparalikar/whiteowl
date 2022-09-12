@@ -7,16 +7,14 @@ import org.ta4j.core.num.DoubleNum;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.rules.AbstractRule;
 
+import lombok.Getter;
+@Getter
 public class BuyTradeRule extends AbstractRule {
 	
 	private final int barCount;
 	private final BarSeries series;
 	private final double targetPercentage;
 	private final double stopLossPercentage;
-
-	public BuyTradeRule(BarSeries series) {
-		this(series, 10, 10, 5);
-	}
 	
 	public BuyTradeRule(BarSeries series, int barCount, double targetPercentage, double stopLossPercentage) {
 		if(0 >= barCount) throw new IllegalArgumentException("Bar count must be positive");
