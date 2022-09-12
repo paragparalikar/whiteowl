@@ -1,4 +1,4 @@
-package com.whiteowl.ml;
+package com.whiteowl.ml.feature;
 
 import java.util.ArrayList;
 import java.util.List;
