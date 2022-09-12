@@ -2,6 +2,7 @@ package com.whiteowl.core.recommendation;
 
 import java.time.ZonedDateTime;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -53,8 +54,10 @@ public class Recommendation {
 	
 	private Integer timeStopBarCount;
 	
+	@Column(nullable = false, columnDefinition = "TIMESTAMP")
 	private ZonedDateTime effectiveTimestamp;
 	
+	@Column(nullable = false, columnDefinition = "TIMESTAMP")
 	private ZonedDateTime expiryTimestamp;
 }
 
