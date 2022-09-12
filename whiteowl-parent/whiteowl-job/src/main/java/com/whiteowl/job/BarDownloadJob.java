@@ -1,14 +1,17 @@
 package com.whiteowl.job;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.whiteowl.core.bar.BarDataProvider;
 import com.whiteowl.core.bar.BarService;
+import com.whiteowl.core.bar.BarsDownloadedEvent;
 import com.whiteowl.core.bar.PersistentBar;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.scrip.Index;
@@ -27,6 +30,7 @@ public class BarDownloadJob {
 	private final BarService barService;
 	private final ScripService scripService;
 	private final BarDataProvider barDataProvider;
+	private final ApplicationEventPublisher eventPublisher;
 	
 	@Async @Scheduled(cron = "20 0 9 * * MON-FRI") public void downloadD() { download(Timeframe.D); }
 	@Async @Scheduled(cron = "15 15 10-17 * * MON-FRI") public void downloadH1() { download(Timeframe.H1); }
@@ -51,7 +55,15 @@ public class BarDownloadJob {
 		final List<PersistentBar> bars = barDataProvider.getBars(scrip, timeframe, from, to);
 		if(!bars.isEmpty()) {
 			bars.forEach(barService::saveSafe);
+			final PersistentBar lastBar = bars.get(bars.size() - 1);
+			final Duration duration = lastBar.getTimeframe().getDuration();
+			final ZonedDateTime endTime = lastBar.getBeginTime().plus(duration);
 			log.info("{} - {} : Downloaded {} bars", timeframe, scrip.getName(), bars.size());
+			eventPublisher.publishEvent(BarsDownloadedEvent.builder()
+					.scrip(scrip)
+					.timeframe(timeframe)
+					.timestamp(endTime)
+					.build());
 		}
 	}
 	

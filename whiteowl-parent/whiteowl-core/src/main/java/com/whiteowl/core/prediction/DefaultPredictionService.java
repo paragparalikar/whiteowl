@@ -9,5 +9,10 @@ import lombok.RequiredArgsConstructor;
 public class DefaultPredictionService implements PredictionService {
 
 	private final PredictionRepository predictionRepository;
+	
+	@Override
+	public Prediction save(Prediction prediction) {
+		return predictionRepository.saveAndFlush(prediction);
+	}
 
 }
