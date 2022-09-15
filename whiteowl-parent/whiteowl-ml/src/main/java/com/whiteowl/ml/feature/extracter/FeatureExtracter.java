@@ -2,6 +2,8 @@ package com.whiteowl.ml.feature.extracter;
 
 import java.util.List;
 
+import org.ta4j.core.BarSeries;
+
 public interface FeatureExtracter {
 	
 	String getName();
@@ -10,6 +12,6 @@ public interface FeatureExtracter {
 	
 	List<String> getAttributeNames();
 
-	List<Double> extract(int index);
+	List<Double> extract(int index, BarSeries series);
 	
 }

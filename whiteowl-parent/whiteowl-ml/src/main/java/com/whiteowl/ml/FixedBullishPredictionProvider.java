@@ -34,7 +34,7 @@ import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
 import com.whiteowl.core.util.Constant;
 import com.whiteowl.ml.feature.BarSeriesNormaliser;
-import com.whiteowl.ml.feature.BuyTradeRule;
+import com.whiteowl.ml.feature.LongSuccessClassificationRule;
 import com.whiteowl.ml.feature.extracter.FeatureExtracter;
 import com.whiteowl.ml.feature.extracter.ValueSeriesFeatureExtracter;
 
@@ -57,7 +57,6 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 	private static final double targetPercentage = 10;
 	private static final double stopLossPercentage = 5;
 	
-	private final int minBarCount = 155;
 	private final BarService barService;
 	private final ScripService scripService;
 	private final String modelIdPrefix = "fixed-bullish";
@@ -85,11 +84,9 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 		return classifier;
 	}
 	
-	private FeatureExtracter createFeatureExtracter(BarSeries series) {
-		final BarSeries normalSeries = barSeriesNormalizer.normalise(series);
-		final TypicalPriceIndicator typicalPriceIndicator = new TypicalPriceIndicator(normalSeries);
-		final SMAIndicator smaIndicator = new SMAIndicator(typicalPriceIndicator, 21);
-		return new ValueSeriesFeatureExtracter("SMA(TP,21)", smaIndicator, 129);
+	private FeatureExtracter createFeatureExtracter() {
+		return new ValueSeriesFeatureExtracter("SMA(TP,21)", 129, 21, 
+				(s, barCount) -> new SMAIndicator(new TypicalPriceIndicator(s), barCount));
 	}
 	
 	private Instance createInstance(List<Double> featureValues, Instances instances) {
@@ -107,11 +104,14 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 		final List<Bar> bars = barService.findByCodeAndTimeframe(scrip.getCode(), timeframe).stream()
 			.map(PersistentBar::toBar).collect(Collectors.toList());
 		final BarSeries series = new BaseBarSeries(bars);
-		final BuyTradeRule buyTradeule = new BuyTradeRule(series, timeStopBarCount, targetPercentage, stopLossPercentage);
-		final FeatureExtracter featureExtracter = createFeatureExtracter(series);
+		final LongSuccessClassificationRule buyTradeule = new LongSuccessClassificationRule(series, timeStopBarCount, targetPercentage, stopLossPercentage);
+		final FeatureExtracter featureExtracter = createFeatureExtracter();
 		final Instances instances = createInstances(featureExtracter.getAttributeNames());
-		for (int index = featureExtracter.getMinBarCount(); index < series.getBarCount(); index++) {
-			final Instance instance = createInstance(featureExtracter.extract(index), instances);
+		final int minBarCount = featureExtracter.getMinBarCount();
+		for (int index = minBarCount; index < series.getBarCount(); index++) {
+			final BarSeries subSeries = series.getSubSeries(index - minBarCount, index + 1);
+			final BarSeries normalSeries = barSeriesNormalizer.normalise(subSeries);
+			final Instance instance = createInstance(featureExtracter.extract(index, normalSeries), instances);
 			instance.setClassValue(String.valueOf(buyTradeule.isSatisfied(index)));
 			instances.add(instance);
 		}
@@ -161,13 +161,16 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 	public Set<Prediction> predict(Scrip scrip, Timeframe timeframe) {
 		final Classifier classifier = getClassifier(scrip, timeframe);
 		if(null == classifier) return Collections.emptySet();
+		
+		final FeatureExtracter featureExtracter = createFeatureExtracter();
+		final int minBarCount = featureExtracter.getMinBarCount();
 		final List<Bar> bars = barService.findLatestByCodeAndTimeframe(scrip.getCode(), timeframe, minBarCount).stream()
 				.map(PersistentBar::toBar).collect(Collectors.toList());
 		if(minBarCount > bars.size()) return Collections.emptySet();
 		final BarSeries series = new BaseBarSeries(bars);
-		final FeatureExtracter featureExtracter = createFeatureExtracter(series);
+		final BarSeries normalSeries = barSeriesNormalizer.normalise(series);
 		final Instances instances = createInstances(featureExtracter.getAttributeNames());
-		final Instance instance = createInstance(featureExtracter.extract(series.getEndIndex()), instances);
+		final Instance instance = createInstance(featureExtracter.extract(series.getEndIndex(), normalSeries), instances);
 		final double classValue = classifier.classifyInstance(instance);
 		final Boolean result = Boolean.parseBoolean(instances.classAttribute().value((int)classValue));
 		if(!result) return Collections.emptySet(); 
@@ -185,7 +188,9 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 				.modelId(getModelId(scrip, timeframe))
 				.scrip(scrip)
 				.timeframe(timeframe)
-				.timestamp(lastBar.getEndTime())
+				.createTimestamp(lastBar.getEndTime())
+				.fromTimestamp(lastBar.getEndTime())
+				.toTimestamp(lastBar.getEndTime().plus(timeframe.getDuration().multipliedBy(timeStopBarCount)))
 				.high(PredictionRange.builder()
 						.min(targetPrice.doubleValue())
 						.max(targetPrice.doubleValue())

@@ -39,7 +39,13 @@ public class Prediction {
 	private Timeframe timeframe;
 	
 	@Column(nullable = false, columnDefinition = "TIMESTAMP")
-	private ZonedDateTime timestamp;
+	private ZonedDateTime createTimestamp;
+	
+	@Column(nullable = false, columnDefinition = "TIMESTAMP")
+	private ZonedDateTime fromTimestamp;
+	
+	@Column(nullable = false, columnDefinition = "TIMESTAMP")
+	private ZonedDateTime toTimestamp;
 	
 	@Embedded
 	private PredictionRange high;

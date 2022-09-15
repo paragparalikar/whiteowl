@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.ta4j.core.BarSeries;
+
 public class CompositeFeatureExtracter implements FeatureExtracter {
 
 	private final List<FeatureExtracter> featureExtracters = new LinkedList<>();
@@ -48,9 +50,9 @@ public class CompositeFeatureExtracter implements FeatureExtracter {
 	}
 
 	@Override
-	public List<Double> extract(int index) {
+	public List<Double> extract(int index, BarSeries barSeries) {
 		return featureExtracters.stream()
-				.map(featureExtracter -> featureExtracter.extract(index))
+				.map(featureExtracter -> featureExtracter.extract(index, barSeries))
 				.flatMap(Collection::stream)
 				.collect(Collectors.toList());
 	}

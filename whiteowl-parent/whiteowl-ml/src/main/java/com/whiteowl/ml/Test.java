@@ -11,12 +11,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,18 +26,34 @@ import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBar;
 import org.ta4j.core.BaseBarSeries;
+import org.ta4j.core.Rule;
 import org.ta4j.core.indicators.SMAIndicator;
 import org.ta4j.core.indicators.helpers.TypicalPriceIndicator;
 import org.ta4j.core.num.DoubleNum;
 
+import com.whiteowl.core.rule.BullishBarRule;
+import com.whiteowl.core.rule.LongOpportunityRule;
+import com.whiteowl.core.rule.NotOverboughtByPriceChannelRule;
+import com.whiteowl.core.rule.NotOverboughtByRSIRule;
 import com.whiteowl.ml.feature.BarSeriesNormaliser;
-import com.whiteowl.ml.feature.BuyTradeRule;
+import com.whiteowl.ml.feature.LongSuccessClassificationRule;
+import com.whiteowl.ml.feature.PercentageBarSeriesNormaliser;
+import com.whiteowl.ml.feature.extracter.BarInfoFeatureExtracter;
+import com.whiteowl.ml.feature.extracter.CompositeFeatureExtracter;
 import com.whiteowl.ml.feature.extracter.FeatureExtracter;
+import com.whiteowl.ml.feature.extracter.IndicatorFeatureExtracter;
 import com.whiteowl.ml.feature.extracter.ValueSeriesFeatureExtracter;
 
 import lombok.SneakyThrows;
-import weka.classifiers.AbstractClassifier;
-import weka.classifiers.Classifier;
+import weka.attributeSelection.ASEvaluation;
+import weka.attributeSelection.ASSearch;
+import weka.attributeSelection.AttributeSelection;
+import weka.attributeSelection.BestFirst;
+import weka.attributeSelection.CfsSubsetEval;
+import weka.attributeSelection.CorrelationAttributeEval;
+import weka.attributeSelection.GainRatioAttributeEval;
+import weka.attributeSelection.InfoGainAttributeEval;
+import weka.attributeSelection.Ranker;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
@@ -43,7 +61,9 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ArffSaver;
+import weka.filters.Filter;
 import weka.filters.supervised.instance.ClassBalancer;
+import weka.filters.unsupervised.attribute.Remove;
 
 public class Test {
 	private static final int folds = 10;
@@ -51,66 +71,65 @@ public class Test {
 	private static final Path directory = Paths.get("C:/Users/parag/Documents/finance/trading/ml/");
 
 	public static void main(String[] args) throws Exception {
-		final String scripCode = "SIEMENS";
+		final String scripCode = "SUNPHARMA";
 		final BarSeries barSeries = getBars(scripCode);
-		final BarSeriesNormaliser barSeriesNormalizer = new BarSeriesNormaliser();
-		final BarSeries normalSeries = barSeriesNormalizer.normalise(barSeries);
-		final BuyTradeRule buyTradeule = new BuyTradeRule(barSeries, 10, 10, 5);
+		final BarSeriesNormaliser barSeriesNormalizer = new PercentageBarSeriesNormaliser();
+		final Rule entryRule = new BullishBarRule(barSeries)
+				.and(new LongOpportunityRule(barSeries))
+				.and(new NotOverboughtByRSIRule(8, 70, barSeries))
+				.and(new NotOverboughtByPriceChannelRule(21, barSeries));
+		final Rule buyTradeule = new LongSuccessClassificationRule(barSeries, 5, 5, 2.5);
 		
-		final TypicalPriceIndicator typicalPriceIndicator = new TypicalPriceIndicator(normalSeries);
-		final SMAIndicator smaIndicator = new SMAIndicator(typicalPriceIndicator, 21);
-		final FeatureExtracter featureExtracter = new ValueSeriesFeatureExtracter("SMA21.129vals", smaIndicator, 129);
+		final ValueSeriesFeatureExtracter valueSeriesFeatureExtracter = new ValueSeriesFeatureExtracter("SMA(TP,21)", 129, 21, 
+				(series, barCount) -> new SMAIndicator(new TypicalPriceIndicator(series), barCount));
+		final BarInfoFeatureExtracter barInfoFeatureExtracter = new BarInfoFeatureExtracter(8, 10);
+		final IndicatorFeatureExtracter indicatorFeatureExtracter = new IndicatorFeatureExtracter(new int[] {2,3,5,8,13,21});
+		final FeatureExtracter featureExtracter = new CompositeFeatureExtracter(indicatorFeatureExtracter);
 		final Instances instances = createInstances(featureExtracter.getAttributeNames());
-		
-		for (int index = featureExtracter.getMinBarCount(); index < barSeries.getBarCount(); index++) {
-			final double[] features = featureExtracter.extract(index).stream().mapToDouble(Double::doubleValue)
-					.toArray();
-			final Instance instance = new DenseInstance(instances.numAttributes());
-			instance.setDataset(instances);
-			for (int f = 0; f < features.length; f++) {
-				instance.setValue(f, features[f]);
-			}
-			instance.setClassValue(String.valueOf(buyTradeule.isSatisfied(index)));
-			instances.add(instance);
-		}
-
-		save(scripCode + "-" + featureExtracter.getName() + ".arff", instances);
-		final Instances balancedInstances = balance(instances);
-		final Random random = new Random();
-		balancedInstances.randomize(random);
-		balancedInstances.stratify(folds);
-		final Map<RandomForestConfig, Double> results = new HashMap<>(); 
-		
-		for(int maxDepth = 0; maxDepth <= 100; maxDepth+=10) {
-			for(int numFeatures = 0; numFeatures < balancedInstances.numAttributes() - 1; numFeatures+= 10) {
-				for(int numIterations = 25; numIterations <= 300; numIterations+=25) {
-					final RandomForestConfig config = RandomForestConfig.builder()
-							.maxDepth(maxDepth)
-							.numFeatures(numFeatures)
-							.numIterations(numIterations)
-							.build();
-					final RandomForest classifier = config.create();
-					classifier.setNumExecutionSlots(50);
-					System.out.println("Evaluating for config " + config.toString());
-					final Evaluation evaluation = new Evaluation(balancedInstances);
-					for (int index = 0; index < folds; index++) {
-						final Instances train = balancedInstances.trainCV(folds, index, random);
-						final Instances test = balancedInstances.testCV(folds, index);
-						final Classifier copy = AbstractClassifier.makeCopy(classifier);
-						copy.buildClassifier(train);
-						evaluation.evaluateModel(copy, test);
+		final ExecutorService executor = Executors.newWorkStealingPool();
+		final int minBarCount = featureExtracter.getMinBarCount();
+		int index = minBarCount;
+		for(index = minBarCount; index < barSeries.getBarCount() - 1; index++) {
+			if(entryRule.isSatisfied(index)) {
+				final int index_ = index;
+				executor.submit(() -> {
+					try {
+						final BarSeries subSeries = barSeries.getSubSeries(index_ - minBarCount, index_ + 1);
+						final BarSeries normalSeries = barSeriesNormalizer.normalise(subSeries);
+						final double[] features = featureExtracter.extract(normalSeries.getEndIndex(), normalSeries)
+								.stream().mapToDouble(Double::doubleValue)
+								.toArray();
+						final Instance instance = new DenseInstance(features.length + 1);
+						instance.setDataset(instances);
+						for (int f = 0; f < features.length; f++) {
+							instance.setValue(f, features[f]);
+						}
+						
+						instance.setClassValue(String.valueOf(buyTradeule.isSatisfied(index_)));
+						instances.add(instance);
+						System.out.println("Created instance for index " + index_);
+					}catch(Exception e) {
+						e.printStackTrace();
 					}
-					results.put(config, evaluation.pctCorrect());
-					System.out.println(evaluation.pctCorrect() + " - " + config);
-				}
+				});
 			}
 		}
 		
-		final RandomForestConfig bestConfig = results.entrySet().stream().max(Comparator.comparing(Entry::getValue))
-				.map(Entry::getKey).orElse(null);
-		System.out.println("Best Config : " + bestConfig);
+		executor.shutdown();
+		executor.awaitTermination(3, TimeUnit.HOURS);
+		
+		
+		splitAndSave(5, String.join("-", scripCode, featureExtracter.getName()), instances);
+		//evaluate(instances);
 	}
-
+	
+	private static void splitAndSave(int folds, String name, Instances instances) throws IOException {
+		instances.stratify(folds);
+		save(name + ".arff", instances);
+		save(name + "-train.arff", instances.trainCV(folds, 1));
+		save(name + "-test.arff", instances.testCV(folds, 1));
+	}
+	
 	private static void save(String fileName, Instances instances) throws IOException {
 		final ArffSaver arffSaver = new ArffSaver();
 		arffSaver.setInstances(instances);
@@ -119,25 +138,13 @@ public class Test {
 	}
 
 	private static Instances createInstances(List<String> attributeNames) {
-		final Attribute classAttribute = new Attribute("success",
-				Arrays.asList(Boolean.TRUE.toString(), Boolean.FALSE.toString()));
+		final Attribute classAttribute = new Attribute("prediction", Arrays.asList("true", "false"));
 		final ArrayList<Attribute> attributes = attributeNames.stream().map(Attribute::new)
 				.collect(Collectors.toCollection(ArrayList::new));
 		attributes.add(classAttribute);
 		final Instances instances = new Instances("test", attributes, 100);
 		instances.setClass(classAttribute);
 		return instances;
-	}
-
-	private static Instances balance(Instances instances) throws Exception {
-		final ClassBalancer classBalancer = new ClassBalancer();
-		classBalancer.setInputFormat(instances);
-		classBalancer.input(instances);
-		classBalancer.batchFinished();
-		final Instances balancedInstances = new Instances(instances);
-		balancedInstances.clear();
-		Stream.generate(classBalancer::output).takeWhile(Objects::nonNull).forEach(balancedInstances::add);
-		return balancedInstances;
 	}
 
 	@SneakyThrows
