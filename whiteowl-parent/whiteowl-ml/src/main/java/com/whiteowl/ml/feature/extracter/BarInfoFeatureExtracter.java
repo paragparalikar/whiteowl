@@ -55,7 +55,7 @@ public class BarInfoFeatureExtracter extends AbstractFeatureExtracter {
 			names.add("closeloc_" + index);
 			names.add("bodyLWickRatio_" + index);
 			names.add("spreadLWickRatio_" + index);
-			names.add("upperWick_" + index);
+			//names.add("upperWick_" + index);
 			names.add("lowerWick_" + index);
 			names.add("trDiff_" + index);
 			names.add("tpDiff_" + index);
@@ -73,7 +73,7 @@ public class BarInfoFeatureExtracter extends AbstractFeatureExtracter {
 		final Indicator<Num> lowIndicator = new LowPriceIndicator(normalSeries);
 		final Indicator<Num> highIndicator = new HighPriceIndicator(normalSeries);
 		final Indicator<Num> closeIndicator = new ClosePriceIndicator(normalSeries);
-		final Indicator<Num> upperWickIndicator = new UpperWickIndicator(normalSeries);
+		//final Indicator<Num> upperWickIndicator = new UpperWickIndicator(normalSeries);
 		final Indicator<Num> lowerWickIndicator = new LowerWickIndicator(normalSeries);
 		final Indicator<Num> spreadIndicator = new DifferenceIndicator(highIndicator, lowIndicator);
 		final Indicator<Num> bodyIndicator = new DifferenceIndicator(openIndicator, closeIndicator);
@@ -99,7 +99,7 @@ public class BarInfoFeatureExtracter extends AbstractFeatureExtracter {
 		indicators.add(closeLocIndicator);
 		indicators.add(bodyLWickRatioIndicator);
 		indicators.add(spreadLWickRatioIndicator);
-		indicators.add(upperWickIndicator);
+		//indicators.add(upperWickIndicator);
 		indicators.add(lowerWickIndicator);
 		indicators.add(trDiffIndicator);
 		indicators.add(typicalPriceDiffIndicator);
@@ -117,7 +117,7 @@ public class BarInfoFeatureExtracter extends AbstractFeatureExtracter {
 			indicators.add(new PreviousValueIndicator(closeLocIndicator, index));
 			indicators.add(new PreviousValueIndicator(bodyLWickRatioIndicator, index));
 			indicators.add(new PreviousValueIndicator(spreadLWickRatioIndicator, index));
-			indicators.add(new PreviousValueIndicator(upperWickIndicator, index));
+			//indicators.add(new PreviousValueIndicator(upperWickIndicator, index));
 			indicators.add(new PreviousValueIndicator(lowerWickIndicator, index));
 			indicators.add(new PreviousValueIndicator(trDiffIndicator, index));
 			indicators.add(new PreviousValueIndicator(typicalPriceDiffIndicator, index));
