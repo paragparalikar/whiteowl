@@ -1,0 +1,27 @@
+To predict open, high, low and close prices for next 1 day : 
+
+1. Use world market indices closing values as features for Indian indices. 
+In case of individual stocks, corresponding parent indices in world markets along with peers should be used as features.
+Candicates : Nasdaq, DowJones, Henseng, SGX Nifty, search more from white papers online as they have been shown to have good correlation with Nifty.
+Random Forest Classification
+
+2. Use Option Chain analysis values as features.
+Candidates : PCR, Long Buildup, Short Buildup, Long unwinding, Short unwinding, volatility skew, India VIX, IV, 
+% change in total OI, % change in Call OI, % change in Put OI, highest OI on strikes as levels
+Random Forest Classification
+
+3. Use % change between previous close to current high to predict next value. Do same for Low and Close.
+LSTM regression
+
+4. Use Random Forest as meta classifier trained on output of previous three models and actual value.
+
+
+To automate technical analysis : 
+
+1. Resolve levels using gap extremities, tops and bottoms (using ZigZagIndicator), volume profile(in case of indices use number of bars)
+
+2. Use Clustering algorithms to merge above values into actual support/resistence levels.
+
+3. Train a model on three bar ohlcv values that resulted in reversal and not. 
+
+Combination of three bar reversal probability at support/resistance level should give good indication of reversal.
