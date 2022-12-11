@@ -1,231 +1,170 @@
 package com.whiteowl.core.bar;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery;
+import org.springframework.stereotype.Repository;
+import org.ta4j.core.Bar;
+import org.ta4j.core.BaseBar;
+import org.ta4j.core.num.DoubleNum;
 
+import com.whiteowl.core.util.Constant;
+
+import lombok.SneakyThrows;
+
+@Repository
 public class FileSystemBarRepository implements BarRepository {
+	private static final int BYTES = Long.BYTES + 5 * Double.BYTES;
 
+	private Path getPath(String code, Timeframe timeframe) {
+		return Constant.HOME.resolve(Paths.get(code, timeframe.name(), "bars.dat"));
+	}
 	
-
-	@Override
-	public List<PersistentBar> findAll() {
-		// TODO Auto-generated method stub
-		return null;
+	private void write(Bar bar, DataOutput output) throws IOException {
+		output.writeLong(bar.getEndTime().toEpochSecond());
+		output.writeDouble(bar.getOpenPrice().doubleValue());
+		output.writeDouble(bar.getHighPrice().doubleValue());
+		output.writeDouble(bar.getLowPrice().doubleValue());
+		output.writeDouble(bar.getClosePrice().doubleValue());
+		output.writeDouble(bar.getVolume().doubleValue());
+	}
+	
+	private Bar read(Timeframe timeframe, DataInput input) throws IOException {
+		final ZoneId zoneId = ZoneId.systemDefault();
+		final Instant instant = Instant.ofEpochSecond(input.readLong());
+		final ZonedDateTime endTime = ZonedDateTime.ofInstant(instant, zoneId);
+		return BaseBar.builder()
+				.openPrice(DoubleNum.valueOf(input.readDouble()))
+				.highPrice(DoubleNum.valueOf(input.readDouble()))
+				.lowPrice(DoubleNum.valueOf(input.readDouble()))
+				.closePrice(DoubleNum.valueOf(input.readDouble()))
+				.volume(DoubleNum.valueOf(input.readDouble()))
+				.timePeriod(timeframe.getDuration())
+				.endTime(endTime)
+				.build();
 	}
 
 	@Override
-	public List<PersistentBar> findAll(Sort sort) {
-		// TODO Auto-generated method stub
-		return null;
+	@SneakyThrows
+	public Optional<Bar> findTopByCodeAndTimeframeOrderByTimeframeDesc(String code, Timeframe timeframe) {
+		final Path path = getPath(code, timeframe);
+		synchronized(path) {
+			if(Files.exists(path)) {
+				try(final RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")){
+					if(file.length() >= BYTES) {
+						file.seek(file.length() - BYTES);
+						return Optional.of(read(timeframe, file));
+					}
+				}
+			}
+		}
+		return Optional.empty();
 	}
 
 	@Override
-	public List<PersistentBar> findAllById(Iterable<PersistentBarKey> ids) {
-		// TODO Auto-generated method stub
-		return null;
+	@SneakyThrows
+	public List<Bar> findByCodeAndTimeframe(String code, Timeframe timeframe) {
+		final Path path = getPath(code, timeframe);
+		synchronized(path) {
+			if(Files.exists(path)) {
+				try(final RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")){
+					final long length = file.length();
+					if(length >= BYTES) {
+						final List<Bar> bars = new ArrayList<Bar>((int) (length/BYTES));
+						for(long position = 0; position <= length - BYTES; position += BYTES) {
+							file.seek(position);
+							bars.add(read(timeframe, file));
+						}
+						return bars;
+					}
+				}
+			}
+		}
+		return Collections.emptyList();
 	}
 
 	@Override
-	public <S extends PersistentBar> List<S> saveAll(Iterable<S> entities) {
-		// TODO Auto-generated method stub
-		return null;
+	@SneakyThrows
+	public List<Bar> findLatestByCodeAndTimeframe(String code, Timeframe timeframe, long count) {
+		final Path path = getPath(code, timeframe);
+		synchronized(path) {
+			if(Files.exists(path)) {
+				try(final RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")){
+					final long length = file.length();
+					if(length >= BYTES) {
+						final long availableBarCount = (length/BYTES);
+						final long effectiveBarCount = Math.min(availableBarCount, count);
+						final List<Bar> bars = new ArrayList<Bar>((int) effectiveBarCount);
+						for(long position = length - effectiveBarCount * BYTES; position <= length - BYTES; position += BYTES) {
+							file.seek(position);
+							bars.add(read(timeframe, file));
+						}
+						return bars;
+					}
+				}
+			}
+		}
+		return Collections.emptyList();
 	}
 
 	@Override
-	public void flush() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public <S extends PersistentBar> S saveAndFlush(S entity) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public <S extends PersistentBar> List<S> saveAllAndFlush(Iterable<S> entities) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void deleteAllInBatch(Iterable<PersistentBar> entities) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void deleteAllByIdInBatch(Iterable<PersistentBarKey> ids) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void deleteAllInBatch() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public PersistentBar getOne(PersistentBarKey id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public PersistentBar getById(PersistentBarKey id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public <S extends PersistentBar> List<S> findAll(Example<S> example) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public <S extends PersistentBar> List<S> findAll(Example<S> example, Sort sort) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Page<PersistentBar> findAll(Pageable pageable) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public <S extends PersistentBar> S save(S entity) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Optional<PersistentBar> findById(PersistentBarKey id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean existsById(PersistentBarKey id) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public long count() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public void deleteById(PersistentBarKey id) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void delete(PersistentBar entity) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void deleteAllById(Iterable<? extends PersistentBarKey> ids) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void deleteAll(Iterable<? extends PersistentBar> entities) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void deleteAll() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public <S extends PersistentBar> Optional<S> findOne(Example<S> example) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public <S extends PersistentBar> Page<S> findAll(Example<S> example, Pageable pageable) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public <S extends PersistentBar> long count(Example<S> example) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public <S extends PersistentBar> boolean exists(Example<S> example) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public <S extends PersistentBar, R> R findBy(Example<S> example,
-			Function<FetchableFluentQuery<S>, R> queryFunction) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Optional<PersistentBar> findTopByCodeAndTimeframeOrderByTimeframeDesc(String code, Timeframe timeframe) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<PersistentBar> findByCodeAndTimeframe(String code, Timeframe timeframe) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<PersistentBar> findByCodeAndTimeframe(String code, Timeframe timeframe, Pageable pageable) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<PersistentBar> findByCodeAndTimeframeAndBeginTimeBefore(String code, Timeframe timeframe,
-			ZonedDateTime from, Pageable pageable) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<PersistentBar> findByCodeAndTimeframeAndBeginTimeBetween(String code, Timeframe timeframe,
-			ZonedDateTime from, ZonedDateTime to) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
+	@SneakyThrows
 	public Optional<ZonedDateTime> findMaxBeginTimeByCodeAndTimeframe(String code, Timeframe timeframe) {
-		// TODO Auto-generated method stub
-		return null;
+		final Path path = getPath(code, timeframe);
+		synchronized(path) {
+			if(Files.exists(path)) {
+				try(final RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")){
+					final long length = file.length();
+					if(length >= BYTES) {
+						file.seek(length - BYTES);
+						final ZoneId zoneId = ZoneId.systemDefault();
+						final Instant instant = Instant.ofEpochSecond(file.readLong());
+						final ZonedDateTime endTime = ZonedDateTime.ofInstant(instant, zoneId);
+						return Optional.of(endTime.minus(timeframe.getDuration()));
+					}
+				}
+			}
+		}
+		return Optional.empty();
+	}
+
+	@Override
+	@SneakyThrows
+	public void saveAll(String code, Timeframe timeframe, Collection<Bar> bars) {
+		if(null != bars && !bars.isEmpty()) {
+			final ZonedDateTime minBeginTime = findMaxBeginTimeByCodeAndTimeframe(code, timeframe)
+					.orElse(ZonedDateTime.now().minusYears(100));
+			bars = bars.stream()
+					.filter(bar -> bar.getBeginTime().isAfter(minBeginTime))
+					.distinct()
+					.sorted(Comparator.comparing(Bar::getEndTime))
+					.collect(Collectors.toList());
+			final Path path = getPath(code, timeframe);
+			synchronized(path) {
+				if(!Files.exists(path)) {
+					Files.createDirectories(path.getParent());
+					Files.createFile(path);
+				}
+				try(final RandomAccessFile file = new RandomAccessFile(path.toFile(), "rw")) {
+					for(Bar bar : bars) write(bar, file);
+				}
+			}
+		}
 	}
 
 }

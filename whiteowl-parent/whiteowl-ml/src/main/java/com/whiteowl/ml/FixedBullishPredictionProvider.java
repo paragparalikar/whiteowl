@@ -25,7 +25,6 @@ import org.ta4j.core.num.DoubleNum;
 import org.ta4j.core.num.Num;
 
 import com.whiteowl.core.bar.BarService;
-import com.whiteowl.core.bar.PersistentBar;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.prediction.Prediction;
 import com.whiteowl.core.prediction.PredictionRange;
@@ -101,8 +100,7 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 	
 	@SneakyThrows
 	private Classifier build(Scrip scrip, Timeframe timeframe) {
-		final List<Bar> bars = barService.findByCodeAndTimeframe(scrip.getCode(), timeframe).stream()
-			.map(PersistentBar::toBar).collect(Collectors.toList());
+		final List<Bar> bars = barService.findByCodeAndTimeframe(scrip.getCode(), timeframe);
 		final BarSeries series = new BaseBarSeries(bars);
 		final LongSuccessClassificationRule buyTradeule = new LongSuccessClassificationRule(series, timeStopBarCount, targetPercentage, stopLossPercentage);
 		final FeatureExtracter featureExtracter = createFeatureExtracter();
@@ -164,8 +162,7 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 		
 		final FeatureExtracter featureExtracter = createFeatureExtracter();
 		final int minBarCount = featureExtracter.getMinBarCount();
-		final List<Bar> bars = barService.findLatestByCodeAndTimeframe(scrip.getCode(), timeframe, minBarCount).stream()
-				.map(PersistentBar::toBar).collect(Collectors.toList());
+		final List<Bar> bars = barService.findLatestByCodeAndTimeframe(scrip.getCode(), timeframe, minBarCount);
 		if(minBarCount > bars.size()) return Collections.emptySet();
 		final BarSeries series = new BaseBarSeries(bars);
 		final BarSeries normalSeries = barSeriesNormalizer.normalise(series);

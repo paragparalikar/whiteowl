@@ -8,11 +8,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.ta4j.core.Bar;
 
 import com.whiteowl.core.bar.BarDataProvider;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.BarsDownloadedEvent;
-import com.whiteowl.core.bar.PersistentBar;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.Scrip;
@@ -52,11 +52,11 @@ public class BarDownloadJob {
 	private void download(Scrip scrip, Timeframe timeframe) {
 		final ZonedDateTime to = ZonedDateTime.now();
 		final ZonedDateTime from = getLastDownloadTimestamp(scrip, timeframe);
-		final List<PersistentBar> bars = barDataProvider.getBars(scrip, timeframe, from, to);
+		final List<Bar> bars = barDataProvider.getBars(scrip, timeframe, from, to);
 		if(!bars.isEmpty()) {
-			bars.forEach(barService::saveSafe);
-			final PersistentBar lastBar = bars.get(bars.size() - 1);
-			final Duration duration = lastBar.getTimeframe().getDuration();
+			barService.saveAll(scrip.getCode(), timeframe, bars);
+			final Bar lastBar = bars.get(bars.size() - 1);
+			final Duration duration = lastBar.getTimePeriod();
 			final ZonedDateTime endTime = lastBar.getBeginTime().plus(duration);
 			log.info("{} - {} : Downloaded {} bars", timeframe, scrip.getName(), bars.size());
 			eventPublisher.publishEvent(BarsDownloadedEvent.builder()

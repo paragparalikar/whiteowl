@@ -1,30 +1,22 @@
 package com.whiteowl.core.bar;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.ta4j.core.Bar;
 
-@Repository
-public interface BarRepository extends JpaRepository<PersistentBar, PersistentBarKey> {
+public interface BarRepository {
 	
-	Optional<PersistentBar> findTopByCodeAndTimeframeOrderByTimeframeDesc(String code, Timeframe timeframe);
+	Optional<Bar> findTopByCodeAndTimeframeOrderByTimeframeDesc(String code, Timeframe timeframe);
 	
-	List<PersistentBar> findByCodeAndTimeframe(String code, Timeframe timeframe);
+	List<Bar> findByCodeAndTimeframe(String code, Timeframe timeframe);
 	
-	List<PersistentBar> findByCodeAndTimeframe(String code, Timeframe timeframe, Pageable pageable);
-	
-	List<PersistentBar> findByCodeAndTimeframeAndBeginTimeBefore(String code, Timeframe timeframe, 
-			ZonedDateTime from, Pageable pageable);
-	
-	List<PersistentBar> findByCodeAndTimeframeAndBeginTimeBetween(String code, Timeframe timeframe, 
-			ZonedDateTime from, ZonedDateTime to);
+	List<Bar> findLatestByCodeAndTimeframe(String code, Timeframe timeframe, long count);
 
-	@Query(value = "select max(b.beginTime) from PersistentBar b where b.code = ?1 and b.timeframe = ?2")
 	Optional<ZonedDateTime> findMaxBeginTimeByCodeAndTimeframe(String code, Timeframe timeframe);
+
+	void saveAll(String code, Timeframe timeframe, Collection<Bar> bars);
 }
 
