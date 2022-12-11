@@ -17,6 +17,7 @@ import org.javalite.http.Put;
 import org.javalite.http.Request;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.whiteowl.client.kite.model.Response;
 import com.whiteowl.client.kite.model.Twofa;
 import com.whiteowl.client.kite.ticker.KiteTicker;
@@ -47,6 +48,8 @@ public class KiteSession {
 		values.stream().map(HttpCookie::parse).flatMap(Collection::stream).forEach(cookies::add);
 	}
 	
+	//EIK6BRLBUGVWMD6DBE25VRLX4PEAUUED
+	
 	@SneakyThrows
 	private void login() {
 		cookies(new Get(KiteConstant.URL_BASE, KiteConstant.TIMEOUT, KiteConstant.TIMEOUT)
@@ -58,14 +61,20 @@ public class KiteSession {
 				.param("user_id", credentials.getUsername())
 				.param("password", credentials.getPassword());
 		final Response<Twofa> response = KiteConstant.JSON.readValue(login.text(), new TypeReference<Response<Twofa>>(){});
+		final Twofa twofaInfo = response.getData();
 		final Post twofa = new Post(KiteConstant.URL_BASE + KiteConstant.URL_TWOFA, null, KiteConstant.TIMEOUT, KiteConstant.TIMEOUT)
 				.header(KiteConstant.USER_AGENT, KiteConstant.USER_AGENT_CHROME)
 				.header("cookie", cookies())
-				.param("user_id", credentials.getUsername())
-				.param("request_id", response.getData().getRequestId())
-				.param("twofa_value", credentials.getPin());
+				.param("user_id", twofaInfo.getUserId())
+				.param("request_id", twofaInfo.getRequestId())
+				.param("twofa_type", twofaInfo.getTwofaType())
+				.param("twofa_value", toTotp(credentials.getPin()));
 		cookies(twofa.headers());
 		cookies(get(KiteConstant.URL_DASHBOARD).headers());
+	}
+	
+	private String toTotp(String pin) {
+		return String.valueOf(new GoogleAuthenticator().getTotpPassword(pin));
 	}
 	
 	public KiteTicker createTicker() {

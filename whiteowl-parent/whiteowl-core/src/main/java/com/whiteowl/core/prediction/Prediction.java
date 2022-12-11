@@ -2,6 +2,8 @@ package com.whiteowl.core.prediction;
 
 import java.time.ZonedDateTime;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -48,12 +50,24 @@ public class Prediction {
 	private ZonedDateTime toTimestamp;
 	
 	@Embedded
+	@AttributeOverrides({
+        @AttributeOverride(name="min", column=@Column(name="MIN_HIGH")),
+        @AttributeOverride(name="max", column=@Column(name="MAX_HIGH"))
+    })
 	private PredictionRange high;
 	
 	@Embedded
+	@AttributeOverrides({
+        @AttributeOverride(name="min", column=@Column(name="MIN_LOW")),
+        @AttributeOverride(name="max", column=@Column(name="MAX_LOW"))
+    })
 	private PredictionRange low;
 	
 	@Embedded
+	@AttributeOverrides({
+        @AttributeOverride(name="min", column=@Column(name="MIN_CLOSE")),
+        @AttributeOverride(name="max", column=@Column(name="MAX_CLOSE"))
+    })
 	private PredictionRange close;
 	
 }

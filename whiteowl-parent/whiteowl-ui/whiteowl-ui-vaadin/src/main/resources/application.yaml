@@ -3,7 +3,7 @@ whiteowl:
     kite:
       username: Kr8iquq+IQuUtHhn1xMeIQ==
       password: StYLdA7W+uC4BRHDt2idyQ==
-      pin: excpHxV4+vwDF69SHj3JPA==
+      pin: cjDp7WCtTW1lcKntKNivqnvYAol9u7aWkhQ22DbL/ONVSwDtU69sTU8kZMOL10Ku
       
 spring:
   h2:
@@ -14,10 +14,10 @@ spring:
     banner-mode: off
     log-startup-info: false
   jpa:
-    show-sql: false
+    show-sql: true
     generate-ddl: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
   datasource:
     #url: jdbc:h2:mem:whiteowl
     url: jdbc:h2:~/.whiteowl/database/h2

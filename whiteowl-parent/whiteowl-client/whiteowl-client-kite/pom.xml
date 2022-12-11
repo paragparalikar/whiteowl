@@ -8,7 +8,7 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>whiteowl-client-kite</artifactId>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -25,6 +25,11 @@
 			<version>${javalite.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.warrenstrange</groupId>
+			<artifactId>googleauth</artifactId>
+			<version>${googleauth.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>io.github.resilience4j</groupId>
 			<artifactId>resilience4j-all</artifactId>
 			<version>${resilience4j.version}</version>
@@ -39,5 +44,5 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 		</dependency>
 	</dependencies>
-	
+
 </project>

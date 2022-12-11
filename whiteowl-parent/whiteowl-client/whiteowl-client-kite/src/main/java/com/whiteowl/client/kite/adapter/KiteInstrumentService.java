@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import com.whiteowl.client.kite.KiteConstant;
 import com.whiteowl.client.kite.model.Instrument;
+import com.whiteowl.core.util.Constant;
 import com.whiteowl.core.util.Strings;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class KiteInstrumentService {
 	
 	private final Map<Long, Instrument> cacheByTokens = new HashMap<>();
 	private final Map<String, Instrument> cacheBySymbol = new HashMap<>();
-	private final Path path = Paths.get(System.getProperty("user.home"), "mongoose", "database", "kite-instruments.csv");
+	private final Path path = Constant.HOME.resolve(Paths.get("database", "kite-instruments.csv"));
 	
 	@PostConstruct
 	public void init() throws Exception {
