@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.IsoFields;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,6 +21,7 @@ import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBar;
 import org.ta4j.core.BaseBarSeries;
 import org.ta4j.core.num.DoubleNum;
+import org.ta4j.core.num.Num;
 
 import lombok.SneakyThrows;
 import weka.core.Instances;
@@ -58,9 +62,40 @@ public class TestDataService {
 
 	@SneakyThrows
 	public BarSeries getBarSeries(Path path) {
+		final List<Bar> bars = Files.lines(path)
+				.map(this::parse)
+				.distinct()
+				.sorted(Comparator.comparing(Bar::getEndTime))
+				.collect(Collectors.toList());
+		return new BaseBarSeries(bars);
+	}
+	
+	public BarSeries getBarSeries(String fileName) {
+		return getBarSeries(inputDirectory.resolve(fileName));
+	}
+	
+	@SneakyThrows
+	public BarSeries getWeeklyBarSeries(Path path) {
 		final List<Bar> bars = Files.lines(path).map(this::parse).distinct()
 				.sorted(Comparator.comparing(Bar::getEndTime)).collect(Collectors.toList());
-		return new BaseBarSeries(bars);
+		int week = -1;
+		Num high = DoubleNum.valueOf(Double.MIN_VALUE), low = DoubleNum.valueOf(Double.MAX_VALUE), 
+				open = null, close = null;
+		final List<Bar> weeklyBars = new ArrayList<>();
+		for(int index = bars.size() - 1; index >= 0; index--) {
+			final Bar bar = bars.get(index);
+			if(null != close && week != bar.getEndTime().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR) && 
+					bar.getEndTime().getDayOfWeek().ordinal() <= DayOfWeek.THURSDAY.ordinal()) {
+				
+			} else {
+				open = bar.getOpenPrice();
+				high = high.max(bar.getHighPrice());
+				low = low.min(bar.getLowPrice());
+				if(null == close) close = bar.getClosePrice();
+				week = bar.getEndTime().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+			}
+		}
+		return new BaseBarSeries(weeklyBars);
 	}
 	
 	private Bar parse(String line) {

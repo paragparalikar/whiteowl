@@ -22,7 +22,6 @@ import org.ta4j.core.num.Num;
 import com.whiteowl.core.indicator.GapIndicator;
 import com.whiteowl.core.indicator.LowerWickIndicator;
 import com.whiteowl.core.indicator.RatioIndicator;
-import com.whiteowl.core.indicator.UpperWickIndicator;
 
 import lombok.RequiredArgsConstructor;
 
