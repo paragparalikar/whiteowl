@@ -1,6 +1,8 @@
 package com.whiteowl.core.derivative.option;
 
-import com.whiteowl.core.scrip.Scrip;
+import java.time.LocalDate;
+
+import com.whiteowl.core.scrip.ScripType;
 
 import lombok.Builder;
 import lombok.Value;
@@ -9,23 +11,20 @@ import lombok.Value;
 @Builder
 public class OptionChainItem {
 
-	private Scrip scrip;
-	private long volume;
-	private long openItnterest;
-	private long changeInOpenItnterest;
-	private double changeInOpenInterestPercentage;
-	private double impliedVolatility;
-	private double lastTradedPrice;
-	private double change;
-	private double changePercentage;
-	private double underlyingValue;
-	private long bidQuantity;
-	private double bidPrice;
-	private long askQuantity;
-	private double askPrice;
-
-	private double delta;
-	private double gamma;
-	private double theta;
-	private double vega;
+	private double strikePrice;
+	
+	private LocalDate expiryDate;
+	
+	private OptionInfo putOptionInfo;
+	
+	private OptionInfo callOptionInfo;
+	
+	public OptionInfo getOptionInfo(ScripType scripType) {
+		switch(scripType) {
+		case CE: return callOptionInfo;
+		case PE: return putOptionInfo;
+		default: throw new IllegalArgumentException(
+				String.format("ScripType %s is not supported for options", scripType.name()));
+		}
+	}
 }

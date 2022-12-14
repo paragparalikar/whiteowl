@@ -1,6 +1,7 @@
 package com.whiteowl.core.derivative.option;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -19,8 +20,12 @@ import lombok.Value;
 @Builder
 public class OptionChain {
 
+	private final IndexInfo indexInfo;
 	private final Scrip underlying;
+	private final double underlyingValue;
+	private final LocalDateTime timestamp;
 	private final Set<OptionChainItem> items = new HashSet<>(); 
+	private final List<Double> strikePrices = new ArrayList<>();
 	private final List<LocalDate> expiryDates = new ArrayList<>();
 	
 	public Optional<OptionChainItem> findByExpiryAndScripType(int skip, OptionExpiryType expiryType, ScripType scripType){
@@ -30,21 +35,20 @@ public class OptionChain {
 	
 	public Optional<OptionChainItem> findByExpiryAndScripType(LocalDate expiryDate, ScripType scripType){
 		return items.stream()
-				.filter(item -> scripType.equals(item.getScrip().getType()))
-				.filter(item -> item.getScrip().getExpiry().equals(expiryDate))
+				.filter(item -> item.getOptionInfo(scripType).getScrip().getExpiry().equals(expiryDate))
 				.findFirst();
 	}
 	
 	public Optional<OptionChainItem> findByScrip(@NonNull Scrip scrip){
 		return items.stream()
-				.filter(item -> scrip.equals(item.getScrip()))
+				.filter(item -> scrip.equals(item.getOptionInfo(scrip.getType()).getScrip()))
 				.findFirst();
 	}
 
-	public Optional<OptionChainItem> findByDeltaAndScripType(double delta, @NonNull ScripType scripType){
+	public Optional<OptionInfo> findByDeltaAndScripType(double delta, @NonNull ScripType scripType){
 		return items.stream()
-				.filter(item -> scripType.equals(item.getScrip().getType()))
-				.min(Comparator.comparingDouble(item -> Math.abs(delta - item.getDelta())));
+				.map(item -> item.getOptionInfo(scripType))
+				.min(Comparator.comparingDouble(info -> Math.abs(delta - info.getDelta())));
 	}
 	
 }

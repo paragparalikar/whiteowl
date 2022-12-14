@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.whiteowl.core.derivative.option.OptionChain;
-import com.whiteowl.core.derivative.option.OptionChainItem;
 import com.whiteowl.core.derivative.option.OptionChainProvider;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
@@ -92,22 +91,7 @@ public class NseOptionChainProvider implements OptionChainProvider {
 	}
 	
 	private OptionChain map(Scrip underlying, NseOptionChainResponse response) {
-		final OptionChain chain = OptionChain.builder()
-				.underlying(underlying)
-				.build();
-		chain.getExpiryDates().addAll(response.getRecords().getExpiryDates());
-		for(NseOptionChainItem item : response.getRecords().getData()) {
-			map(item.getPutOptionInfo()).ifPresent(chain.getItems()::add);
-			map(item.getCallOptionInfo()).ifPresent(chain.getItems()::add);
-		}
-		return chain;
+		return response.getRecords().toOptionChain(underlying, scripService::findByCode);
 	}
-	
-	private Optional<OptionChainItem> map(NseOptionInfo info) {
-		if(null == info) return Optional.empty();
-		return Optional.ofNullable(info)
-			.map(NseOptionInfo::toScripCode)
-			.map(scripService::findByCode)
-			.map(info::toOptionChainItem);
-	}
+
 }

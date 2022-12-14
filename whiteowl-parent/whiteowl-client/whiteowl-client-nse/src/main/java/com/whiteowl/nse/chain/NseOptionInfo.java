@@ -9,7 +9,7 @@ import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.whiteowl.core.derivative.option.OptionChainItem;
+import com.whiteowl.core.derivative.option.OptionInfo;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripType;
 import com.whiteowl.core.util.BlackScholes;
@@ -51,7 +51,8 @@ public abstract class NseOptionInfo {
 	private double askPrice;
 	private double underlyingValue;
 	
-	public OptionChainItem toOptionChainItem(Scrip scrip) {
+	public OptionInfo toOptionInfo(Scrip scrip) {
+		final OptionInfo optionInfo = new OptionInfo();
 		double delta = 0, gamma = 0, theta = 0, vega = 0;
 		if(0 < totalTradedVolume) {
 			final long diff = expiryDate.getTime() - System.currentTimeMillis();
@@ -62,26 +63,27 @@ public abstract class NseOptionInfo {
 			theta = ScripType.CE.equals(scripType) ? blackScholes.getCallTheta() : blackScholes.getPutTheta();
 			delta = ScripType.CE.equals(scripType) ? blackScholes.getCallDelta() : blackScholes.getPutDelta();
 		}
-		return OptionChainItem.builder()
-				.scrip(scrip)
-				.volume(totalTradedVolume)
-				.openItnterest(openInterest)
-				.changeInOpenItnterest(changeinOpenInterest)
-				.changeInOpenInterestPercentage(pchangeinOpenInterest)
-				.impliedVolatility(impliedVolatility)
-				.lastTradedPrice(lastPrice)
-				.change(change)
-				.changePercentage(changePercentage)
-				.underlyingValue(underlyingValue)
-				.bidQuantity(bidQty)
-				.bidPrice(bidprice)
-				.askQuantity(askQty)
-				.askPrice(askPrice)
-				.delta(delta)
-				.gamma(gamma)
-				.theta(theta)
-				.vega(vega)
-				.build();
+		optionInfo.setScrip(scrip);
+		optionInfo.setOpenInterest(openInterest);
+		optionInfo.setChangeinOpenInterest(changeinOpenInterest);
+		optionInfo.setChangeInOpenInterestPercentage(pchangeinOpenInterest);
+		optionInfo.setTotalTradedVolume(totalTradedVolume);
+		optionInfo.setImpliedVolatility(impliedVolatility);
+		optionInfo.setLastPrice(lastPrice);
+		optionInfo.setChange(change);
+		optionInfo.setChangePercentage(changePercentage);
+		optionInfo.setUnderlyingValue(underlyingValue);
+		optionInfo.setTotalBuyQuantity(totalBuyQuantity);
+		optionInfo.setTotalSellQuantity(totalSellQuantity);
+		optionInfo.setBidQuantity(bidQty);
+		optionInfo.setBidPrice(bidprice);
+		optionInfo.setAskQuantity(askQty);
+		optionInfo.setAskPrice(askPrice);
+		optionInfo.setDelta(delta);
+		optionInfo.setGamma(gamma);
+		optionInfo.setTheta(theta);
+		optionInfo.setVega(vega);
+		return optionInfo;
 	}
 	
 	public String toScripCode() {

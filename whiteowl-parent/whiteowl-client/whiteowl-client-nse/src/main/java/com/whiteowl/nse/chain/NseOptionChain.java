@@ -4,10 +4,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.whiteowl.core.derivative.option.OptionChain;
+import com.whiteowl.core.scrip.Scrip;
 
 import lombok.Data;
 
@@ -28,5 +32,20 @@ public class NseOptionChain {
 	private double underlyingValue;
 	
 	private NseIndexInfo index;
+	
+	public OptionChain toOptionChain(Scrip underlying, Function<String, Scrip> scripResolver) {
+		final OptionChain optionChain = OptionChain.builder()
+				.indexInfo(Optional.ofNullable(index).map(NseIndexInfo::toIndexInfo).orElse(null))
+				.underlying(underlying)
+				.underlyingValue(underlyingValue)
+				.timestamp(timestamp)
+				.build();
+		optionChain.getStrikePrices().addAll(strikePrices);
+		optionChain.getExpiryDates().addAll(expiryDates);
+		data.stream()
+			.map(item -> item.toOptionChainItem(underlying, scripResolver))
+			.forEach(optionChain.getItems()::add);
+		return optionChain;
+	}
 
 }
