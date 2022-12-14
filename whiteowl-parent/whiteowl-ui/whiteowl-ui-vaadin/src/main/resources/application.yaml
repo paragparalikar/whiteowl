@@ -2,8 +2,10 @@ whiteowl:
   data-provider:
     kite:
       username: Kr8iquq+IQuUtHhn1xMeIQ==
-      password: u1+iPAl+2lr152hzHgWlWA==
-      pin: cjDp7WCtTW1lcKntKNivqnvYAol9u7aWkhQ22DbL/ONVSwDtU69sTU8kZMOL10Ku
+      # Dark@Horse3
+      password: gH5xVw9QCiNY6tjn8LXTNA==
+      # 3DA57RQMUXVOBKT5E5OM75CS5RZXPXWT
+      pin: UEpcbpBgOo1X4NpRYrRohKztpp7dPI7ZGTCsemRanCJVSwDtU69sTU8kZMOL10Ku
       
 spring:
   h2:

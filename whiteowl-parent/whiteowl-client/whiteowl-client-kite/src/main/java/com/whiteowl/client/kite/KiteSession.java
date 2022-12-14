@@ -62,6 +62,14 @@ public class KiteSession {
 				.param("password", credentials.getPassword());
 		final Response<Twofa> response = KiteConstant.JSON.readValue(login.text(), new TypeReference<Response<Twofa>>(){});
 		final Twofa twofaInfo = response.getData();
+		if(twofaInfo.isLocked()) {
+			throw new IllegalStateException(String.format("Kite account is locked for %s. Manual intervention is required.", 
+					credentials.getUsername()));
+		}
+		if(twofaInfo.isCaptcha()) {
+			throw new IllegalStateException(String.format("Kite api has requested CAPTCHA for %s. Manual intervention is required.", 
+					credentials.getUsername()));
+		}
 		final Post twofa = new Post(KiteConstant.URL_BASE + KiteConstant.URL_TWOFA, null, KiteConstant.TIMEOUT, KiteConstant.TIMEOUT)
 				.header(KiteConstant.USER_AGENT, KiteConstant.USER_AGENT_CHROME)
 				.header("cookie", cookies())
@@ -69,6 +77,7 @@ public class KiteSession {
 				.param("request_id", twofaInfo.getRequestId())
 				.param("twofa_type", twofaInfo.getTwofaType())
 				.param("twofa_value", toTotp(credentials.getPin()));
+		
 		cookies(twofa.headers());
 		cookies(get(KiteConstant.URL_DASHBOARD).headers());
 	}

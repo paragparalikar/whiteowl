@@ -46,7 +46,7 @@ public class Crypto {
 	
     public static void main(String[] args) throws Exception {
     	final String key = "UXytRK5s40Sett3rj+h2dA==";
-    	final String pin = "EIK6BRLBUGVWMD6DBE25VRLX4PEAUUED";
+    	final String pin = "3DA57RQMUXVOBKT5E5OM75CS5RZXPXWT";
     	final String encryptedPin = Crypto.encrypt(pin, key);
     	System.out.println(encryptedPin);
     }

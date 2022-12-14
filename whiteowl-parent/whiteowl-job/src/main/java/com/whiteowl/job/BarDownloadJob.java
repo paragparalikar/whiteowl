@@ -4,7 +4,9 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -38,6 +40,13 @@ public class BarDownloadJob {
 	@Async @Scheduled(cron = "5 0/15 9-16 * * MON-FRI") public void downloadM15() { download(Timeframe.M15); }
 	@Async @Scheduled(cron = "3 5-59/10 9-16 * * MON-FRI") public void downloadM10() { download(Timeframe.M10); }
 	@Async @Scheduled(cron = "2 0/5 9-16 * * MON-FRI") public void downloadM5() { download(Timeframe.M5); }
+	
+	@EventListener(ApplicationStartedEvent.class)
+	public void download() {
+		for(Timeframe timeframe : Timeframe.values()) {
+			download(timeframe);
+		}
+	}
 	
 	private void download(Timeframe timeframe) {
 		scripService.findAll().stream()
