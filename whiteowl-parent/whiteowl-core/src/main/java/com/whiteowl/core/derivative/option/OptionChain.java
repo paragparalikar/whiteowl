@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -47,7 +48,9 @@ public class OptionChain {
 
 	public Optional<OptionInfo> findByDeltaAndScripType(double delta, @NonNull ScripType scripType){
 		return items.stream()
+				.filter(Objects::nonNull)
 				.map(item -> item.getOptionInfo(scripType))
+				.filter(Objects::nonNull)
 				.min(Comparator.comparingDouble(info -> Math.abs(delta - info.getDelta())));
 	}
 	

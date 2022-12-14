@@ -9,5 +9,7 @@ public class Twofa {
 	private String requestId;
 	private String twofaType;
 	private String twofaStatus;
+	private boolean captcha;
+	private boolean locked;
 	
 }

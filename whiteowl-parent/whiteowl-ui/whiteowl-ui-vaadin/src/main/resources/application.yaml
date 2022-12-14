@@ -14,10 +14,10 @@ spring:
     banner-mode: off
     log-startup-info: false
   jpa:
-    show-sql: true
+    show-sql: false
     generate-ddl: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
   datasource:
     #url: jdbc:h2:mem:whiteowl
     url: jdbc:h2:~/.whiteowl/database/h2

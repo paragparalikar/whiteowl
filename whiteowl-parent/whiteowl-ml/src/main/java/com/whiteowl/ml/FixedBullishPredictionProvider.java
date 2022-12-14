@@ -148,6 +148,10 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 			if(isExpired(scrip, timeframe, ttl)) {
 				log.warn("Model expired for {} {} - {}", modelIdPrefix, scrip.getCode(), timeframe);
 				final Path path = getPath(scrip, timeframe);
+				if(Files.exists(path)) {
+					Files.createDirectories(path.getParent());
+					Files.createFile(path);
+				}
 				final Classifier classifier = build(scrip, timeframe);
 				SerializationHelper.serialize((Serializable) classifier, Files.newOutputStream(path));
 			}
