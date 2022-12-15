@@ -1,6 +1,7 @@
 package com.whiteowl.client.kite;
 
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
@@ -46,6 +47,8 @@ public class KiteConstant {
 	public static final String INTERVAL_60_MINUTE = "60minute";
 	
 	public static final String FORMAT_TIMESTAMP = "yyyy-MM-dd HH:mm:ss";
+	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(KiteConstant.FORMAT_TIMESTAMP);
+	
 	
 	static {
 		KiteConstant.JSON.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
