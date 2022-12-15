@@ -20,7 +20,7 @@ public class PredictionProviderRebuildJob {
 	private final List<PredictionProvider> predictionProviders;
 	
 	@Scheduled(cron = "0 0 9 * * *")
-	@EventListener(ApplicationReadyEvent.class)
+	//@EventListener(ApplicationReadyEvent.class)
 	public void run() {
 		predictionProviders.forEach(predictionProvider -> predictionProvider.rebuild(ttl));
 	}

@@ -1,6 +1,7 @@
 package com.whiteowl.client.kite;
 
 import java.net.HttpCookie;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -48,8 +49,6 @@ public class KiteSession {
 		values.stream().map(HttpCookie::parse).flatMap(Collection::stream).forEach(cookies::add);
 	}
 	
-	//EIK6BRLBUGVWMD6DBE25VRLX4PEAUUED
-	
 	@SneakyThrows
 	private void login() {
 		cookies(new Get(KiteConstant.URL_BASE, KiteConstant.TIMEOUT, KiteConstant.TIMEOUT)
@@ -82,8 +81,13 @@ public class KiteSession {
 		cookies(get(KiteConstant.URL_DASHBOARD).headers());
 	}
 	
-	private String toTotp(String pin) {
-		return String.valueOf(new GoogleAuthenticator().getTotpPassword(pin));
+	private String toTotp(String pin) throws InterruptedException {
+		final LocalDateTime localDateTime = LocalDateTime.now();
+		final int secondOfMinute = localDateTime.getSecond();
+		if(secondOfMinute >= 27 && secondOfMinute <= 29) Thread.sleep(30 - secondOfMinute);
+		if(secondOfMinute >= 57 && secondOfMinute <= 59) Thread.sleep(60 - secondOfMinute);
+		final GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator();
+		return String.valueOf(googleAuthenticator.getTotpPassword(pin));
 	}
 	
 	public KiteTicker createTicker() {
