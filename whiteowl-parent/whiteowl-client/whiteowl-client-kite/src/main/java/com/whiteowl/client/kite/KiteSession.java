@@ -128,7 +128,7 @@ public class KiteSession {
 		final String enctoken = getCookieValue("enctoken");
 		if(!Strings.hasText(enctoken)) login();
 		request.header("cookie", getCookies());
-		request.header("authorization", "enctoken " + enctoken);
+		request.header("authorization", "enctoken " + getCookieValue("enctoken"));
 	}
 	
 }
