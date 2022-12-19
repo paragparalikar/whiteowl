@@ -34,6 +34,12 @@ public class FileSystemBarRepository implements BarRepository {
 	private static final String NAME = "bars.dat";
 	private static final int BYTES = Long.BYTES + 5 * Double.BYTES;
 	
+	public static void main(String[] args) {
+		final FileSystemBarRepository repo = new FileSystemBarRepository();
+		repo.findByCodeAndTimeframe("TITAN", Timeframe.H1)
+			.forEach(System.out::println);
+	}
+	
 	private Path getPath(String code, Timeframe timeframe) {
 		return Constant.HOME.resolve(Paths.get(code, timeframe.name(), NAME));
 	}
@@ -154,7 +160,7 @@ public class FileSystemBarRepository implements BarRepository {
 					.orElse(ZonedDateTime.now().minusYears(100));
 			final List<Bar> cleanBars = bars.stream()
 					.filter(bar -> bar.getBeginTime().isAfter(minBeginTime) || bar.getBeginTime().equals(minBeginTime))
-					.filter(bar -> withinSession(bar.getEndTime()))
+					.filter(bar -> Timeframe.D.equals(timeframe) || withinSession(bar.getBeginTime(), bar.getEndTime()))
 					.distinct()
 					.sorted(Comparator.comparing(Bar::getEndTime))
 					.collect(Collectors.toList());
@@ -176,11 +182,10 @@ public class FileSystemBarRepository implements BarRepository {
 		}
 	}
 	
-	private boolean withinSession(ZonedDateTime zonedDateTime) {
-		final LocalTime localTime = zonedDateTime.toLocalTime();
-		return Constant.NSE_START_TIME.isBefore(localTime) &&
-				(Constant.NSE_END_TIME.isAfter(localTime) || 
-						Constant.NSE_END_TIME.equals(localTime));
+	private boolean withinSession(ZonedDateTime beginTime, ZonedDateTime endTime) {
+		final LocalTime beginLocalTime = beginTime.toLocalTime();
+		final LocalTime endLocalTime = endTime.toLocalTime();
+		return Constant.NSE_START_TIME.isBefore(endLocalTime) && Constant.NSE_END_TIME.isAfter(beginLocalTime);
 	}
 
 }
