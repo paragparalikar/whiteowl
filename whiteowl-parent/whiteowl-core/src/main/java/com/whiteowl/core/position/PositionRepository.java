@@ -13,6 +13,6 @@ public interface PositionRepository extends JpaRepository<Position, Long> {
 	
 	List<Position> findByPortfolioAndStatusNot(Portfolio portfolio, PositionStatus status);
 	
-	List<Position> findByScripAndTradingStrategyConfigIdAndStatus(Scrip scrip, Long configId, PositionStatus status);
+	List<Position> findByScripAndTradingStrategyConfigIdAndStatus(Scrip scrip, String configId, PositionStatus status);
 	
 }

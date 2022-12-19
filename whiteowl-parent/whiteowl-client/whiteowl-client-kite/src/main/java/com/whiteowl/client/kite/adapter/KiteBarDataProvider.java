@@ -9,11 +9,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
+import org.ta4j.core.Bar;
 
-import com.whiteowl.core.quote.Quote;
-import com.whiteowl.core.quote.QuoteDataProvider;
-import com.whiteowl.core.quote.QuoteMode;
-import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.client.kite.KiteConnectApi;
 import com.whiteowl.client.kite.adapter.mapper.KiteMapper;
 import com.whiteowl.client.kite.model.Candle;
@@ -22,8 +19,11 @@ import com.whiteowl.client.kite.model.Instrument;
 import com.whiteowl.client.kite.model.KiteQuote;
 import com.whiteowl.client.kite.model.KiteQuoteMode;
 import com.whiteowl.core.bar.BarDataProvider;
-import com.whiteowl.core.bar.PersistentBar;
 import com.whiteowl.core.bar.Timeframe;
+import com.whiteowl.core.quote.Quote;
+import com.whiteowl.core.quote.QuoteDataProvider;
+import com.whiteowl.core.quote.QuoteMode;
+import com.whiteowl.core.scrip.Scrip;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,11 +44,11 @@ public class KiteBarDataProvider implements BarDataProvider, QuoteDataProvider {
 	}
 	
 	@Override
-	public List<PersistentBar> getBars(Scrip scrip, Timeframe timeframe, ZonedDateTime from, ZonedDateTime to) {
+	public List<Bar> getBars(Scrip scrip, Timeframe timeframe, ZonedDateTime from, ZonedDateTime to) {
 		final Instrument instrument = kiteInstrumentService.findByTradingSymbol(scrip.getCode());
 		final long instrumentToken = instrument.getInstrumentToken();
 		final Duration duration = kiteMapper.getHistoricalDataBatchLimit(timeframe);
-		final List<PersistentBar> bars = new ArrayList<>();
+		final List<Bar> bars = new ArrayList<>();
 		log.debug("Initiating bar download for {} - {}, from {} to {}", scrip.getCode(), timeframe.name(), from, to);
 		while(null != to && to.isAfter(from)) {
 			final ZonedDateTime projectedFrom = to.minus(duration);
@@ -59,7 +59,7 @@ public class KiteBarDataProvider implements BarDataProvider, QuoteDataProvider {
 	}
 	
 	private ZonedDateTime fill(long instrumentToken, String code, Timeframe timeframe, 
-			ZonedDateTime from, ZonedDateTime to, List<PersistentBar> bars){
+			ZonedDateTime from, ZonedDateTime to, List<Bar> bars){
 		log.debug("Fetching data from {} to {}", from, to);
 		final String interval = kiteMapper.toInterval(timeframe);
 		final CandleSeries candleSeries = kiteClient.getData(instrumentToken, interval, from, to);
@@ -67,7 +67,7 @@ public class KiteBarDataProvider implements BarDataProvider, QuoteDataProvider {
 			final List<Candle> candles = candleSeries.getData();
 			log.debug("Fetched {} candles from kite", candles.size());
 			candles.stream()
-				.map(candle -> kiteMapper.toPersistentBar(candle, code, timeframe))
+				.map(candle -> kiteMapper.toBar(candle, timeframe))
 				.forEach(bars::add);
 			return candles.get(0).getTimestamp().minus(timeframe.getDuration());
 		}

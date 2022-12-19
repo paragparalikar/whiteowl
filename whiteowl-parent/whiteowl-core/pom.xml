@@ -26,6 +26,16 @@
 			<artifactId>h2</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.javalite</groupId>
+			<artifactId>javalite-common</artifactId>
+			<version>${javalite.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.brotli</groupId>
+			<artifactId>dec</artifactId>
+			<version>0.1.2</version>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>

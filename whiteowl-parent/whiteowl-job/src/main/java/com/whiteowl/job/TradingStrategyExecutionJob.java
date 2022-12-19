@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import com.whiteowl.job.TradeSynchronizationJob.TradesSynchronizedEvent;
 import com.whiteowl.strategy.TradingStrategyExecutor;
+import com.whiteowl.strategy.config.TradingStrategyConfig;
 import com.whiteowl.strategy.config.TradingStrategyConfigService;
 
 import lombok.RequiredArgsConstructor;
@@ -20,12 +21,13 @@ public class TradingStrategyExecutionJob {
 	
 	@EventListener(TradesSynchronizedEvent.class)
 	public void tryExecute() {
-		try {
-			log.debug("Starting trading strategy execution job");
-			tradingStrategyConfigService.findByEnabled(true).stream()
-			.forEach(tradingStrategyExecutor::execute);
-		} catch(Exception e) {
-			log.error("", e);
+		for(TradingStrategyConfig config : tradingStrategyConfigService.findByEnabled(true)) {
+			try {
+				log.debug("Starting trading strategy execution job");
+				tradingStrategyExecutor.execute(config);
+			} catch(Exception e) {
+				log.error("", e);
+			}
 		}
 	}
 

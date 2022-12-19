@@ -7,6 +7,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 
+import org.ta4j.core.Bar;
+
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.util.Constant;
 
@@ -16,12 +18,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class SmartBarDataProvider implements BarDataProvider {
+public class LastBarAwareBarDataProvider implements BarDataProvider {
 
 	@NonNull private final BarDataProvider delegate;
 
 	@Override
-	public List<PersistentBar> getBars(Scrip scrip, Timeframe timeframe, ZonedDateTime from, ZonedDateTime to) {
+	public List<Bar> getBars(Scrip scrip, Timeframe timeframe, ZonedDateTime from, ZonedDateTime to) {
 		if(Timeframe.D.equals(timeframe)) {
 			to = to.truncatedTo(ChronoUnit.DAYS);
 			from = from.truncatedTo(ChronoUnit.DAYS);

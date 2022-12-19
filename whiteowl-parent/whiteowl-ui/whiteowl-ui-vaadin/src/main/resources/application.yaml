@@ -1,9 +1,11 @@
 whiteowl:
   data-provider:
     kite:
-      username: Kr8iquq+IQuUtHhn1xMeIQ==
-      password: StYLdA7W+uC4BRHDt2idyQ==
-      pin: excpHxV4+vwDF69SHj3JPA==
+      credentials: 
+        encrypted: false
+        username: RP3497
+        password: Dark@Horse5
+        pin: TFGKP2YOIGOLEFBHHLJ7QQ6PBOKXARFL
       
 spring:
   h2:

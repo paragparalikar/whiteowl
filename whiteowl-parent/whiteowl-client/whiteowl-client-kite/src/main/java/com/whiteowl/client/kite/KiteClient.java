@@ -5,20 +5,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
-import org.javalite.http.Delete;
+import org.brotli.dec.BrotliInputStream;
 import org.javalite.http.Get;
-import org.javalite.http.Http;
-import org.javalite.http.Post;
 import org.javalite.http.Request;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.whiteowl.client.kite.model.CandleSeries;
@@ -36,6 +36,16 @@ import com.whiteowl.client.kite.model.OrderVariety;
 import com.whiteowl.client.kite.model.Position;
 import com.whiteowl.client.kite.model.Profile;
 import com.whiteowl.client.kite.model.Response;
+import com.whiteowl.client.kite.request.CancelOrderRequest;
+import com.whiteowl.client.kite.request.CreateOrderRequest;
+import com.whiteowl.client.kite.request.HistoricalDataRequest;
+import com.whiteowl.client.kite.request.HoldingsRequest;
+import com.whiteowl.client.kite.request.MarginRequest;
+import com.whiteowl.client.kite.request.OrdersRequest;
+import com.whiteowl.client.kite.request.PositionsRequest;
+import com.whiteowl.client.kite.request.ProfileRequest;
+import com.whiteowl.client.kite.request.QuoteRequest;
+import com.whiteowl.client.kite.request.UpdateOrderRequest;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -55,11 +65,11 @@ public class KiteClient implements KiteConnectApi {
 	}
 
 	private final KiteSession session;
-	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(KiteConstant.FORMAT_TIMESTAMP);
 	
 	@SneakyThrows
 	private <T> T execute(Request<?> request, TypeReference<Response<T>> ref){
-		final Response<T> response = KiteConstant.JSON.readValue(request.text(), ref);
+		final InputStream inputStream = resolveInputStream(request);
+		final Response<T> response = KiteConstant.JSON.readValue(inputStream, ref);
 		if(!"success".equalsIgnoreCase(response.getStatus())) {
 			final String message = String.join(" - ", 
 					String.valueOf(request.responseCode()),
@@ -77,17 +87,36 @@ public class KiteClient implements KiteConnectApi {
 		}
 	}
 	
+	@SneakyThrows
+	private InputStream resolveInputStream(Request<?> request) {
+		final String contentEncoding = getHeaderValue("content-encoding", request);
+		if(StringUtils.hasText(contentEncoding)) {
+			if("gzip".equalsIgnoreCase(contentEncoding)) {
+				return new GZIPInputStream(request.getInputStream());
+			} else if("br".equalsIgnoreCase(contentEncoding)) {
+				return new BrotliInputStream(request.getInputStream());
+			}
+		} 
+		return request.getInputStream();
+	}
+	
+	private String getHeaderValue(String header, Request<?> request) {
+		return request.headers().entrySet().stream()
+				.filter(Objects::nonNull)
+				.filter(entry -> header.equalsIgnoreCase(entry.getKey()))
+				.map(Entry::getValue)
+				.flatMap(Collection::stream)
+				.findFirst()
+				.orElse(null);
+	}
+	
 	@Override
 	@SneakyThrows
 	public CandleSeries getData(long instrumentToken, String interval, ZonedDateTime from, ZonedDateTime to){
-		final String url = String.join("/", KiteConstant.URL_BARS, String.valueOf(instrumentToken), interval) ;
-		final Map<String, String> queryParams = new HashMap<>();
-		queryParams.put("oi", "1");		
-		queryParams.put("to", formatter.format(to));
-		queryParams.put("from", formatter.format(from));
-		queryParams.put("user_id", session.getCredentials().getUsername());
-		final Get get = session.get(url + "?" + Http.map2URLEncoded(queryParams));
-		return execute(get, new TypeReference<Response<CandleSeries>>(){});
+		final HistoricalDataRequest historicalDataRequest = new HistoricalDataRequest(
+				instrumentToken, interval, from, to, session);
+		session.authorize(historicalDataRequest);
+		return execute(historicalDataRequest, new TypeReference<Response<CandleSeries>>(){});
 	}
 	
 	@Override
@@ -98,61 +127,58 @@ public class KiteClient implements KiteConnectApi {
 	
 	private Map<String, KiteQuote> getQuotesMap(Collection<Instrument> instruments, KiteQuoteMode mode){
 		if(instruments.isEmpty()) return Collections.emptyMap();
-		final StringBuilder urlBuilder = new StringBuilder();
-		switch(mode) {
-		case FULL: urlBuilder.append(KiteConstant.URL_QUOTE); break;
-		case LTP: urlBuilder.append(KiteConstant.URL_QUOTE_LTP); break;
-		case OHLC: urlBuilder.append(KiteConstant.URL_QUOTE_OHLC); break;
-		}
-		final String queryString = instruments.stream()
-			.map(instrument -> "i=" + instrument.getExchange().name() + ":" + instrument.getTradingsymbol())
-			.collect(Collectors.joining("&"));
-		urlBuilder.append("?" + queryString);
-		return execute(session.get(urlBuilder.toString()), new TypeReference<Response<Map<String, KiteQuote>>>(){});
+		final QuoteRequest quoteRequest = new QuoteRequest(instruments, mode, session);
+		session.authorize(quoteRequest);
+		return execute(quoteRequest, new TypeReference<Response<Map<String, KiteQuote>>>(){});
 	}
 	
 	@Override
 	@SneakyThrows
 	public Profile getProfile() {
-		return execute(session.get(KiteConstant.URL_PROFILE), new TypeReference<Response<Profile>>(){});
+		final ProfileRequest profileRequest = new ProfileRequest(session);
+		session.authorize(profileRequest);
+		return execute(profileRequest, new TypeReference<Response<Profile>>(){});
 	}
 	
 	@Override
 	@SneakyThrows
 	public Margin getMargin() {
-		return execute(session.delete(KiteConstant.URL_MARGIN), new TypeReference<Response<Margin>>(){});
+		final MarginRequest marginRequest = new MarginRequest(session);
+		session.authorize(marginRequest);
+		return execute(marginRequest, new TypeReference<Response<Margin>>(){});
 	}
+	
 	
 	@Override
 	@SneakyThrows
 	public List<Holding> getHoldings(){
-		return execute(session.get(KiteConstant.URL_HOLDINGS), new TypeReference<Response<List<Holding>>>(){});
+		final HoldingsRequest holdingsRequest = new HoldingsRequest(session);
+		session.authorize(holdingsRequest);
+		return execute(holdingsRequest, new TypeReference<Response<List<Holding>>>(){});
 	}
 	
 	@Override
 	@SneakyThrows
 	public List<Position> getPositions(){
-		return execute(session.get(KiteConstant.URL_POSITIONS), new TypeReference<Response<List<Position>>>(){});
+		final PositionsRequest positionsRequest = new PositionsRequest(session);
+		session.authorize(positionsRequest);
+		return execute(positionsRequest, new TypeReference<Response<List<Position>>>(){});
 	}
 	
 	@Override
 	@SneakyThrows
 	public List<Order> getOrders(){
-		return execute(session.get(KiteConstant.URL_ORDERS), new TypeReference<Response<List<Order>>>(){});
+		final OrdersRequest ordersRequest = new OrdersRequest(session);
+		session.authorize(ordersRequest);
+		return execute(ordersRequest, new TypeReference<Response<List<Order>>>(){});
 	}
 	
 	@Override
 	@SneakyThrows
 	public OrderId createOrder(@NonNull final Order order) {
-		final Post post = session.post(KiteConstant.URL_ORDERS + "/" + order.getVariety().name())
-				.param("tradingsymbol", order.getTradingsymbol())
-				.param("exchange", order.getExchange().name())
-				.param("transaction_type", order.getTransactionType().name())
-				.param("order_type", order.getOrderType().name())
-				.param("quantity", String.valueOf(order.getQuantity()))
-				.param("product", order.getProduct().name())
-				.param("validity", order.getValidity().name());
-		return execute(post, new TypeReference<Response<OrderId>>(){});
+		final CreateOrderRequest createOrderRequest = new CreateOrderRequest(order, session);
+		session.authorize(createOrderRequest);
+		return execute(createOrderRequest, new TypeReference<Response<OrderId>>(){});
 	}
 	
 	@Override
@@ -166,11 +192,9 @@ public class KiteClient implements KiteConnectApi {
 	@SneakyThrows
 	public OrderId update(@NonNull final OrderVariety variety, @NonNull final String orderId, 
 			@NonNull final OrderType orderType, int quantity, @NonNull final OrderValidity validity) {
-		final Post post = session.post(KiteConstant.URL_ORDERS + "/" + variety.name() + "/" + orderId)
-				.param("order_type", orderType.name())
-				.param("quantity", String.valueOf(quantity))
-				.param("validity", validity.name());
-		return execute(post, new TypeReference<Response<OrderId>>(){});
+		final UpdateOrderRequest updateOrderRequest = new UpdateOrderRequest(variety, orderId, orderType, quantity, validity, session);
+		session.authorize(updateOrderRequest);
+		return execute(updateOrderRequest, new TypeReference<Response<OrderId>>(){});
 	}
 	
 	@Override 
@@ -182,8 +206,9 @@ public class KiteClient implements KiteConnectApi {
 	@Override
 	@SneakyThrows
 	public OrderId cancel(@NonNull final OrderVariety variety, @NonNull final String orderId) {
-		final Delete delete = session.delete(KiteConstant.URL_ORDERS + "/" + variety.name() + "/" + orderId);
-		return execute(delete, new TypeReference<Response<OrderId>>(){});
+		final CancelOrderRequest cancelOrderRequest = new CancelOrderRequest(variety, orderId, session);
+		session.authorize(cancelOrderRequest);
+		return execute(cancelOrderRequest, new TypeReference<Response<OrderId>>(){});
 	}
 	
 }

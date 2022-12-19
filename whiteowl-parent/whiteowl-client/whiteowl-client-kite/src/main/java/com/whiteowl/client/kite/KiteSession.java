@@ -1,24 +1,36 @@
 package com.whiteowl.client.kite;
 
+import static com.whiteowl.client.kite.KiteConstant.JSON;
+import static com.whiteowl.core.util.Http.AUTHORIZATION;
+import static com.whiteowl.core.util.Http.BAD_REQUEST;
+import static com.whiteowl.core.util.Http.BR;
+import static com.whiteowl.core.util.Http.CONTENT_ENCODING;
+import static com.whiteowl.core.util.Http.COOKIE;
+import static com.whiteowl.core.util.Http.FORBIDDEN;
+import static com.whiteowl.core.util.Http.GZIP;
+import static com.whiteowl.core.util.Http.SET_COOKIE;
+
+import java.io.InputStream;
 import java.net.HttpCookie;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
-import org.javalite.http.Delete;
-import org.javalite.http.Get;
-import org.javalite.http.Post;
-import org.javalite.http.Put;
+import org.brotli.dec.BrotliInputStream;
 import org.javalite.http.Request;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.whiteowl.client.kite.model.Response;
 import com.whiteowl.client.kite.model.Twofa;
+import com.whiteowl.client.kite.request.LoginRequest;
+import com.whiteowl.client.kite.request.RootRequest;
+import com.whiteowl.client.kite.request.TwofaRequest;
 import com.whiteowl.client.kite.ticker.KiteTicker;
 import com.whiteowl.core.util.Strings;
 
@@ -32,63 +44,78 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class KiteSession {
-	
+	private static final String ENCTOKEN = "enctoken";
+
+	private final UUID uuid = UUID.randomUUID();
 	@NonNull private final KiteCredentials credentials;
 	private final Set<HttpCookie> cookies = new HashSet<>();
 	
-	private String cookies() {
-		return cookies.stream().map(Object::toString).collect(Collectors.joining("; "));
+	public void setCookies(Request<?> request) {
+		request.headers().entrySet().stream()
+			.filter(Objects::nonNull)
+			.filter(entry -> SET_COOKIE.equalsIgnoreCase(entry.getKey()))
+			.map(Entry::getValue)
+			.flatMap(Collection::stream)
+			.map(HttpCookie::parse)
+			.flatMap(Collection::stream)
+			.forEach(cookies::add);
 	}
 	
-	private void cookies(Map<String, List<String>> headers) {
-		final List<String> values = new LinkedList<>();
-		Optional.ofNullable(headers.get("set-cookie")).ifPresent(cookies -> values.addAll(cookies));
-		Optional.ofNullable(headers.get("Set-Cookie")).ifPresent(cookies -> values.addAll(cookies));
-		values.stream().map(HttpCookie::parse).flatMap(Collection::stream).forEach(cookies::add);
+	public String getCookies() {
+		return cookies.stream()
+				.map(Object::toString)
+				.collect(Collectors.joining(";"));
 	}
 	
 	@SneakyThrows
 	private void login() {
-		cookies(new Get(KiteConstant.URL_BASE, KiteConstant.TIMEOUT, KiteConstant.TIMEOUT)
-				.header(KiteConstant.USER_AGENT, KiteConstant.USER_AGENT_CHROME)
-				.headers());
-		final Post login = new Post(KiteConstant.URL_BASE + KiteConstant.URL_LOGIN, null, KiteConstant.TIMEOUT, KiteConstant.TIMEOUT)
-				.header(KiteConstant.USER_AGENT, KiteConstant.USER_AGENT_CHROME)
-				.header("cookie", cookies())
-				.param("user_id", credentials.getUsername())
-				.param("password", credentials.getPassword());
-		final Response<Twofa> response = KiteConstant.JSON.readValue(login.text(), new TypeReference<Response<Twofa>>(){});
-		final Post twofa = new Post(KiteConstant.URL_BASE + KiteConstant.URL_TWOFA, null, KiteConstant.TIMEOUT, KiteConstant.TIMEOUT)
-				.header(KiteConstant.USER_AGENT, KiteConstant.USER_AGENT_CHROME)
-				.header("cookie", cookies())
-				.param("user_id", credentials.getUsername())
-				.param("request_id", response.getData().getRequestId())
-				.param("twofa_value", credentials.getPin());
-		cookies(twofa.headers());
-		cookies(get(KiteConstant.URL_DASHBOARD).headers());
+		setCookies(new RootRequest());
+		final LoginRequest loginRequest = new LoginRequest(this);
+		setCookies(loginRequest);
+		final InputStream inputStream = resolveInputStream(loginRequest);
+		final Response<Twofa> response = JSON.readValue(inputStream, new TypeReference<Response<Twofa>>(){});
+		final Twofa twofaInfo = response.getData();
+		if(twofaInfo.isLocked()) {
+			throw new IllegalStateException(String.format("Kite account is locked for %s. Manual intervention is required.", 
+					credentials.getUsername()));
+		}
+		if(twofaInfo.isCaptcha()) {
+			throw new IllegalStateException(String.format("Kite api has requested CAPTCHA for %s. Manual intervention is required.", 
+					credentials.getUsername()));
+		}
+		final TwofaRequest twofaRequest = new TwofaRequest(twofaInfo, this);
+		setCookies(twofaRequest);
 	}
 	
 	public KiteTicker createTicker() {
-		if(cookies.isEmpty() || !Strings.hasText(getCookieValue("enctoken"))) login();
-		return new KiteTicker(credentials.getUsername(), getCookieValue("enctoken"));
+		if(!Strings.hasText(getCookieValue(ENCTOKEN))) login();
+		return new KiteTicker(credentials.getUsername(), getCookieValue(ENCTOKEN));
 	}
 	
-	public Get get(final String url) {
-		return authorize(new Get(KiteConstant.URL_BASE + url, KiteConstant.TIMEOUT, KiteConstant.TIMEOUT));
+	@SneakyThrows
+	private InputStream resolveInputStream(Request<?> request) {
+		final String contentEncoding = getHeaderValue(CONTENT_ENCODING, request);
+		if(StringUtils.hasText(contentEncoding)) {
+			if(GZIP.equalsIgnoreCase(contentEncoding)) {
+				return new GZIPInputStream(request.getInputStream());
+			} else if(BR.equalsIgnoreCase(contentEncoding)) {
+				return new BrotliInputStream(request.getInputStream());
+			}
+		} 
+		return request.getInputStream();
 	}
 	
-	public Delete delete(final String url) {
-		return authorize(new Delete(KiteConstant.URL_BASE + url, KiteConstant.TIMEOUT, KiteConstant.TIMEOUT));
+	private String getHeaderValue(String header, Request<?> request) {
+		return request.headers().entrySet().stream()
+				.filter(Objects::nonNull)
+				.filter(entry -> header.equalsIgnoreCase(entry.getKey()))
+				.map(Entry::getValue)
+				.flatMap(Collection::stream)
+				.findFirst()
+				.orElse(null);
 	}
 	
-	public Post post(final String url) {
-		return authorize(new Post(KiteConstant.URL_BASE + url, null, KiteConstant.TIMEOUT, KiteConstant.TIMEOUT));
-	}
-	
-	public Put put(final String url) {
-		return authorize(new Put(KiteConstant.URL_BASE + url, null, KiteConstant.TIMEOUT, KiteConstant.TIMEOUT));
-	}
-	
+	@SneakyThrows
 	private String getCookieValue(String cookieName) {
 		return cookies.stream()
 				.filter(cookie -> cookieName.equalsIgnoreCase(cookie.getName()))
@@ -96,25 +123,26 @@ public class KiteSession {
 				.findFirst().orElse(null);
 	}
 	
-	private <T extends Request<T>> T authorize(final T request){
+	public <T extends Request<T>> T authorize(final T request){
 		addHeaders(request);
-		if(403 == request.responseCode()) {
-			cookies.clear();
+		if(FORBIDDEN == request.responseCode()) {
+			login();
 			addHeaders(request);
 		}
-		if(400 <= request.responseCode()) {
+		if(BAD_REQUEST <= request.responseCode()) {
 			log.error(request.responseCode() + " : " + request.responseMessage() + "\n" + request.text());
 		}
 		return request;
 	}
 	
-	private  void addHeaders(final Request<?> request){
-		final String enctoken = getCookieValue("enctoken");
-		if(cookies.isEmpty() || !Strings.hasText(enctoken)) login();
-		request
-			.header("cookie", cookies())
-			.header("authorization", "enctoken " + enctoken)
-			.header(KiteConstant.USER_AGENT, KiteConstant.USER_AGENT_CHROME);
+	private void addHeaders(final Request<?> request){
+		String enctoken = getCookieValue(ENCTOKEN);
+		if(!Strings.hasText(enctoken)) {
+			login();
+			enctoken = getCookieValue(ENCTOKEN);
+		}
+		request.header(COOKIE, getCookies());
+		request.header(AUTHORIZATION, ENCTOKEN + " " + enctoken);
 	}
-
+	
 }

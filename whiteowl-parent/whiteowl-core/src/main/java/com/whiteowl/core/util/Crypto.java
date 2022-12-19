@@ -44,4 +44,10 @@ public class Crypto {
     	return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
     }
 	
+    public static void main(String[] args) throws Exception {
+    	final String key = "UXytRK5s40Sett3rj+h2dA==";
+    	final String pin = "3DA57RQMUXVOBKT5E5OM75CS5RZXPXWT";
+    	final String encryptedPin = Crypto.encrypt(pin, key);
+    	System.out.println(encryptedPin);
+    }
 }

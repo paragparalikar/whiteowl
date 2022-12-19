@@ -118,7 +118,7 @@ public class ShortStraddleTradingStrategy implements TradingStrategy {
 					final double stopLossPercentage = position.getExitTrades().isEmpty() ? 
 							config.getPercentageStopLoss() : 0;
 					final double stopLossPrice = entryPrice * (1 - stopLossPercentage / 100);
-					final double currentPrice = item.getLastTradedPrice();
+					final double currentPrice = item.getOptionInfo(entryTrade.getScrip().getType()).getLastPrice();
 					if(currentPrice >= targetPrice || currentPrice <= stopLossPrice) {
 						position.getExitTrades().add(entryTrade.complement());
 					}
