@@ -1,5 +1,15 @@
 package com.whiteowl.client.kite;
 
+import static com.whiteowl.client.kite.KiteConstant.JSON;
+import static com.whiteowl.core.util.Http.AUTHORIZATION;
+import static com.whiteowl.core.util.Http.BAD_REQUEST;
+import static com.whiteowl.core.util.Http.BR;
+import static com.whiteowl.core.util.Http.CONTENT_ENCODING;
+import static com.whiteowl.core.util.Http.COOKIE;
+import static com.whiteowl.core.util.Http.FORBIDDEN;
+import static com.whiteowl.core.util.Http.GZIP;
+import static com.whiteowl.core.util.Http.SET_COOKIE;
+
 import java.io.InputStream;
 import java.net.HttpCookie;
 import java.util.Collection;
@@ -34,7 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class KiteSession {
-	
+	private static final String ENCTOKEN = "enctoken";
+
 	private final UUID uuid = UUID.randomUUID();
 	@NonNull private final KiteCredentials credentials;
 	private final Set<HttpCookie> cookies = new HashSet<>();
@@ -42,7 +53,7 @@ public class KiteSession {
 	public void setCookies(Request<?> request) {
 		request.headers().entrySet().stream()
 			.filter(Objects::nonNull)
-			.filter(entry -> "Set-Cookie".equalsIgnoreCase(entry.getKey()))
+			.filter(entry -> SET_COOKIE.equalsIgnoreCase(entry.getKey()))
 			.map(Entry::getValue)
 			.flatMap(Collection::stream)
 			.map(HttpCookie::parse)
@@ -62,7 +73,7 @@ public class KiteSession {
 		final LoginRequest loginRequest = new LoginRequest(this);
 		setCookies(loginRequest);
 		final InputStream inputStream = resolveInputStream(loginRequest);
-		final Response<Twofa> response = KiteConstant.JSON.readValue(inputStream, new TypeReference<Response<Twofa>>(){});
+		final Response<Twofa> response = JSON.readValue(inputStream, new TypeReference<Response<Twofa>>(){});
 		final Twofa twofaInfo = response.getData();
 		if(twofaInfo.isLocked()) {
 			throw new IllegalStateException(String.format("Kite account is locked for %s. Manual intervention is required.", 
@@ -77,17 +88,17 @@ public class KiteSession {
 	}
 	
 	public KiteTicker createTicker() {
-		if(!Strings.hasText(getCookieValue("enctoken"))) login();
-		return new KiteTicker(credentials.getUsername(), getCookieValue("enctoken"));
+		if(!Strings.hasText(getCookieValue(ENCTOKEN))) login();
+		return new KiteTicker(credentials.getUsername(), getCookieValue(ENCTOKEN));
 	}
 	
 	@SneakyThrows
 	private InputStream resolveInputStream(Request<?> request) {
-		final String contentEncoding = getHeaderValue("content-encoding", request);
+		final String contentEncoding = getHeaderValue(CONTENT_ENCODING, request);
 		if(StringUtils.hasText(contentEncoding)) {
-			if("gzip".equalsIgnoreCase(contentEncoding)) {
+			if(GZIP.equalsIgnoreCase(contentEncoding)) {
 				return new GZIPInputStream(request.getInputStream());
-			} else if("br".equalsIgnoreCase(contentEncoding)) {
+			} else if(BR.equalsIgnoreCase(contentEncoding)) {
 				return new BrotliInputStream(request.getInputStream());
 			}
 		} 
@@ -114,21 +125,24 @@ public class KiteSession {
 	
 	public <T extends Request<T>> T authorize(final T request){
 		addHeaders(request);
-		if(403 == request.responseCode()) {
+		if(FORBIDDEN == request.responseCode()) {
 			login();
 			addHeaders(request);
 		}
-		if(400 <= request.responseCode()) {
+		if(BAD_REQUEST <= request.responseCode()) {
 			log.error(request.responseCode() + " : " + request.responseMessage() + "\n" + request.text());
 		}
 		return request;
 	}
 	
 	private void addHeaders(final Request<?> request){
-		final String enctoken = getCookieValue("enctoken");
-		if(!Strings.hasText(enctoken)) login();
-		request.header("cookie", getCookies());
-		request.header("authorization", "enctoken " + getCookieValue("enctoken"));
+		String enctoken = getCookieValue(ENCTOKEN);
+		if(!Strings.hasText(enctoken)) {
+			login();
+			enctoken = getCookieValue(ENCTOKEN);
+		}
+		request.header(COOKIE, getCookies());
+		request.header(AUTHORIZATION, ENCTOKEN + " " + enctoken);
 	}
 	
 }

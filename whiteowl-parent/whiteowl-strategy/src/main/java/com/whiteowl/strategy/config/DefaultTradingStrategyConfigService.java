@@ -1,14 +1,12 @@
 package com.whiteowl.strategy.config;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import com.whiteowl.strategy.TradingStrategyConfig;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -26,29 +24,18 @@ public class DefaultTradingStrategyConfigService implements TradingStrategyConfi
 	}
 
 	@Override
-	public TradingStrategyConfig save(@NonNull @Valid TradingStrategyConfig config) {
-		final PersistentTradingStrategyConfig persistentConfig = new PersistentTradingStrategyConfig(config);
-		tradingStrategyConfigRepository.save(persistentConfig);
-		return persistentConfig.getDelegate();
+	public Optional<TradingStrategyConfig> findById(@NonNull String id) {
+		return tradingStrategyConfigRepository.findById(id);
 	}
 
 	@Override
-	public List<TradingStrategyConfig> findAll() {
-		return tradingStrategyConfigRepository.findAll().stream()
-				.map(PersistentTradingStrategyConfig::getDelegate)
-				.collect(Collectors.toList());
+	public TradingStrategyConfig save(@NonNull @Valid TradingStrategyConfig config) {
+		return tradingStrategyConfigRepository.save(config);
 	}
 
 	@Override
 	public List<TradingStrategyConfig> findByEnabled(boolean value) {
-		return tradingStrategyConfigRepository.findByEnabled(value).stream()
-				.map(PersistentTradingStrategyConfig::getDelegate)
-				.collect(Collectors.toList());
+		return tradingStrategyConfigRepository.findByEnabled(value);
 	}
-
-	@Override
-	public void deleteById(@NonNull Long id) {
-		tradingStrategyConfigRepository.deleteById(id);
-	}
-
+	
 }

@@ -1,13 +1,16 @@
 package com.whiteowl.strategy.config;
 
 import java.util.List;
+import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+public interface TradingStrategyConfigRepository {
+	
+	long count();
+	
+	Optional<TradingStrategyConfig> findById(String id);
+	
+	TradingStrategyConfig save(TradingStrategyConfig config);
 
-@Repository
-public interface TradingStrategyConfigRepository extends JpaRepository<PersistentTradingStrategyConfig, Long> {
-
-	public List<PersistentTradingStrategyConfig> findByEnabled(boolean value);
+	List<TradingStrategyConfig> findByEnabled(boolean value);
 	
 }

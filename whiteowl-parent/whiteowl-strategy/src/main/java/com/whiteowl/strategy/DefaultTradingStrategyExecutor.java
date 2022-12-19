@@ -26,6 +26,7 @@ import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
 import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.TradeStatus;
+import com.whiteowl.strategy.config.TradingStrategyConfig;
 import com.whiteowl.strategy.shortstrangle.ShortStraddleConfig;
 import com.whiteowl.strategy.shortstrangle.ShortStraddleTradingStrategy;
 
@@ -57,8 +58,10 @@ public class DefaultTradingStrategyExecutor implements TradingStrategyExecutor {
 		final BiFunction<Scrip, TradingStrategyConfig, Optional<TradingStrategy>>
 			builder = builders.get(config.getTemplate());
 		if(null != builder) {
-			for(Scrip scrip : scripService.findAll().stream()
-					.filter(config.getScripCriteria()).collect(Collectors.toList())) {
+			for (Scrip scrip : scripService
+					.findAll()/*
+								 * .stream() .filter(config.getScripCriteria()).collect(Collectors.toList())
+								 */) {
 				log.debug("Executing config {} for template {} for scrip {}", config.getId(),
 						config.getTemplate(), scrip.getName());
 				final TradingStrategy strategy = builder.apply(scrip, config).orElse(null);

@@ -1,23 +1,21 @@
 package com.whiteowl.strategy.config;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.Valid;
-
-import com.whiteowl.strategy.TradingStrategyConfig;
 
 import lombok.NonNull;
 
 public interface TradingStrategyConfigService {
 	
-	public long count();
-
-	public TradingStrategyConfig save(@NonNull @Valid TradingStrategyConfig config);
-
-	public List<TradingStrategyConfig> findAll();
+	long count();
 	
-	public List<TradingStrategyConfig> findByEnabled(boolean value);
+	Optional<TradingStrategyConfig> findById(@NonNull String id);
+
+	TradingStrategyConfig save(@NonNull @Valid TradingStrategyConfig config);
+
+	List<TradingStrategyConfig> findByEnabled(boolean value);
 	
-	public void deleteById(Long id);
 	
 }
