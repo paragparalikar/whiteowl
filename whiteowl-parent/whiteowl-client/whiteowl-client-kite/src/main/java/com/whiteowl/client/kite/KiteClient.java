@@ -116,6 +116,7 @@ public class KiteClient implements KiteConnectApi {
 		final HistoricalDataRequest historicalDataRequest = new HistoricalDataRequest(
 				instrumentToken, interval, from, to, session);
 		session.authorize(historicalDataRequest);
+		log.info("Downloading data from kite for instrument {} {} from {} - to {}", instrumentToken, interval, from, to);
 		return execute(historicalDataRequest, new TypeReference<Response<CandleSeries>>(){});
 	}
 	

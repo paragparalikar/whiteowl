@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class LastBarAwareBarDataProvider implements BarDataProvider {
+public class TradingSessionAwareBarDataProvider implements BarDataProvider {
 
 	@NonNull private final BarDataProvider delegate;
 

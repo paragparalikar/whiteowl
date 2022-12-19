@@ -14,15 +14,14 @@ import com.whiteowl.core.bar.BarDataProvider;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.BarsDownloadedEvent;
 import com.whiteowl.core.bar.Timeframe;
+import com.whiteowl.core.bar.TradingSessionAwareBarDataProvider;
 import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripCriteria;
 import com.whiteowl.core.scrip.ScripService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class BarDownloadJob {
@@ -40,16 +39,18 @@ public class BarDownloadJob {
 	@Async @Scheduled(cron = "2 0/5 9-16 * * MON-FRI") public void downloadM5() { download(Timeframe.M5); }
 	
 	private void download(Timeframe timeframe) {
+		final TradingSessionAwareBarDataProvider smartDataProvider = 
+				new TradingSessionAwareBarDataProvider(barDataProvider);
 		scripService.findAll().stream()
 			.filter(getScripCriteria())
-			.forEach(scrip -> download(scrip, timeframe));
+			.forEach(scrip -> download(scrip, timeframe, smartDataProvider));
 	}
 	
 	private ScripCriteria getScripCriteria() {
 		return new ScripCriteria().withIndex(Index.NIFTY50);
 	}
 	
-	private void download(Scrip scrip, Timeframe timeframe) {
+	private void download(Scrip scrip, Timeframe timeframe, BarDataProvider barDataProvider) {
 		final ZonedDateTime to = ZonedDateTime.now();
 		final ZonedDateTime from = getLastDownloadTimestamp(scrip, timeframe);
 		final List<Bar> bars = barDataProvider.getBars(scrip, timeframe, from, to);
@@ -58,7 +59,6 @@ public class BarDownloadJob {
 			final Bar lastBar = bars.get(bars.size() - 1);
 			final Duration duration = lastBar.getTimePeriod();
 			final ZonedDateTime endTime = lastBar.getBeginTime().plus(duration);
-			log.info("{} - {} : Downloaded {} bars", timeframe, scrip.getName(), bars.size());
 			eventPublisher.publishEvent(BarsDownloadedEvent.builder()
 					.scrip(scrip)
 					.timeframe(timeframe)
@@ -69,8 +69,9 @@ public class BarDownloadJob {
 	
 	private ZonedDateTime getLastDownloadTimestamp(Scrip scrip, Timeframe timeframe) {
 		return barService.findMaxBeginTimeByCodeAndTimeframe(scrip.getCode(), timeframe)
-				.map(time -> time.plus(timeframe.getDuration()))
-				.orElse(ZonedDateTime.now().minusYears(10));
+				//.map(time -> time.plus(timeframe.getDuration())) 
+				// We want first bar to be re-fetched as it may not have been completely formed when fetched last time.
+				.orElse(ZonedDateTime.now().minusYears(100));
 	}
 	
 }

@@ -49,23 +49,23 @@ public class KiteBarDataProvider implements BarDataProvider, QuoteDataProvider {
 		final long instrumentToken = instrument.getInstrumentToken();
 		final Duration duration = kiteMapper.getHistoricalDataBatchLimit(timeframe);
 		final List<Bar> bars = new ArrayList<>();
-		log.debug("Initiating bar download for {} - {}, from {} to {}", scrip.getCode(), timeframe.name(), from, to);
 		while(null != to && to.isAfter(from)) {
 			final ZonedDateTime projectedFrom = to.minus(duration);
 			final ZonedDateTime effectiveFrom = from.isAfter(projectedFrom) ? from : projectedFrom;
+			log.info("Downloading data from kite Code : {}, Timeframe : {}, from : {}, to : {}", 
+					scrip.getCode(), timeframe, effectiveFrom, to);
 			to = fill(instrumentToken, scrip.getCode(), timeframe, effectiveFrom, to, bars);
 		}
+		log.info("Downloaded total {} bars from kite for Code : {}, Timeframe : {}", bars.size(), scrip.getCode(), timeframe);
 		return bars;
 	}
 	
 	private ZonedDateTime fill(long instrumentToken, String code, Timeframe timeframe, 
 			ZonedDateTime from, ZonedDateTime to, List<Bar> bars){
-		log.debug("Fetching data from {} to {}", from, to);
 		final String interval = kiteMapper.toInterval(timeframe);
 		final CandleSeries candleSeries = kiteClient.getData(instrumentToken, interval, from, to);
 		if(null != candleSeries && null != candleSeries.getData() && !candleSeries.getData().isEmpty()) {
 			final List<Candle> candles = candleSeries.getData();
-			log.debug("Fetched {} candles from kite", candles.size());
 			candles.stream()
 				.map(candle -> kiteMapper.toBar(candle, timeframe))
 				.forEach(bars::add);

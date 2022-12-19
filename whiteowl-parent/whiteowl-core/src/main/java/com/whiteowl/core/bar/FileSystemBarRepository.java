@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -25,14 +26,16 @@ import org.ta4j.core.num.DoubleNum;
 
 import com.whiteowl.core.util.Constant;
 
+import lombok.NonNull;
 import lombok.SneakyThrows;
 
 @Repository
 public class FileSystemBarRepository implements BarRepository {
+	private static final String NAME = "bars.dat";
 	private static final int BYTES = Long.BYTES + 5 * Double.BYTES;
-
+	
 	private Path getPath(String code, Timeframe timeframe) {
-		return Constant.HOME.resolve(Paths.get(code, timeframe.name(), "bars.dat"));
+		return Constant.HOME.resolve(Paths.get(code, timeframe.name(), NAME));
 	}
 	
 	private void write(Bar bar, DataOutput output) throws IOException {
@@ -145,26 +148,39 @@ public class FileSystemBarRepository implements BarRepository {
 
 	@Override
 	@SneakyThrows
-	public void saveAll(String code, Timeframe timeframe, Collection<Bar> bars) {
+	public void saveAll(@NonNull final String code, @NonNull final Timeframe timeframe, @NonNull final Collection<Bar> bars) {
 		if(null != bars && !bars.isEmpty()) {
 			final ZonedDateTime minBeginTime = findMaxBeginTimeByCodeAndTimeframe(code, timeframe)
 					.orElse(ZonedDateTime.now().minusYears(100));
-			bars = bars.stream()
-					.filter(bar -> bar.getBeginTime().isAfter(minBeginTime))
+			final List<Bar> cleanBars = bars.stream()
+					.filter(bar -> bar.getBeginTime().isAfter(minBeginTime) || bar.getBeginTime().equals(minBeginTime))
+					.filter(bar -> withinSession(bar.getEndTime()))
 					.distinct()
 					.sorted(Comparator.comparing(Bar::getEndTime))
 					.collect(Collectors.toList());
-			final Path path = getPath(code, timeframe);
-			synchronized(path) {
-				if(!Files.exists(path)) {
-					Files.createDirectories(path.getParent());
-					Files.createFile(path);
-				}
-				try(final RandomAccessFile file = new RandomAccessFile(path.toFile(), "rw")) {
-					for(Bar bar : bars) write(bar, file);
+			if(!cleanBars.isEmpty()) {
+				final Path path = getPath(code, timeframe);
+				synchronized(path) {
+					if(!Files.exists(path)) {
+						Files.createDirectories(path.getParent());
+						Files.createFile(path);
+					}
+					try(final RandomAccessFile file = new RandomAccessFile(path.toFile(), "rw")) {
+						final long startOffset = minBeginTime.equals(cleanBars.get(cleanBars.size() - 1).getBeginTime()) ?
+								file.length() - BYTES : file.length();
+						file.seek(startOffset);
+						for(Bar bar : cleanBars) write(bar, file);
+					}
 				}
 			}
 		}
+	}
+	
+	private boolean withinSession(ZonedDateTime zonedDateTime) {
+		final LocalTime localTime = zonedDateTime.toLocalTime();
+		return Constant.NSE_START_TIME.isBefore(localTime) &&
+				(Constant.NSE_END_TIME.isAfter(localTime) || 
+						Constant.NSE_END_TIME.equals(localTime));
 	}
 
 }
