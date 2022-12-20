@@ -1,6 +1,6 @@
 package com.whiteowl.core.quote;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import lombok.Data;
 
@@ -8,8 +8,6 @@ import lombok.Data;
 public class Quote {
 
 	private String code;
-	private Date timestamp;
-	private Date lastTradeTime;
 	private double lastPrice;
 	private int lastQuantity;
 	private int buyQuantity;
@@ -24,5 +22,7 @@ public class Quote {
 	private double lowerCircuitLimit;
 	private double upperCircuitLimit;
 	private MarketDepth depth;
+	private LocalDateTime timestamp;
+	private LocalDateTime lastTradeTime;
 	
 }

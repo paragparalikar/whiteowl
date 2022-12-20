@@ -18,6 +18,8 @@ import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
 import com.whiteowl.core.position.PositionStatus;
+import com.whiteowl.core.position.event.AllPositionsSynchronizedEvent;
+import com.whiteowl.core.position.event.PositionSynchronizedEvent;
 import com.whiteowl.core.trade.Trade;
 
 import lombok.RequiredArgsConstructor;
@@ -27,8 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class TradeSynchronizationJob {
-	
-	public static class TradesSynchronizedEvent{}
 	
 	private final PositionService positionService;
 	private final PortfolioService portfolioService;
@@ -47,10 +47,11 @@ public class TradeSynchronizationJob {
 					synchronize(position.getExitTrades(), trades);
 					synchronize(position.getEntryTrades(), trades);
 					position.updateStatus();
-					positionService.save(position);
+					position = positionService.save(position);
+					eventPublisher.publishEvent(new PositionSynchronizedEvent(position));
 				}
 			}
-			eventPublisher.publishEvent(new TradesSynchronizedEvent());
+			eventPublisher.publishEvent(new AllPositionsSynchronizedEvent());
 		} catch(Exception e) {
 			log.error("", e);
 		}

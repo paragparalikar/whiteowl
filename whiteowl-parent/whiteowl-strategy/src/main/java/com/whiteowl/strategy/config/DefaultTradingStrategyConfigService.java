@@ -8,6 +8,8 @@ import javax.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import com.whiteowl.strategy.TradingStrategyTemplate;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -36,6 +38,11 @@ public class DefaultTradingStrategyConfigService implements TradingStrategyConfi
 	@Override
 	public List<TradingStrategyConfig> findByEnabled(boolean value) {
 		return tradingStrategyConfigRepository.findByEnabled(value);
+	}
+	
+	@Override
+	public List<TradingStrategyConfig> findByEnabledAndTemplate(boolean enabled, TradingStrategyTemplate template) {
+		return tradingStrategyConfigRepository.findByEnabledAndTemplate(enabled, template);
 	}
 	
 }

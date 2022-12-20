@@ -1,6 +1,6 @@
 package com.whiteowl.client.kite.model;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -34,14 +34,14 @@ public class KiteTick {
     @JsonProperty("totalSellQuantity")
     private double totalSellQuantity;
     @JsonProperty("lastTradedTime")
-    private Date lastTradedTime;
+    private LocalDateTime lastTradedTime;
     private double oi;
     @JsonProperty("openInterestDayHigh")
     private double oiDayHigh;
     @JsonProperty("openInterestDayLow")
     private double oiDayLow;
     @JsonProperty("tickTimestamp")
-    private Date tickTimestamp;
+    private LocalDateTime tickTimestamp;
 
     private KiteMarketDepth depth;
 

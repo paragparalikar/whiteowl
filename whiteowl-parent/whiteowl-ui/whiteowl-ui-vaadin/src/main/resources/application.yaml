@@ -15,6 +15,15 @@ spring:
   main:
     banner-mode: off
     log-startup-info: false
+  task:    execution:      pool:        max-size: 50
+        core-size: 4
+        allow-core-thread-timeout: true
+      shutdown:        await-termination: true
+        await-termination-period: 1m
+      thread-name-prefix: white-owl-executor-
+    scheduling:
+      shutdown:        await-termination: true
+        await-termination-period: 1m      thread-name-prefix: white-owl-scheduler-
   jpa:
     show-sql: false
     generate-ddl: true

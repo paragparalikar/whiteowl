@@ -8,6 +8,6 @@ public interface TradingStrategyConfig {
 
 	boolean isEnabled();
 	
-	TradingStrategyTemplate getTemplate();
+	TradingStrategyTemplate getTradingStrategyTemplate();
 	
 }

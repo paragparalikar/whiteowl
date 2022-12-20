@@ -1,5 +1,6 @@
 package com.whiteowl.core.derivative.option;
 
+import java.time.Duration;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,7 +18,7 @@ import lombok.NonNull;
 public class OptionChainService {
 	
 	@Autowired private OptionChainProvider optionChainProvider;
-	@Value("${whiteowl.option-chain.download.delay.seconds:15}") private int delaySeconds;
+	@Value("${whiteowl.option-chain.ttl:1m}") private Duration ttl;
 	private final Map<Scrip, OptionChain> cache = new HashMap<>();
 	private final Map<Scrip, LocalTime> timestampCache = new HashMap<>();
 	// TODO : Use Hazelcast
@@ -37,10 +38,8 @@ public class OptionChainService {
 	}
 	
 	private boolean isExpired(Scrip scrip) {
-		return LocalTime.now().minusSeconds(delaySeconds).isAfter(
+		return LocalTime.now().minus(ttl).isAfter(
 				timestampCache.getOrDefault(scrip, LocalTime.MIN));
 	}
-	
-	
 	
 }

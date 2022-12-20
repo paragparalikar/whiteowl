@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import com.whiteowl.core.util.Constant;
 import com.whiteowl.core.util.XmlUtils;
+import com.whiteowl.strategy.TradingStrategyTemplate;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -72,7 +73,27 @@ public class XmlTradingStrategyConfigRepository implements TradingStrategyConfig
 					.<Optional<TradingStrategyConfig>>map(XmlUtils::read)
 					.<TradingStrategyConfig>map(o -> o.orElse(null))
 					.filter(Objects::nonNull)
-					.filter(TradingStrategyConfig::isEnabled)
+					.filter(config -> value == config.isEnabled())
+					.sorted(Comparator.comparing(TradingStrategyConfig::getId))
+					.collect(Collectors.toList());
+		}
+	}
+	
+	@Override
+	@SneakyThrows
+	@Synchronized
+	public List<TradingStrategyConfig> findByEnabledAndTemplate(boolean enabled, @NonNull TradingStrategyTemplate template) {
+		final Path path = getPath();
+		if(!Files.exists(path)) return Collections.emptyList();
+		else try(Stream<Path> files = Files.list(path)){
+			return files
+					.filter(Files::isRegularFile)
+					.filter(p -> p.endsWith(POSTFIX))
+					.<Optional<TradingStrategyConfig>>map(XmlUtils::read)
+					.<TradingStrategyConfig>map(o -> o.orElse(null))
+					.filter(Objects::nonNull)
+					.filter(config -> enabled == config.isEnabled())
+					.filter(config -> template.equals(config.getTemplate()))
 					.sorted(Comparator.comparing(TradingStrategyConfig::getId))
 					.collect(Collectors.toList());
 		}

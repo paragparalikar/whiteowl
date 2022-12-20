@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import javax.validation.Valid;
 
+import com.whiteowl.strategy.TradingStrategyTemplate;
+
 import lombok.NonNull;
 
 public interface TradingStrategyConfigService {
@@ -17,5 +19,6 @@ public interface TradingStrategyConfigService {
 
 	List<TradingStrategyConfig> findByEnabled(boolean value);
 	
+	List<TradingStrategyConfig> findByEnabledAndTemplate(boolean enabled, TradingStrategyTemplate template);
 	
 }

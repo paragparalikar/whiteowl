@@ -9,6 +9,7 @@ import com.whiteowl.core.derivative.option.OptionChain;
 import com.whiteowl.core.derivative.option.OptionChainItem;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionStatus;
+import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripType;
 import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.TradeLimitType;
@@ -16,7 +17,7 @@ import com.whiteowl.core.trade.TradeProduct;
 import com.whiteowl.core.trade.TradeStatus;
 import com.whiteowl.core.trade.TradeValidity;
 import com.whiteowl.core.trade.TradeVariety;
-import com.whiteowl.strategy.TradingStrategy;
+import com.whiteowl.strategy.config.TradingStrategyConfig;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -26,12 +27,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @RequiredArgsConstructor
-public class ShortStraddleTradingStrategy implements TradingStrategy {
+public class ShortStraddleTradingStrategy {
 
+	private Position createNewPosition(Scrip scrip, TradingStrategyConfig config) {
+		final Position position = new Position();
+		position.setScrip(scrip);
+		position.setStatus(PositionStatus.NEW);
+		position.setTradingStrategyConfigId(config.getId());
+		return position;
+	}
+	
 	private final OptionChain optionChain;
 	private final ShortStraddleConfig config;
 	
-	@Override
 	public boolean handle(@NonNull Position position) {
 		if(PositionStatus.NEW.equals(position.getStatus())) {
 			return handleNewPosition(position);

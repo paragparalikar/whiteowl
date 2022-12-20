@@ -1,6 +1,6 @@
 package com.whiteowl.client.kite.model;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import lombok.Data;
 
@@ -8,8 +8,8 @@ import lombok.Data;
 public class KiteQuote {
 
 	private long instrumentToken;
-	private Date timestamp;
-	private Date lastTradeTime;
+	private LocalDateTime timestamp;
+	private LocalDateTime lastTradeTime;
 	private double lastPrice;
 	private int lastQuantity;
 	private int buyQuantity;
