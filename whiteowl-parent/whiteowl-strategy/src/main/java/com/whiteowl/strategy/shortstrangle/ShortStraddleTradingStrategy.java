@@ -1,6 +1,6 @@
 package com.whiteowl.strategy.shortstrangle;
 
-import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.ta4j.core.Trade.TradeType;
 
@@ -32,7 +32,7 @@ public class ShortStraddleTradingStrategy {
 		position.getEntryTrades().stream()
 			.filter(entryTrade -> !position.getExitTrades().stream()
 					.map(Trade::getScrip)
-					.anyMatch(scrip -> Objects.equals(entryTrade.getScrip(), scrip)))
+					.anyMatch(Predicate.isEqual(entryTrade.getScrip())))
 			.map(Trade::complement)
 			.forEach(position.getExitTrades()::add);
 	}
@@ -73,6 +73,9 @@ public class ShortStraddleTradingStrategy {
 	boolean onQuote(@NonNull final Position position, @NonNull final Quote quote, @NonNull final ShortStraddleConfig config) {
 		final double stopLossMultiplier = 1 + (position.getExitTrades().isEmpty() ? config.getPercentageStopLoss() / 100 : 0);
 		return 0 < position.getEntryTrades().stream()
+				.filter(trade -> position.getExitTrades().stream()
+						.map(Trade::getScrip)
+						.anyMatch(Predicate.isEqual(trade.getScrip())))
 				.filter(trade -> quote.getCode().equalsIgnoreCase(trade.getScrip().getCode()))
 				.filter(trade -> quote.getLastPrice() >= trade.getAveragePrice() * stopLossMultiplier)
 				.map(Trade::complement)

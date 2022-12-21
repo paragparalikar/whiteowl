@@ -1,8 +1,10 @@
 package com.whiteowl.strategy.shortstrangle;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 
 import org.springframework.scheduling.TaskScheduler;
@@ -13,6 +15,7 @@ import com.whiteowl.core.derivative.option.OptionChain;
 import com.whiteowl.core.derivative.option.OptionChainService;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
+import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.quote.QuoteMode;
 import com.whiteowl.core.quote.QuoteService;
@@ -36,13 +39,14 @@ public class ShortStraddleTradingStrategyExecutor implements TradingStrategyExec
 	private final QuoteService quoteService;
 	private final PositionService positionService;
 	private final OptionChainService optionChainService;
-	private final List<ScheduledFuture<?>> futures = new ArrayList<>(2);
-	private final List<QuoteSubscription> subscriptions = new ArrayList<>(2);
+	private final Map<ShortStraddleConfig, List<ScheduledFuture<?>>> futures = new HashMap<>();
+	private final Map<ShortStraddleConfig, List<QuoteSubscription>> subscriptions = new HashMap<>();
 	private final ShortStraddleTradingStrategy tradingStrategy = new ShortStraddleTradingStrategy();
 	@Getter private final TradingStrategyTemplate tradingStrategyTemplate = TradingStrategyTemplate.SHORT_STRADDLE;
 	
 	@Override
 	public void schedule(@NonNull final ShortStraddleConfig config, @NonNull final TaskScheduler taskScheduler) {
+		final List<ScheduledFuture<?>> futures = this.futures.computeIfAbsent(config, key -> new ArrayList<>(2));
 		futures.add(taskScheduler.schedule(() -> openPosition(config), new CronTrigger(config.getPositionOpenCron())));
 		futures.add(taskScheduler.schedule(() -> closePosition(config), new CronTrigger(config.getPositionCloseCron())));
 	}
@@ -55,26 +59,35 @@ public class ShortStraddleTradingStrategyExecutor implements TradingStrategyExec
 			.map(Trade::getScrip)
 			.map(tradeScrip -> quoteService.subscribe(tradeScrip, QuoteMode.LTP))
 			.map(subscription -> subscription.addListener(quote -> onQuote(config, quote)))
-			.forEach(subscriptions::add);
+			.forEach(subscriptions.computeIfAbsent(config, key -> new ArrayList<>(2))::add);
 		// TODO send position to broker
 	}
 	
 	private void onQuote(ShortStraddleConfig config, Quote quote) {
-		final List<Position> positions = positionService.findByTradingStrategyConfigId(config.getId());
+		positionService.findByTradingStrategyConfigIdAndStatusNot(config.getId(), PositionStatus.CLOSED).stream()
+			.filter(position -> tradingStrategy.onQuote(position, quote, config))
+			.forEach(null); 
+		// TODO send position to broker
+	}
+	
+	private void closePosition(ShortStraddleConfig config) {
 		
 	}
 	
-	
-	private void closePosition(ShortStraddleConfig config) {
-		Optional.ofNullable(putQuoteSubscription).ifPresent(QuoteSubscription::unsubscribe);
-		Optional.ofNullable(callQuoteSubscription).ifPresent(QuoteSubscription::unsubscribe);
+	@Override
+	public void onPositionChanged(@NonNull final ShortStraddleConfig config, @NonNull final Position position) {
+		position.getExitTrades()
 	}
 	
 	@Override
 	public void close() throws Exception {
-		futures.forEach(future -> future.cancel(false));
+		futures.values().stream()
+			.flatMap(Collection::stream)
+			.forEach(future -> future.cancel(false));
 		futures.clear();
-		subscriptions.forEach(QuoteSubscription::unsubscribe);
+		subscriptions.values().stream()
+			.flatMap(Collection::stream)
+			.forEach(QuoteSubscription::unsubscribe);
 		subscriptions.clear();
 	}
 }

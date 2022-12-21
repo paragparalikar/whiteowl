@@ -22,8 +22,10 @@ public class DefaultPositionService implements PositionService {
 	}
 	
 	@Override
-	public List<Position> findByTradingStrategyConfigId(String tradingStrategyConfigId) {
-		return positionRepository.findByTradingStrategyConfigId(tradingStrategyConfigId);
+	public List<Position> findByTradingStrategyConfigIdAndStatusNot(
+			@NonNull final String tradingStrategyConfigId,
+			@NonNull final PositionStatus status) {
+		return positionRepository.findByTradingStrategyConfigIdAndStatusNot(tradingStrategyConfigId, status);
 	}
 	
 	@Override
