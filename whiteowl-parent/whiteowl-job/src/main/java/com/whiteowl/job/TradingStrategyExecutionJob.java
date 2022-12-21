@@ -36,7 +36,7 @@ public class TradingStrategyExecutionJob {
 			final TradingStrategyTemplate template = executor.getTradingStrategyTemplate();
 			for(TradingStrategyConfig config : tradingStrategyConfigService.findByEnabledAndTemplate(true, template)) {
 				try {
-					executor.execute(config, taskScheduler);
+					executor.schedule(config, taskScheduler);
 				}catch(Exception e) {
 					log.error("", e);
 				}
@@ -55,7 +55,7 @@ public class TradingStrategyExecutionJob {
 					config.getTradingStrategyTemplate()))
 			.findFirst().ifPresent(executor -> {
 				try {
-					executor.execute(config, position);
+					executor.onPositionChanged(config, position);
 				}catch(Exception e) {
 					log.error("", e);
 				}
@@ -68,7 +68,7 @@ public class TradingStrategyExecutionJob {
 			final TradingStrategyTemplate template = executor.getTradingStrategyTemplate();
 			for(TradingStrategyConfig config : tradingStrategyConfigService.findByEnabledAndTemplate(true, template)) {
 				try {
-					executor.execute(config, event.getTimeframe());
+					executor.onTimeframeBarDataDownloaded(config, event.getTimeframe());
 				}catch(Exception e) {
 					log.error("", e);
 				}
@@ -82,7 +82,7 @@ public class TradingStrategyExecutionJob {
 			final TradingStrategyTemplate template = executor.getTradingStrategyTemplate();
 			for(TradingStrategyConfig config : tradingStrategyConfigService.findByEnabledAndTemplate(true, template)) {
 				try {
-					executor.execute(config, event.getScrip(), event.getTimeframe());
+					executor.onScripBarDataDownloaded(config, event.getScrip(), event.getTimeframe());
 				}catch(Exception e) {
 					log.error("", e);
 				}

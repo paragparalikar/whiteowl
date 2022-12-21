@@ -64,6 +64,7 @@ public abstract class NseOptionInfo {
 			delta = ScripType.CE.equals(scripType) ? blackScholes.getCallDelta() : blackScholes.getPutDelta();
 		}
 		optionInfo.setScrip(scrip);
+		optionInfo.setStrikePrice(strikePrice);
 		optionInfo.setOpenInterest(openInterest);
 		optionInfo.setChangeinOpenInterest(changeinOpenInterest);
 		optionInfo.setChangeInOpenInterestPercentage(pchangeinOpenInterest);

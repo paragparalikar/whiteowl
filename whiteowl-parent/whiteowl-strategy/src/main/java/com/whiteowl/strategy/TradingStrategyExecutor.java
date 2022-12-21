@@ -4,11 +4,10 @@ import org.springframework.scheduling.TaskScheduler;
 
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.position.Position;
-import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.strategy.config.TradingStrategyConfig;
 
-public interface TradingStrategyExecutor<T extends TradingStrategyConfig> {
+public interface TradingStrategyExecutor<T extends TradingStrategyConfig> extends AutoCloseable {
 	
 	TradingStrategyTemplate getTradingStrategyTemplate();
 	
@@ -46,14 +45,5 @@ public interface TradingStrategyExecutor<T extends TradingStrategyConfig> {
 	 * @param position
 	 */
 	default void onPositionChanged(T config, Position position) {};
-	
-	/**
-	 * Invoked when a quote is received from data provider. Processing should be kept minimal in this method as 
-	 * it could be invoked quite rapidly.
-	 * 
-	 * @param config
-	 * @param quote
-	 */
-	default void onQuoteDownloaded(T config, Position position, Quote quote) {};
 	
 }

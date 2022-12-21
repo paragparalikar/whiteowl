@@ -8,6 +8,7 @@ import lombok.Data;
 public class OptionInfo {
 
 	private Scrip scrip;
+	private double strikePrice;
 	private long openInterest;
 	private long changeinOpenInterest;
 	private double changeInOpenInterestPercentage;

@@ -1,16 +1,17 @@
 package com.whiteowl.core.quote;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.whiteowl.core.scrip.Scrip;
+import com.whiteowl.core.util.ConcurrentExpiryMap;
 import com.whiteowl.core.util.Tuple2;
 
 import lombok.NonNull;
@@ -29,29 +31,41 @@ public class DefaultQuoteService implements QuoteService {
 	
 	@Autowired private QuoteDataProvider quoteDataProvider;
 	@Value("${whiteowl.quote.ttl:15s}") private Duration quoteTtl;
-	private final Map<Tuple2<Scrip, QuoteMode>, Tuple2<Quote, LocalDateTime>> quotesCache = new HashMap<>(); // TODO use hazelcast
+	private final ConcurrentExpiryMap<Tuple2<Scrip, QuoteMode>, Quote> quotesCache = new ConcurrentExpiryMap<>(); // TODO use hazelcast
 	private final Map<Tuple2<Scrip, QuoteMode>, Set<QuoteSubscription>> subscriptionsCache = new ConcurrentHashMap<>();
 	
-	@Scheduled(initialDelayString = "15s", fixedRateString = "${whiteowl.quote.ttl:15s}")
+	@PostConstruct
+	public void init() {
+		quotesCache.setTtlInMillis(quoteTtl.toMillis());
+	}
+	
+	// TODO Use websockets instead of polling
+	@Scheduled(initialDelayString = "${whiteowl.quote.ttl:15s}", fixedRateString = "${whiteowl.quote.ttl:15s}")
 	public void poll() {
-		for(QuoteMode mode : Arrays.asList(QuoteMode.FULL, QuoteMode.OHLC, QuoteMode.LTP)) {
-			subscriptionsCache.entrySet().stream()
-				.filter(entry -> entry.getKey().getValue().equals(mode))
-				.forEach(entry -> poll(entry.getKey().getKey(), entry.getKey().getValue(), entry.getValue()));
+		for(QuoteMode mode : QuoteMode.values()) {
+			final Map<String, Scrip> scripCodeMapping = subscriptionsCache.keySet().stream()
+					.filter(tuple -> mode.equals(tuple.getValue()))
+					.<Scrip>map(Tuple2::getKey)
+					.collect(Collectors.toMap(Scrip::getCode, Function.identity()));
+			for(Quote quote : quoteDataProvider.getQuotes(scripCodeMapping.values(), mode)) {
+				if(null != quote) {
+					final Scrip scrip = scripCodeMapping.get(quote.getCode());
+					onQuote(scrip, mode, quote);
+				}
+			}
 		}
 	}
 	
-	private void poll(Scrip scrip, QuoteMode mode, Set<QuoteSubscription> subscriptions) {
-		final Quote quote = getQuote(scrip, mode);
-		if(null != quote) {
-			for(QuoteSubscription subscription : subscriptions) {
-				try {
-					subscription.onQuote(quote);
-				} catch(Exception e) {
-					log.error("", e);
-				}
+	private void onQuote(Scrip scrip, QuoteMode mode, Quote quote) {
+		final Tuple2<Scrip, QuoteMode> key = Tuple2.of(scrip, mode); 
+		quotesCache.put(key, quote);
+		for(QuoteSubscription subscription : subscriptionsCache.get(key)) {
+			try {
+				subscription.onQuote(quote);
+			} catch(Exception e) {
+				log.error("", e);
 			}
-		};
+		}
 	}
 	
 	@Override
@@ -91,62 +105,36 @@ public class DefaultQuoteService implements QuoteService {
 	
 	@Override
 	public Quote getLtpQuote(@NonNull final Scrip scrip) {
-		final Tuple2<Scrip, QuoteMode> key = Tuple2.of(scrip, QuoteMode.LTP);
-		final Tuple2<Quote, LocalDateTime> value = quotesCache.get(key);
-		if(null != value && !isExpired(value)) {
-			return value.getKey();
-		} else {
-			final Tuple2<Quote, LocalDateTime> ohlcQuoteValue = quotesCache.get(Tuple2.of(scrip, QuoteMode.OHLC));
-			if(null != ohlcQuoteValue && !isExpired(ohlcQuoteValue)) {
-				return ohlcQuoteValue.getKey();
-			} else {
-				final Tuple2<Quote, LocalDateTime> fullQuoteValue = quotesCache.get(Tuple2.of(scrip, QuoteMode.FULL));
-				if(null != fullQuoteValue && !isExpired(fullQuoteValue)) {
-					return fullQuoteValue.getKey();
-				} else {
-					final Quote quote = quoteDataProvider.getQuotes(Collections.singleton(scrip), QuoteMode.LTP).stream()
-							.findFirst().orElse(null);
-					quotesCache.put(key, Tuple2.of(quote, LocalDateTime.now()));
-					return quote;
-				}
-			}
-		}
+		return get(scrip, QuoteMode.LTP, QuoteMode.OHLC, QuoteMode.FULL);
 	}
 	
 	@Override
 	public Quote getOhlcQuote(@NonNull final Scrip scrip) {
-		final Tuple2<Scrip, QuoteMode> key = Tuple2.of(scrip, QuoteMode.OHLC);
-		final Tuple2<Quote, LocalDateTime> value = quotesCache.get(key);
-		if(null != value && !isExpired(value)) {
-			return value.getKey();
-		} else {
-			final Tuple2<Quote, LocalDateTime> fullQuoteValue = quotesCache.get(Tuple2.of(scrip, QuoteMode.FULL));
-			if(null != fullQuoteValue && !isExpired(fullQuoteValue)) {
-				return fullQuoteValue.getKey();
-			} else {
-				final Quote quote = quoteDataProvider.getQuotes(Collections.singleton(scrip), QuoteMode.OHLC).stream()
-						.findFirst().orElse(null);
-				quotesCache.put(key, Tuple2.of(quote, LocalDateTime.now()));
-				return quote;
-			}
-		}
+		return get(scrip, QuoteMode.OHLC, QuoteMode.FULL);
 	}
 	
 	@Override
 	public Quote getFullQuote(@NonNull final Scrip scrip) {
-		final Tuple2<Scrip, QuoteMode> key = Tuple2.of(scrip, QuoteMode.FULL);
-		final Tuple2<Quote, LocalDateTime> value = quotesCache.get(key);
-		if(null == value || isExpired(value)) {
-			final Quote quote = quoteDataProvider.getQuotes(Collections.singleton(scrip), QuoteMode.FULL).stream()
-				.findFirst().orElse(null);
-			quotesCache.put(key, Tuple2.of(quote, LocalDateTime.now()));
-			return quote;
-		} 
-		return value.getKey();
+		return get(scrip, QuoteMode.FULL);
 	}
 	
-	private boolean isExpired(Tuple2<Quote, LocalDateTime> value) {
-		return LocalDateTime.now().minus(quoteTtl).isAfter(value.getValue());
+	private Quote get(@NonNull final Scrip scrip, @NonNull QuoteMode...modes) {
+		Quote quote = getCachedQuote(scrip, modes);
+		if(null == quote) {
+			final QuoteMode mode = modes[0];
+			quote = quoteDataProvider.getQuotes(Collections.singleton(scrip), mode).stream()
+					.findFirst().orElse(null);
+			quotesCache.put(Tuple2.of(scrip, mode), quote);
+		}
+		return quote;
 	}
 
+	private Quote getCachedQuote(@NonNull final Scrip scrip, QuoteMode...modes) {
+		for(QuoteMode mode : modes) {
+			final Quote quote = quotesCache.get(Tuple2.of(scrip, mode));
+			if(null != quote) return quote;
+		}
+		return null;
+	}
+	
 }

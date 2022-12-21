@@ -2,29 +2,17 @@ package com.whiteowl.core.position;
 
 import java.util.List;
 
-import org.springframework.stereotype.Service;
-
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.scrip.Scrip;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+public interface PositionService {
 
-@Service
-@RequiredArgsConstructor
-public class PositionService {
-
-	private final PositionRepository positionRepository;
+	Position save(Position position);
 	
-	public Position save(@NonNull Position position) {
-		return positionRepository.saveAndFlush(position);
-	}
+	List<Position> findByTradingStrategyConfigId(String tradingStrategyConfigId);
 	
-	public List<Position> findByPortfolioAndStatusNot(Portfolio portfolio, PositionStatus status) {
-		return positionRepository.findByPortfolioAndStatusNot(portfolio, status);
-	}
+	List<Position> findByPortfolioAndStatusNot(Portfolio portfolio, PositionStatus status);
 	
-	public List<Position> findByScripAndTradingStrategyConfigIdAndStatus(Scrip scrip, String configId, PositionStatus status){
-		return positionRepository.findByScripAndTradingStrategyConfigIdAndStatus(scrip, configId, status);
-	}
+	List<Position> findByScripAndTradingStrategyConfigIdAndStatus(Scrip scrip, String configId, PositionStatus status);
+	
 }

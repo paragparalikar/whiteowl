@@ -54,4 +54,10 @@ public class OptionChain {
 				.min(Comparator.comparingDouble(info -> Math.abs(delta - info.getDelta())));
 	}
 	
+	public Optional<OptionChainItem> findByStrikePrice(double strikePrice){
+		return items.stream()
+				.filter(item -> item.getStrikePrice() == strikePrice)
+				.findFirst();
+	}
+	
 }
