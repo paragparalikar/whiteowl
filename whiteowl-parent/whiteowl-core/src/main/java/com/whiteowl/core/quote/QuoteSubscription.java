@@ -26,16 +26,19 @@ public class QuoteSubscription {
 	@NonNull private final Consumer<QuoteSubscription> unsubscribeCallback;
 	private final Set<Consumer<Quote>> listeners = Collections.newSetFromMap(new IdentityHashMap<>());
 	
-	public void unsubscribe() {
+	public QuoteSubscription unsubscribe() {
 		unsubscribeCallback.accept(this);
+		return this;
 	}
 	
-	public void addListener(@NonNull final Consumer<Quote> listener) {
+	public QuoteSubscription addListener(@NonNull final Consumer<Quote> listener) {
 		listeners.add(listener);
+		return this;
 	}
 	
-	public void removeListener(@NonNull final Consumer<Quote> listener) {
+	public QuoteSubscription removeListener(@NonNull final Consumer<Quote> listener) {
 		listeners.remove(listener);
+		return this;
 	}
 	
 	void onQuote(@NonNull final Quote quote) {

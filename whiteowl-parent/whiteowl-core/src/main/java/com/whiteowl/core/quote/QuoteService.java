@@ -5,7 +5,7 @@ import com.whiteowl.core.scrip.Scrip;
 public interface QuoteService {
 	
 	QuoteSubscription subscribe(Scrip scrip, QuoteMode mode);
-
+	
 	Quote getQuote(Scrip scrip, QuoteMode mode);
 
 	Quote getFullQuote(Scrip scrip);
@@ -13,5 +13,5 @@ public interface QuoteService {
 	Quote getOhlcQuote(Scrip scrip);
 
 	Quote getLtpQuote(Scrip scrip);
-	
+
 }

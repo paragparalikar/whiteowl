@@ -3,9 +3,7 @@ package com.whiteowl.core.quote;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -70,27 +68,17 @@ public class DefaultQuoteService implements QuoteService {
 	
 	@Override
 	public QuoteSubscription subscribe(@NonNull final Scrip scrip, @NonNull final QuoteMode mode) {
-		final QuoteSubscription subscription = QuoteSubscription.builder()
-				.scrip(scrip)
-				.mode(mode)
-				.unsubscribeCallback(this::unsubscribe)
-				.build();
-		subscriptionsCache.computeIfAbsent(
-				Tuple2.of(scrip, mode), 
-				key -> Collections.newSetFromMap(new IdentityHashMap<>()))
-			.add(subscription);
+		final QuoteSubscription subscription = new QuoteSubscription(scrip, mode, this::unsubscribe);
+		subscriptionsCache.computeIfAbsent(Tuple2.of(scrip, mode), 
+				key -> Collections.newSetFromMap(new IdentityHashMap<>())).add(subscription);
 		return subscription;
 	}
 	
-	public void unsubscribe(QuoteSubscription quoteSubscription) {
-		subscriptionsCache.values().forEach(subscriptions -> subscriptions.remove(quoteSubscription));
-		final Iterator<Entry<Tuple2<Scrip, QuoteMode>, Set<QuoteSubscription>>> iterator = 
-				subscriptionsCache.entrySet().iterator();
-		while(iterator.hasNext()) {
-			final Entry<Tuple2<Scrip, QuoteMode>, Set<QuoteSubscription>> entry = iterator.next();
-			final Set<QuoteSubscription> subscriptions = entry.getValue();
-			if(null == subscriptions || subscriptions.isEmpty()) iterator.remove();
-		}
+	void unsubscribe(@NonNull QuoteSubscription quoteSubscription) {
+		final Tuple2<Scrip, QuoteMode> key = Tuple2.of(quoteSubscription.getScrip(), quoteSubscription.getMode());
+		final Set<QuoteSubscription> values = subscriptionsCache.getOrDefault(key, Collections.emptySet());
+		values.remove(quoteSubscription);
+		if(values.isEmpty()) subscriptionsCache.remove(key);
 	}
 	
 	@Override
