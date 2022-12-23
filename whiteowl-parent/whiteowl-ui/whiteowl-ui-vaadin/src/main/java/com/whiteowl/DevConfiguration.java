@@ -35,7 +35,13 @@ public class DevConfiguration {
 	
 	@Bean
 	public CommandLineRunner configureTradingStrategyConfigs(TradingStrategyConfigService configService) {
-		return args -> { if(0 == configService.count()) configService.save(new ShortStraddleConfig()); };
+		return args -> { 
+			if(0 == configService.count()) {
+				final ShortStraddleConfig config = new ShortStraddleConfig();
+				config.setPercentageStopLoss(24D);
+				configService.save(config); 
+			}
+		};
 	}
 	
 	@Bean
@@ -49,7 +55,7 @@ public class DevConfiguration {
 						.pin("TEST")
 						.build();
 				portfolio.setCredentials(credentials);
-				portfolio.setBroker(Broker.CONSOLE);
+				portfolio.setBroker(Broker.TEST);
 				portfolio.setMaxTradableAmount(1000000);
 				portfolio.setName("TEST");
 			}

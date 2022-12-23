@@ -55,7 +55,7 @@ public abstract class TitledEditor extends Dialog {
 		cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 		final Button saveButton = new Button("Save", VaadinUtils.toIcon(VaadinIcon.DATABASE), event -> {
 			try { action(); }
-			catch(Exception e) { e.printStackTrace(); setError(e.getMessage()); }
+			catch(Exception e) { setError(e.getMessage()); }
 		});
 		saveButton.setAutofocus(true);
 		saveButton.addClickShortcut(Key.ENTER);

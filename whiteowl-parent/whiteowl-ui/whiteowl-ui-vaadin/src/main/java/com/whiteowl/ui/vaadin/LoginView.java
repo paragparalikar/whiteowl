@@ -12,7 +12,7 @@ import com.vaadin.flow.router.Route;
 
 @PermitAll
 @Route("login") 
-@PageTitle("Login | Mongoose")
+@PageTitle("Login")
 public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 	private static final long serialVersionUID = 7854278744047155542L;
 
@@ -27,7 +27,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 		login.setAction("login"); 
 		login.setForgotPasswordButtonVisible(false);
 
-		add(new H1("Mongoose"), login);
+		add(new H1("White Owl"), login);
 	}
 
 	@Override

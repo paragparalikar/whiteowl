@@ -47,12 +47,14 @@ public class PortfolioEditor extends TitledFormEditor<Portfolio> {
 		
 		final ComboBox<Broker> brokerComboBox = new ComboBox<>("Broker", Arrays.asList(Broker.values()));
 		brokerComboBox.setWidthFull();
-		binder.forField(brokerComboBox).bind(Portfolio::getBroker, Portfolio::setBroker);
+		binder.forField(brokerComboBox)
+			.asRequired("Broker is required")
+			.bind(Portfolio::getBroker, Portfolio::setBroker);
 		
-		final NumberField amountField = new NumberField("Amount");
+		final NumberField amountField = new NumberField("Max Usable Amount");
 		amountField.setWidthFull();
 		binder.forField(amountField)
-			.asRequired("Amount is required")
+			.asRequired("Max Usable Amount is required")
 			.withValidator(new PortfolioAmountValidator())
 			.bind(Portfolio::getMaxTradableAmount, Portfolio::setMaxTradableAmount);
 		amountField.setPrefixComponent(VaadinUtils.toIcon(VaadinIcon.MONEY));

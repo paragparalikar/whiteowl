@@ -42,7 +42,6 @@ public abstract class TitledFormEditor<T> extends TitledEditor {
 			edit(value);
 			close();
 		} catch (Exception e) {
-			e.printStackTrace();
 			setError(e.getMessage());
 		}
 	}

@@ -13,7 +13,6 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.whiteowl.core.scrip.Scrip;
@@ -37,8 +36,6 @@ public class DefaultQuoteService implements QuoteService {
 		quotesCache.setTtlInMillis(quoteTtl.toMillis());
 	}
 	
-	// TODO Use websockets instead of polling
-	@Scheduled(initialDelayString = "${whiteowl.quote.poll.initial-delay:PT15S}", fixedRateString = "${whiteowl.quote.poll.fixed-rate:PT15S}")
 	public void poll() {
 		for(QuoteMode mode : QuoteMode.values()) {
 			final Map<String, Scrip> scripCodeMapping = subscriptionsCache.keySet().stream()

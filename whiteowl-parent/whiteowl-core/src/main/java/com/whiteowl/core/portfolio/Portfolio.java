@@ -38,7 +38,7 @@ public class Portfolio {
 	@NotNull
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
-	private Broker broker = Broker.CONSOLE;
+	private Broker broker = Broker.TEST;
 
 	@Valid
 	@NonNull

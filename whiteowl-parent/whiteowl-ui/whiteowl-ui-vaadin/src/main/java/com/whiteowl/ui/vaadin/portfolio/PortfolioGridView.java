@@ -60,7 +60,6 @@ public class PortfolioGridView extends TitledGridView<Portfolio> {
 			portfolioService.delete(portfolio);
 			portfolioDataProvider.refreshAll();
 		} catch(Exception e) {
-			e.printStackTrace();
 			setError(e.getMessage());
 		}
 	}

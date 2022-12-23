@@ -34,7 +34,7 @@ import com.vaadin.flow.theme.lumo.Lumo;
 @Theme(themeClass = Lumo.class, variant = Lumo.DARK)
 @NpmPackage(value = "line-awesome", version = "1.3.0")
 @JsModule("@vaadin/vaadin-lumo-styles/presets/compact.js")
-@PWA(name = "Mongoose", shortName = "M", offlineResources = {})
+@PWA(name = "White Owl", shortName = "WO", offlineResources = {})
 @SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
 public class WhiteOwlApplication implements AppShellConfigurator {
 	private static final long serialVersionUID = 1L;

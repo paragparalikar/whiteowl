@@ -21,7 +21,7 @@ public class ShortStraddleConfig implements TradingStrategyConfig {
 	@PositiveOrZero private Double percentageStopLoss = 25D;
 	@NotBlank private String positionOpenCron = "0 16 9 * * MON-FRI";
 	@NotBlank private String positionCloseCron = "0 15 15 * * MON-FRI";
-	private final String id = Index.NIFTY50.getCode() + TradingStrategyTemplate.SHORT_STRADDLE.getId();
+	private final String id = Index.NIFTY50.getCode() + "-" + TradingStrategyTemplate.SHORT_STRADDLE.getId();
 	private final TradingStrategyTemplate tradingStrategyTemplate = TradingStrategyTemplate.SHORT_STRADDLE;
 	
 }

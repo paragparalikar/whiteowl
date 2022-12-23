@@ -20,13 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class ConsoleBrokerServiceProvider implements BrokerServiceProvider {
+public class TestBrokerServiceProvider implements BrokerServiceProvider {
 	
 	private final Map<Long, Trade> trades = new HashMap<>();
 	
 	@Override
 	public Broker getBrokerType() {
-		return Broker.CONSOLE;
+		return Broker.TEST;
 	}
 
 	@Override
