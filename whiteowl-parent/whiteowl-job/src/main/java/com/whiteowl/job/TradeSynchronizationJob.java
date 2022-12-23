@@ -25,6 +25,8 @@ import com.whiteowl.core.trade.Trade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+// TODO use websockets to receive trade updates
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
