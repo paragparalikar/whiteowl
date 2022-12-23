@@ -1,0 +1,3 @@
+Persist bar's begin time instead of end time
+Convert bar existing bar data that persists end time to new format
+Handle bar duration for day's last bar while parsing

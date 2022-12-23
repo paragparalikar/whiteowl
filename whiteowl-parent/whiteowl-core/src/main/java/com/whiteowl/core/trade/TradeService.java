@@ -2,18 +2,16 @@ package com.whiteowl.core.trade;
 
 import java.util.Optional;
 
-import org.springframework.stereotype.Service;
+import com.whiteowl.core.portfolio.Portfolio;
 
-import lombok.RequiredArgsConstructor;
+public interface TradeService {
 
-@Service
-@RequiredArgsConstructor
-public class TradeService {
+	Optional<Trade> findByBrokerTradeId(String brokerTradeId);
 
-	private final TradeRepository tradeRepository;
-	
-	public Optional<Trade> findByBrokerTradeId(String brokerTradeId){
-		return tradeRepository.findByBrokerTradeId(brokerTradeId);
-	}
-	
+	Trade create(Trade trade, Portfolio portfolio);
+
+	Trade update(Trade trade, Portfolio portfolio);
+
+	Trade cancel(Trade trade, Portfolio portfolio);
+
 }

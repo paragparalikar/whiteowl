@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
@@ -27,6 +28,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 import com.whiteowl.core.portfolio.Portfolio;
+import com.whiteowl.core.position.stateMachine.PositionEntityListener;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.TradeStatus;
@@ -43,6 +45,7 @@ import lombok.NonNull;
 		@Index(columnList = "status"),
 		@Index(columnList = "tradingStrategyConfigId")
 	})
+@EntityListeners(PositionEntityListener.class)
 @EqualsAndHashCode(of = {"id", "scrip", "portfolio", "tradingStrategyConfigId"})
 public class Position {
 
