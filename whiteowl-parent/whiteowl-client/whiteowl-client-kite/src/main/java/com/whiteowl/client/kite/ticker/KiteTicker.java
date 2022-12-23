@@ -30,6 +30,7 @@ import com.whiteowl.client.kite.model.KiteDepth;
 import com.whiteowl.client.kite.model.KiteMarketDepth;
 import com.whiteowl.client.kite.model.KiteTick;
 import com.whiteowl.client.kite.model.Order;
+import com.whiteowl.core.util.Dates;
 
 import lombok.SneakyThrows;
 
@@ -502,7 +503,7 @@ public class KiteTicker {
             tick.setMode(modeFull);
             long tickTimeStamp = convertToLong(getBytes(bin, 28, 32)) * 1000;
             if(isValidDate(tickTimeStamp)) {
-                tick.setTickTimestamp(new Date(tickTimeStamp));
+                tick.setTickTimestamp(Dates.toLocalDateTime(tickTimeStamp));
             } else {
                 tick.setTickTimestamp(null);
             }
@@ -554,7 +555,7 @@ public class KiteTicker {
     private KiteTick getFullData(byte[] bin, int dec, KiteTick tick){
         long lastTradedtime = convertToLong(getBytes(bin, 44, 48)) * 1000;
         if(isValidDate(lastTradedtime)) {
-            tick.setLastTradedTime(new Date(lastTradedtime));
+            tick.setLastTradedTime(Dates.toLocalDateTime(lastTradedtime));
         }else {
             tick.setLastTradedTime(null);
         }
@@ -563,7 +564,7 @@ public class KiteTicker {
         tick.setOiDayLow(convertToDouble(getBytes(bin, 56, 60)));
         long tickTimeStamp = convertToLong(getBytes(bin, 60, 64)) * 1000;
         if(isValidDate(tickTimeStamp)) {
-            tick.setTickTimestamp(new Date(tickTimeStamp));
+            tick.setTickTimestamp(Dates.toLocalDateTime(tickTimeStamp));
         } else {
             tick.setTickTimestamp(null);
         }

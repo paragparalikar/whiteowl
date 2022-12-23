@@ -28,13 +28,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ShortStraddleTradingStrategy {
 	
-	void closePosition(@NonNull final Position position) {
+	Position closePosition(@NonNull final Position position) {
 		position.getEntryTrades().stream()
 			.filter(entryTrade -> !position.getExitTrades().stream()
 					.map(Trade::getScrip)
 					.anyMatch(Predicate.isEqual(entryTrade.getScrip())))
 			.map(Trade::complement)
 			.forEach(position.getExitTrades()::add);
+		return position;
 	}
 
 	Position openPosition(@NonNull final OptionChain optionChain, @NonNull final ShortStraddleConfig config) {

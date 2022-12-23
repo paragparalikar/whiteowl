@@ -93,7 +93,7 @@ public class XmlTradingStrategyConfigRepository implements TradingStrategyConfig
 					.<TradingStrategyConfig>map(o -> o.orElse(null))
 					.filter(Objects::nonNull)
 					.filter(config -> enabled == config.isEnabled())
-					.filter(config -> template.equals(config.getTemplate()))
+					.filter(config -> template.equals(config.getTradingStrategyTemplate()))
 					.sorted(Comparator.comparing(TradingStrategyConfig::getId))
 					.collect(Collectors.toList());
 		}
