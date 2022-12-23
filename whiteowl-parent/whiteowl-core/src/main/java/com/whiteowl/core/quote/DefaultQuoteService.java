@@ -38,7 +38,7 @@ public class DefaultQuoteService implements QuoteService {
 	}
 	
 	// TODO Use websockets instead of polling
-	@Scheduled(initialDelayString = "${whiteowl.quote.ttl:15s}", fixedRateString = "${whiteowl.quote.ttl:15s}")
+	@Scheduled(initialDelayString = "${whiteowl.quote.poll.initial-delay:PT15S}", fixedRateString = "${whiteowl.quote.poll.fixed-rate:PT15S}")
 	public void poll() {
 		for(QuoteMode mode : QuoteMode.values()) {
 			final Map<String, Scrip> scripCodeMapping = subscriptionsCache.keySet().stream()

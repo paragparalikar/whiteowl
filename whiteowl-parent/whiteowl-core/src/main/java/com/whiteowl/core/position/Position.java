@@ -177,7 +177,7 @@ public class Position {
 				.anyMatch(Predicate.isEqual(scrip.getCode()));
 	}
 	
-	public void updateStatus() {
+	void updateStatus() {
 		if(exitTrades.isEmpty()) {
 			if(entryTrades.isEmpty()) {
 				status = PositionStatus.NEW;
