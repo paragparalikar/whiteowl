@@ -8,6 +8,6 @@ public interface TradeStateTransition {
 
 	TradeStatus getInitialStatus();
 	
-	Trade transition(Trade trade, Position position);
+	void transition(Trade trade, Position position);
 	
 }

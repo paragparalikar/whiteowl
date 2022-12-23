@@ -3,6 +3,7 @@ package com.whiteowl.core.position.stateMachine;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.core.OrderComparator;
 import org.springframework.stereotype.Component;
 
 import com.whiteowl.core.position.Position;
@@ -23,8 +24,8 @@ public class PositionStateMachine {
 		positionStateTransitions.stream()
 			.filter(positionStateTransition -> Objects.equals(position.getStatus(), 
 					positionStateTransition.getInitialStatus()))
+			.sorted(OrderComparator.INSTANCE)
 			.forEach(positionStateTransition -> positionStateTransition.transition(position));
-		position.updateStatus();
 		positionService.save(position);
 	}
 	

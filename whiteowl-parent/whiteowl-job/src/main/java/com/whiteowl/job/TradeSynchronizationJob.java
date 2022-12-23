@@ -46,7 +46,6 @@ public class TradeSynchronizationJob {
 				for(Position position : positions) {
 					synchronize(position.getExitTrades(), trades);
 					synchronize(position.getEntryTrades(), trades);
-					position.updateStatus();
 					position = positionService.save(position);
 					eventPublisher.publishEvent(new PositionSynchronizedEvent(position));
 				}

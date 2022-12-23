@@ -18,6 +18,7 @@ public class DefaultPositionService implements PositionService {
 	
 	@Override
 	public Position save(@NonNull final Position position) {
+		position.updateStatus();
 		return positionRepository.saveAndFlush(position);
 	}
 	
