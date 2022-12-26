@@ -22,8 +22,6 @@ import com.whiteowl.client.kite.model.Profile;
 import io.github.resilience4j.decorators.Decorators;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.RetryRegistry;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -32,12 +30,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	private static final String KITE = "kite";
 
 	@NonNull private final KiteConnectApi delegate;
-	
-	private final RetryRegistry retryRegistry = RetryRegistry.of(RetryConfig.custom()
-			.maxAttempts(3)
-			.waitDuration(Duration.ofMillis(333))
-			.retryExceptions(Exception.class)
-			.build());
 	
 	private final RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(RateLimiterConfig.custom()
 			.limitForPeriod(3)
@@ -48,7 +40,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	public CandleSeries getData(long instrumentToken, String interval, ZonedDateTime from, ZonedDateTime to) {
 		return Decorators.ofSupplier(() -> delegate.getData(instrumentToken, interval, from, to))
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.get();
 	}
 
@@ -56,7 +47,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	public Profile getProfile() {
 		return Decorators.ofSupplier(delegate::getProfile)
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.get();
 	}
 
@@ -64,7 +54,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	public Margin getMargin() {
 		return Decorators.ofSupplier(delegate::getMargin)
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.get();
 	}
 
@@ -72,7 +61,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	public List<Holding> getHoldings() {
 		return Decorators.ofSupplier(delegate::getHoldings)
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.get();
 	}
 
@@ -80,7 +68,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	public List<Position> getPositions() {
 		return Decorators.ofSupplier(delegate::getPositions)
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.get();
 	}
 
@@ -88,7 +75,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	public List<Order> getOrders() {
 		return Decorators.ofSupplier(delegate::getOrders)
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.get();
 	}
 
@@ -96,7 +82,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	public OrderId createOrder(Order order) {
 		return Decorators.ofFunction(delegate::createOrder)
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.apply(order);
 	}
 
@@ -104,7 +89,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	public OrderId update(Order order) {
 		return Decorators.<Order, OrderId>ofFunction(delegate::update)
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.apply(order);
 	}
 
@@ -113,7 +97,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 			OrderValidity validity) {
 		return Decorators.ofSupplier(() -> delegate.update(variety, orderId, orderType, quantity, validity))
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.get();
 	}
 
@@ -121,7 +104,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	public OrderId cancel(Order order) {
 		return Decorators.<Order, OrderId>ofFunction(delegate::cancel)
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.apply(order);
 	}
 
@@ -129,7 +111,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	public OrderId cancel(OrderVariety variety, String orderId) {
 		return Decorators.ofSupplier(() -> delegate.cancel(variety, orderId))
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.get();
 	}
 	
@@ -137,7 +118,6 @@ public class ResilientKiteClient implements KiteConnectApi {
 	public Collection<KiteQuote> getQuotes(Collection<Instrument> instruments, KiteQuoteMode mode) {
 		return Decorators.ofSupplier(() -> delegate.getQuotes(instruments, mode))
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
-				.withRetry(retryRegistry.retry(KITE))
 				.get();
 	}
 	
