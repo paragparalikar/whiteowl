@@ -116,34 +116,36 @@ public class KiteClient implements KiteConnectApi {
 	@Override
 	@SneakyThrows
 	public CandleSeries getData(long instrumentToken, String interval, ZonedDateTime from, ZonedDateTime to){
+		to = truncate(to, interval, true);
+		from = truncate(from, interval, false);
 		final HistoricalDataRequest historicalDataRequest = new HistoricalDataRequest(
-				instrumentToken, interval, truncate(from, interval), truncate(to, interval), session);
+				instrumentToken, interval, from, to, session);
 		session.authorize(historicalDataRequest);
 		log.info("Downloading data from kite for instrument {} {} from {} - to {}", instrumentToken, interval, from, to);
 		final CandleSeries candleSeries = execute(historicalDataRequest, new TypeReference<Response<CandleSeries>>(){});
 		return candleSeries;
 	}
 	
-	private ZonedDateTime truncate(ZonedDateTime date, String interval) {
+	private ZonedDateTime truncate(ZonedDateTime date, String interval, boolean toPrevious) {
 		switch(interval) {
 		case "day": return date.truncatedTo(ChronoUnit.DAYS);
-		case "60minute": return truncateToPrevious(date, Duration.ofHours(1));
-		case "30minute": return truncateToPrevious(date, Duration.ofMinutes(30));
-		case "15minute": return truncateToPrevious(date, Duration.ofMinutes(15));
-		case "10minute": return truncateToPrevious(date, Duration.ofMinutes(10));
-		case "5minute": return truncateToPrevious(date, Duration.ofMinutes(5));
+		case "60minute": return truncateToPrevious(date, Duration.ofHours(1), toPrevious);
+		case "30minute": return truncateToPrevious(date, Duration.ofMinutes(30), toPrevious);
+		case "15minute": return truncateToPrevious(date, Duration.ofMinutes(15), toPrevious);
+		case "10minute": return truncateToPrevious(date, Duration.ofMinutes(10), toPrevious);
+		case "5minute": return truncateToPrevious(date, Duration.ofMinutes(5), toPrevious);
 		}
 		return date;
 	}
 	
-	private ZonedDateTime truncateToPrevious(ZonedDateTime date, Duration duration) {
+	private ZonedDateTime truncateToPrevious(ZonedDateTime date, Duration duration, boolean toPrevious) {
 		final ZonedDateTime startOfMarket = date
 				.truncatedTo(ChronoUnit.DAYS)
 				.plusHours(Constant.NSE_START_HOUR)
 				.plusMinutes(Constant.NSE_START_MINUTE);
-		return startOfMarket.plus(duration.multipliedBy(
-	            Duration.between(startOfMarket, date).dividedBy(duration)))
-				.minus(duration);
+		final ZonedDateTime result = startOfMarket.plus(duration.multipliedBy(
+	            Duration.between(startOfMarket, date).dividedBy(duration)));
+		return toPrevious ? result.minus(duration) : result;
 	}
 	
 	@Override

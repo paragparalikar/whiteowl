@@ -52,8 +52,6 @@ public class KiteBarDataProvider implements BarDataProvider, QuoteDataProvider {
 		while(null != to && to.isAfter(from)) {
 			final ZonedDateTime projectedFrom = to.minus(duration);
 			final ZonedDateTime effectiveFrom = from.isAfter(projectedFrom) ? from : projectedFrom;
-			log.info("Downloading data from kite Code : {}, Timeframe : {}, from : {}, to : {}", 
-					scrip.getCode(), timeframe, effectiveFrom, to);
 			to = fill(instrumentToken, scrip.getCode(), timeframe, effectiveFrom, to, bars);
 		}
 		log.info("Downloaded total {} bars from kite for Code : {}, Timeframe : {}", bars.size(), scrip.getCode(), timeframe);

@@ -69,8 +69,6 @@ public class BarDownloadJob {
 	
 	private ZonedDateTime getLastDownloadTimestamp(Scrip scrip, Timeframe timeframe) {
 		return barService.findMaxBeginTimeByCodeAndTimeframe(scrip.getCode(), timeframe)
-				//.map(time -> time.plus(timeframe.getDuration())) 
-				// We want first bar to be re-fetched as it may not have been completely formed when fetched last time.
 				.orElse(ZonedDateTime.now().minusYears(100));
 	}
 	
