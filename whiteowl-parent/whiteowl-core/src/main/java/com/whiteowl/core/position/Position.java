@@ -27,6 +27,10 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.position.stateMachine.PositionEntityListener;
 import com.whiteowl.core.scrip.Scrip;
@@ -45,7 +49,7 @@ import lombok.NonNull;
 		@Index(columnList = "status"),
 		@Index(columnList = "tradingStrategyConfigId")
 	})
-@EntityListeners(PositionEntityListener.class)
+@EntityListeners({AuditingEntityListener.class, PositionEntityListener.class})
 @EqualsAndHashCode(of = {"id", "scrip", "portfolio", "tradingStrategyConfigId"})
 public class Position {
 
@@ -78,6 +82,12 @@ public class Position {
 	
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private Set<@Valid Trade> exitTrades = new HashSet<>();
+	
+	@CreatedDate
+	private LocalDateTime createdDate;
+	
+	@LastModifiedDate
+	private LocalDateTime lastModifiedDate;
 	
 	public Position withPortfolio(Portfolio portfolio) {
 		final Position position = new Position();

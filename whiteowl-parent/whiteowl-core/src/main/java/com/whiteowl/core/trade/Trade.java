@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
@@ -16,6 +17,9 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.scrip.Scrip;
@@ -35,6 +39,7 @@ import lombok.NonNull;
 	@Index(columnList = "status"),
 	@Index(columnList = "scrip_code")
 })
+@EntityListeners(AuditingEntityListener.class)
 public class Trade {
 
 	@Id
@@ -90,6 +95,12 @@ public class Trade {
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private TradeStatus status;
+	
+	@CreatedDate
+	private LocalDateTime createdDate;
+	
+	@LastModifiedDate
+	private LocalDateTime lastModifiedDate;
 	
 	public void copy(Trade trade) {
 		this.id = trade.getId();

@@ -1,5 +1,3 @@
-Persist and use only the completed bar from kite
-Add createdDate and lastModifiedDate to Position and Trade
 Backtest functionality
 Config Optimization functionality
 Win rate enhancement using machine learning
