@@ -10,7 +10,9 @@ import com.whiteowl.core.trade.stateMachine.TradeStateMachine;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public abstract class AbstractPositionStateTransition implements PositionStateTransition {
 	
@@ -20,6 +22,7 @@ public abstract class AbstractPositionStateTransition implements PositionStateTr
 	@Override
 	public void transition(@NonNull final Position position) {
 		if(!initialStatus.equals(position.getStatus())) throw new IllegalStateException();
+		if(log.isInfoEnabled()) log.info("Position transition triggered : {}", position);
 		handle(position, position.getExitTrades());
 		handle(position, position.getEntryTrades());
 	}

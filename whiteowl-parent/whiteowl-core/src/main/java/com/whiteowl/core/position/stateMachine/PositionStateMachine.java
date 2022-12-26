@@ -21,6 +21,7 @@ public class PositionStateMachine {
 	private final List<PositionStateTransition> positionStateTransitions;
 	
 	public void handle(@NonNull final Position position) {
+		if(position.getStatus().isTerminal()) throw new IllegalStateException();
 		positionStateTransitions.stream()
 			.filter(positionStateTransition -> Objects.equals(position.getStatus(), 
 					positionStateTransition.getInitialStatus()))

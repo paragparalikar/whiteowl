@@ -32,7 +32,9 @@ import com.whiteowl.strategy.TradingStrategyTemplate;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ShortStraddleTradingStrategyExecutor implements TradingStrategyExecutor<ShortStraddleConfig> {
@@ -48,6 +50,7 @@ public class ShortStraddleTradingStrategyExecutor implements TradingStrategyExec
 	
 	@Override
 	public void schedule(@NonNull final ShortStraddleConfig config, @NonNull final TaskScheduler taskScheduler) {
+		if(log.isDebugEnabled()) log.debug("Scheduling config {}", config);
 		final List<ScheduledFuture<?>> futures = this.futures.computeIfAbsent(config, key -> Collections.synchronizedList(new ArrayList<>(2)));
 		futures.add(taskScheduler.schedule(() -> openPosition(config), new CronTrigger(config.getPositionOpenCron())));
 		futures.add(taskScheduler.schedule(() -> closePosition(config), new CronTrigger(config.getPositionCloseCron())));
@@ -60,10 +63,12 @@ public class ShortStraddleTradingStrategyExecutor implements TradingStrategyExec
 		final OptionChain optionChain = optionChainService.findByScrip(scrip).orElseThrow();
 		final Position position = tradingStrategy.openPosition(optionChain, config);
 		subscribe(position, config);
+		if(log.isInfoEnabled()) log.info("Opening position {} for config {}", position, config);
 		positionService.save(position);
 	}
 	
 	private void subscribe(Position position, ShortStraddleConfig config) {
+		if(log.isDebugEnabled()) log.debug("Subscribing to quotes for position {}", position);
 		position.getEntryTrades().stream()
 			.map(Trade::getScrip)
 			.map(tradeScrip -> quoteService.subscribe(tradeScrip, QuoteMode.LTP))
@@ -72,12 +77,14 @@ public class ShortStraddleTradingStrategyExecutor implements TradingStrategyExec
 	}
 	
 	private void onQuote(ShortStraddleConfig config, Quote quote) {
+		if(log.isDebugEnabled()) log.debug("Received quote {} for config {}", quote, config);
 		positionService.findByTradingStrategyConfigIdAndStatusNot(config.getId(), PositionStatus.CLOSED).stream()
 			.filter(position -> tradingStrategy.onQuote(position, quote, config))
 			.forEach(position -> save(position, config));
 	}
 	
 	private void unsubscribe(ShortStraddleConfig config, Scrip scrip) {
+		if(log.isDebugEnabled()) log.debug("Unsubscribing for quotes for scrip {} and config {}", scrip, config);
 		subscriptions.entrySet().stream()
 			.filter(entry -> entry.getKey().equals(config))
 			.map(Entry::getValue)
@@ -85,6 +92,7 @@ public class ShortStraddleTradingStrategyExecutor implements TradingStrategyExec
 	}
 	
 	private void closePosition(ShortStraddleConfig config) {
+		if(log.isInfoEnabled()) log.info("Closing all open positions for config {}", config);
 		positionService.findByTradingStrategyConfigIdAndStatusNot(config.getId(), PositionStatus.CLOSED).stream()
 			.map(tradingStrategy::closePosition)
 			.forEach(position -> save(position, config));
@@ -98,6 +106,7 @@ public class ShortStraddleTradingStrategyExecutor implements TradingStrategyExec
 	
 	@Override
 	public void close() throws Exception {
+		if(log.isInfoEnabled()) log.info("Closing trading strategy {}", getClass().getSimpleName());
 		futures.values().stream()
 			.flatMap(Collection::stream)
 			.forEach(future -> future.cancel(false));

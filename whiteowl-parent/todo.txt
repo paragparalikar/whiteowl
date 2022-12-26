@@ -1,3 +1,12 @@
+Persist and use only the completed bar from kite
+Add createdDate and lastModifiedDate to Position and Trade
+Backtest functionality
+Config Optimization functionality
+Win rate enhancement using machine learning
+Option chain repository
+Option chain download job
+Option chain historical data download
+
 BrokerServiceProvider to throw various exceptions like InsufficientFundsExceptions, MarketNotInSessionException
 How to handle funds allocation to each strategy ?
 How to handle limit type trade execution ?

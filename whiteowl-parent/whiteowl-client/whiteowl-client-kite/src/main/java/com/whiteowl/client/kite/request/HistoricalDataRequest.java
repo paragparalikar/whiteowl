@@ -26,7 +26,8 @@ public class HistoricalDataRequest extends Get {
 		queryParams.put("to", KiteConstant.FORMATTER.format(to));
 		queryParams.put("from", KiteConstant.FORMATTER.format(from));
 		queryParams.put("user_id", kiteSession.getCredentials().getUsername());
-		return url + "?" + Http.map2URLEncoded(queryParams);
+		final String result = url + "?" + Http.map2URLEncoded(queryParams);
+		return result;
 	}
 
 	public HistoricalDataRequest(long instrumentToken, String interval, 
