@@ -9,6 +9,7 @@ import static java.time.DayOfWeek.WEDNESDAY;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 
@@ -16,8 +17,10 @@ public class WeekdayPostMarketFromAdjuster implements BarQueryTimeAdjuster {
 
 	@Override
 	public boolean test(ZonedDateTime date) {
+		final LocalTime localTime = date.toLocalTime();
 		final DayOfWeek dayOfWeek = date.getDayOfWeek();
-		return NSE_END_TIME.isBefore(date.toLocalTime()) 
+		return (NSE_END_TIME.equals(localTime) 
+				|| NSE_END_TIME.isBefore(localTime))
 				&& (MONDAY.equals(dayOfWeek)
 				|| TUESDAY.equals(dayOfWeek) 
 				|| WEDNESDAY.equals(dayOfWeek)
