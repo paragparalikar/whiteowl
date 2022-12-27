@@ -20,11 +20,13 @@ import com.whiteowl.client.kite.model.KiteQuote;
 import com.whiteowl.client.kite.model.KiteQuoteMode;
 import com.whiteowl.core.bar.BarDataProvider;
 import com.whiteowl.core.bar.Timeframe;
+import com.whiteowl.core.bar.query.BarQuery;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.quote.QuoteDataProvider;
 import com.whiteowl.core.quote.QuoteMode;
 import com.whiteowl.core.scrip.Scrip;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -44,7 +46,11 @@ public class KiteBarDataProvider implements BarDataProvider, QuoteDataProvider {
 	}
 	
 	@Override
-	public List<Bar> getBars(Scrip scrip, Timeframe timeframe, ZonedDateTime from, ZonedDateTime to) {
+	public List<Bar> getBars(@NonNull final BarQuery barQuery) {
+		final Scrip scrip = barQuery.getScrip();
+		final Timeframe timeframe = barQuery.getTimeframe();
+		ZonedDateTime to = barQuery.getTo();
+		ZonedDateTime from = barQuery.getFrom();
 		final Instrument instrument = kiteInstrumentService.findByTradingSymbol(scrip.getCode());
 		final long instrumentToken = instrument.getInstrumentToken();
 		final Duration duration = kiteMapper.getHistoricalDataBatchLimit(timeframe);

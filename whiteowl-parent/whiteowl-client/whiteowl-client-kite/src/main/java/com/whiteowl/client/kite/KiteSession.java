@@ -13,11 +13,12 @@ import static com.whiteowl.core.util.Http.SET_COOKIE;
 import java.io.InputStream;
 import java.net.HttpCookie;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
@@ -48,7 +49,7 @@ public class KiteSession {
 
 	private final UUID uuid = UUID.randomUUID();
 	@NonNull private final KiteCredentials credentials;
-	private final Set<HttpCookie> cookies = new HashSet<>();
+	private final Set<HttpCookie> cookies = Collections.newSetFromMap(new ConcurrentHashMap<>());
 	
 	public void setCookies(Request<?> request) {
 		request.headers().entrySet().stream()
@@ -123,7 +124,7 @@ public class KiteSession {
 				.findFirst().orElse(null);
 	}
 	
-	public <T extends Request<T>> T authorize(final T request){
+	public synchronized <T extends Request<T>> T authorize(final T request){
 		addHeaders(request);
 		if(FORBIDDEN == request.responseCode()) {
 			login();

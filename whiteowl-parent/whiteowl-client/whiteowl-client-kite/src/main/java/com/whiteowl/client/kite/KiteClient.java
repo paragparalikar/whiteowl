@@ -4,9 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
-import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -48,7 +46,6 @@ import com.whiteowl.client.kite.request.PositionsRequest;
 import com.whiteowl.client.kite.request.ProfileRequest;
 import com.whiteowl.client.kite.request.QuoteRequest;
 import com.whiteowl.client.kite.request.UpdateOrderRequest;
-import com.whiteowl.core.util.Constant;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -116,36 +113,12 @@ public class KiteClient implements KiteConnectApi {
 	@Override
 	@SneakyThrows
 	public CandleSeries getData(long instrumentToken, String interval, ZonedDateTime from, ZonedDateTime to){
-		to = truncate(to, interval, true);
-		from = truncate(from, interval, false);
 		final HistoricalDataRequest historicalDataRequest = new HistoricalDataRequest(
 				instrumentToken, interval, from, to, session);
 		session.authorize(historicalDataRequest);
 		if(log.isDebugEnabled()) log.debug("Downloading data from kite for instrument {} {} from {} - to {}", instrumentToken, interval, from, to);
 		final CandleSeries candleSeries = execute(historicalDataRequest, new TypeReference<Response<CandleSeries>>(){});
 		return candleSeries;
-	}
-	
-	private ZonedDateTime truncate(ZonedDateTime date, String interval, boolean toPrevious) {
-		switch(interval) {
-		case "day": return date.truncatedTo(ChronoUnit.DAYS);
-		case "60minute": return truncateToPrevious(date, Duration.ofHours(1), toPrevious);
-		case "30minute": return truncateToPrevious(date, Duration.ofMinutes(30), toPrevious);
-		case "15minute": return truncateToPrevious(date, Duration.ofMinutes(15), toPrevious);
-		case "10minute": return truncateToPrevious(date, Duration.ofMinutes(10), toPrevious);
-		case "5minute": return truncateToPrevious(date, Duration.ofMinutes(5), toPrevious);
-		}
-		return date;
-	}
-	
-	private ZonedDateTime truncateToPrevious(ZonedDateTime date, Duration duration, boolean toPrevious) {
-		final ZonedDateTime startOfMarket = date
-				.truncatedTo(ChronoUnit.DAYS)
-				.plusHours(Constant.NSE_START_HOUR)
-				.plusMinutes(Constant.NSE_START_MINUTE);
-		final ZonedDateTime result = startOfMarket.plus(duration.multipliedBy(
-	            Duration.between(startOfMarket, date).dividedBy(duration)));
-		return toPrevious ? result.minus(duration) : result;
 	}
 	
 	@Override

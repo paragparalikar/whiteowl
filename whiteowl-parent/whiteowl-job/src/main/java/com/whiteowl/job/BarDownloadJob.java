@@ -1,6 +1,7 @@
 package com.whiteowl.job;
 
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -12,9 +13,10 @@ import org.ta4j.core.Bar;
 import com.whiteowl.core.bar.BarDataProvider;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
-import com.whiteowl.core.bar.TradingSessionAwareBarDataProvider;
 import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
 import com.whiteowl.core.bar.event.TimeframeBarDownloadedEvent;
+import com.whiteowl.core.bar.query.BarQuery;
+import com.whiteowl.core.bar.query.BarQueryTransformer;
 import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripCriteria;
@@ -31,6 +33,7 @@ public class BarDownloadJob {
 	private final BarService barService;
 	private final ScripService scripService;
 	private final BarDataProvider barDataProvider;
+	private final BarQueryTransformer barQueryTransformer;
 	private final ApplicationEventPublisher eventPublisher;
 	
 	@Async @Scheduled(cron = "1 15 9 * * MON-FRI") public void downloadD() { download(Timeframe.D); }
@@ -41,11 +44,9 @@ public class BarDownloadJob {
 	@Async @Scheduled(cron = "1 0/5 9-16 * * MON-FRI") public void downloadM5() { download(Timeframe.M5); }
 	
 	private void download(Timeframe timeframe) {
-		final TradingSessionAwareBarDataProvider smartDataProvider = 
-				new TradingSessionAwareBarDataProvider(barDataProvider);
 		scripService.findAll().stream()
 			.filter(getScripCriteria())
-			.forEach(scrip -> download(scrip, timeframe, smartDataProvider));
+			.forEach(scrip -> download(scrip, timeframe, barDataProvider));
 		eventPublisher.publishEvent(new TimeframeBarDownloadedEvent(timeframe));
 	}
 	
@@ -54,10 +55,18 @@ public class BarDownloadJob {
 	}
 	
 	private void download(Scrip scrip, Timeframe timeframe, BarDataProvider barDataProvider) {
-		final ZonedDateTime to = ZonedDateTime.now();
-		final ZonedDateTime from = getLastDownloadTimestamp(scrip, timeframe);
-		if(log.isDebugEnabled()) log.debug("Bars were last downloaded on {} for scrip {} and timeframe {}", from, scrip.getCode(), timeframe);
-		final List<Bar> bars = barDataProvider.getBars(scrip, timeframe, from, to);
+		final ZonedDateTime now = ZonedDateTime.now();
+		final ZonedDateTime lastDownloadedTime = getLastDownloadTimestamp(scrip, timeframe);
+		if(log.isDebugEnabled()) log.debug("Bars were last downloaded on {} for scrip {} and timeframe {}", lastDownloadedTime, scrip.getCode(), timeframe);
+		final BarQuery barQuery = BarQuery.builder()
+				.to(now)
+				.from(lastDownloadedTime)
+				.scrip(scrip)
+				.timeframe(timeframe)
+				.build();
+		final List<Bar> bars = barQueryTransformer.transform(barQuery)
+				.map(barDataProvider::getBars)
+				.orElse(Collections.emptyList());
 		if(!bars.isEmpty()) {
 			barService.saveAll(scrip.getCode(), timeframe, bars);
 			eventPublisher.publishEvent(ScripBarDownloadedEvent.builder()

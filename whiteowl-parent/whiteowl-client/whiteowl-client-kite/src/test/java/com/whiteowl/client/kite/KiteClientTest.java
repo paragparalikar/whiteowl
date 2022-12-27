@@ -15,8 +15,8 @@ public class KiteClientTest {
 		dataProviderCredentials.setEncrypted(false);
 		final KiteCredentials credentials = dataProviderCredentials.toKiteCredentials();
 		final KiteSession session = new KiteSession(credentials);
-		final KiteConnectApi api = new KiteClient(session);
-		final CandleSeries series = api.getData(738561L, "day", ZonedDateTime.now().minusMonths(1), ZonedDateTime.now());
+		final KiteConnectApi api = new ResilientKiteClient(new KiteClient(session));
+		final CandleSeries series = api.getData(738561L, "5minute", ZonedDateTime.now().minusMonths(1), ZonedDateTime.now());
 		series.getData().forEach(System.out::println);
 	}
 }
