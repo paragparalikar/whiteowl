@@ -58,7 +58,8 @@ public class BarDownloadJob {
 		final ZonedDateTime now = ZonedDateTime.now();
 		final ZonedDateTime lastDownloadedTime = getLastDownloadTimestamp(scrip, timeframe);
 		final ZonedDateTime nextDownloadTime = lastDownloadedTime.plus(timeframe.getDuration());
-		if(log.isDebugEnabled()) log.debug("Bars were last downloaded on {} for scrip {} and timeframe {}", lastDownloadedTime, scrip.getCode(), timeframe);
+		if(log.isDebugEnabled()) log.debug("Bars were last downloaded on {} for scrip {} and timeframe {}, next is {}", 
+				lastDownloadedTime, scrip.getCode(), timeframe, nextDownloadTime);
 		final BarQuery barQuery = BarQuery.builder()
 				.to(now)
 				.from(nextDownloadTime)

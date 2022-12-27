@@ -16,7 +16,7 @@ public class WeekdayPostMarketToAdjuster implements BarQueryTimeAdjuster {
 	@Override
 	public boolean test(ZonedDateTime date) {
 		final DayOfWeek dayOfWeek = date.getDayOfWeek();
-		return NSE_END_TIME.isBefore(date.toLocalTime()) 
+		return !NSE_END_TIME.isAfter(date.toLocalTime()) 
 				&& (MONDAY.equals(dayOfWeek)
 				|| TUESDAY.equals(dayOfWeek) 
 				|| WEDNESDAY.equals(dayOfWeek)
