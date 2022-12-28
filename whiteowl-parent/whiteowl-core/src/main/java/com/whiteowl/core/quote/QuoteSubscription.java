@@ -41,7 +41,7 @@ public class QuoteSubscription {
 		return this;
 	}
 	
-	void onQuote(@NonNull final Quote quote) {
+	public void onQuote(@NonNull final Quote quote) {
 		if(Strings.hasText(quote.getCode()) && quote.getCode().equalsIgnoreCase(scrip.getCode())) {
 			for(Consumer<Quote> listener : listeners) {
 				try {
