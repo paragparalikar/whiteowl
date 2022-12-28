@@ -1,6 +1,7 @@
 package com.whiteowl.job;
 
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,6 +43,7 @@ public class BarDownloadJob {
 	@Async @Scheduled(cron = "1 0/15 9-16 * * MON-FRI") public void downloadM15() { download(Timeframe.M15); }
 	@Async @Scheduled(cron = "1 5-59/10 9-16 * * MON-FRI") public void downloadM10() { download(Timeframe.M10); }
 	@Async @Scheduled(cron = "1 0/5 9-16 * * MON-FRI") public void downloadM5() { download(Timeframe.M5); }
+	@Async @Scheduled(cron = "1 30 15 * * MON-FRI") public void downloadAll() { Arrays.asList(Timeframe.values()).forEach(this::download); }
 	
 	private void download(Timeframe timeframe) {
 		scripService.findAll().stream()

@@ -64,6 +64,11 @@ public class DefaultQuoteService implements QuoteService {
 	}
 	
 	@Override
+	public QuoteSubscription subscribe(Scrip scrip) {
+		return subscribe(scrip, QuoteMode.LTP);
+	}
+	
+	@Override
 	public QuoteSubscription subscribe(@NonNull final Scrip scrip, @NonNull final QuoteMode mode) {
 		final QuoteSubscription subscription = new QuoteSubscription(scrip, mode, this::unsubscribe);
 		subscriptionsCache.computeIfAbsent(Tuple2.of(scrip, mode), 

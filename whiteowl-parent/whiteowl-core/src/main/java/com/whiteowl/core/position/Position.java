@@ -22,6 +22,8 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
@@ -187,6 +189,8 @@ public class Position {
 				.anyMatch(Predicate.isEqual(scrip.getCode()));
 	}
 	
+	@PreUpdate
+	@PrePersist
 	void updateStatus() {
 		if(exitTrades.isEmpty()) {
 			if(entryTrades.isEmpty()) {

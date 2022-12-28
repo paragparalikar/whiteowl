@@ -1,5 +1,8 @@
 package com.whiteowl.strategy.meanReversion;
 
+import java.util.Comparator;
+import java.util.stream.Stream;
+
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
@@ -22,5 +25,12 @@ public class MeanReversionInUptrendTradingStrategyConfig implements TradingStrat
 	@Positive private int stochasticBarCount = 14;
 	@PositiveOrZero @Max(100) private int maxStochasticValue = 30;
 	private TradingStrategyTemplate tradingStrategyTemplate = TradingStrategyTemplate.MEAN_REVERSION_UPTREND;
+	
+	@Override
+	public int getBarCount() {
+		return Stream.of(rsiBarCount, macdShortBarCount, macdLongBarCount, stochasticBarCount)
+				.max(Comparator.naturalOrder())
+				.orElse(0);
+	}
 
 }

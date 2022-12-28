@@ -3,10 +3,10 @@ package com.whiteowl.strategy.shortstrangle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
 import org.springframework.scheduling.TaskScheduler;
@@ -43,9 +43,9 @@ public class ShortStraddleTradingStrategyExecutor implements TradingStrategyExec
 	private final QuoteService quoteService;
 	private final PositionService positionService;
 	private final OptionChainService optionChainService;
-	private final Map<ShortStraddleConfig, List<ScheduledFuture<?>>> futures = new HashMap<>();
-	private final Map<ShortStraddleConfig, List<QuoteSubscription>> subscriptions = new HashMap<>();
 	private final ShortStraddleTradingStrategy tradingStrategy = new ShortStraddleTradingStrategy();
+	private final Map<ShortStraddleConfig, List<ScheduledFuture<?>>> futures = new ConcurrentHashMap<>();
+	private final Map<ShortStraddleConfig, List<QuoteSubscription>> subscriptions = new ConcurrentHashMap<>();
 	@Getter private final TradingStrategyTemplate tradingStrategyTemplate = TradingStrategyTemplate.SHORT_STRADDLE;
 	
 	@Override

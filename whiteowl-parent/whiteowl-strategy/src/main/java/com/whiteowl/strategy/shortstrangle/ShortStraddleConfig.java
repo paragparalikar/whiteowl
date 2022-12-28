@@ -24,4 +24,8 @@ public class ShortStraddleConfig implements TradingStrategyConfig {
 	private final String id = Index.NIFTY50.getCode() + "-" + TradingStrategyTemplate.SHORT_STRADDLE.getId();
 	private final TradingStrategyTemplate tradingStrategyTemplate = TradingStrategyTemplate.SHORT_STRADDLE;
 	
+	@Override
+	public int getBarCount() {
+		return 0;
+	}
 }

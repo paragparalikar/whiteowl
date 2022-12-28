@@ -12,8 +12,12 @@ public class BarQueryPredicate implements Predicate<BarQuery> {
 
 	@Override
 	public boolean test(@NonNull final BarQuery barQuery) {
-		return 0 >= barQuery.getTimeframe().getDuration().compareTo(
-				Duration.between(barQuery.getFrom(), barQuery.getTo()));
+		final Duration timeframeDuration = barQuery.getTimeframe().getDuration();
+		final Duration queryDuration = Duration.between(barQuery.getFrom(), barQuery.getTo());
+		final Duration durationDelta = timeframeDuration.minus(queryDuration);
+		return queryDuration.isZero() || 
+				durationDelta.isZero() ||
+				durationDelta.isNegative();
 	}
 
 }

@@ -55,7 +55,7 @@ public class KiteBarDataProvider implements BarDataProvider, QuoteDataProvider {
 		final long instrumentToken = instrument.getInstrumentToken();
 		final Duration duration = kiteMapper.getHistoricalDataBatchLimit(timeframe);
 		final List<Bar> bars = new ArrayList<>();
-		while(null != to && to.isAfter(from)) {
+		while(null != to && !from.isAfter(to)) {
 			final ZonedDateTime projectedFrom = to.minus(duration);
 			final ZonedDateTime effectiveFrom = from.isAfter(projectedFrom) ? from : projectedFrom;
 			to = fill(instrumentToken, scrip.getCode(), timeframe, effectiveFrom, to, bars);
