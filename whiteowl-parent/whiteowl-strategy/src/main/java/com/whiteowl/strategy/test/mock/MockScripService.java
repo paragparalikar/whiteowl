@@ -1,4 +1,4 @@
-package com.whiteowl.strategy.test;
+package com.whiteowl.strategy.test.mock;
 
 import java.util.List;
 
@@ -11,44 +11,34 @@ import com.whiteowl.core.scrip.ScripService;
 
 public class MockScripService implements ScripService {
 
-	public MockScripService() {
-		// TODO Auto-generated constructor stub
-	}
-
 	@Override
 	public List<Scrip> findAll() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Page<Scrip> findByIndices(Index index, Pageable pageable) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public long countByIndices(Index index) {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<Scrip> findByIndices(Index index) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<Scrip> saveAll(List<Scrip> scrips) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Scrip findByCode(String code) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 }

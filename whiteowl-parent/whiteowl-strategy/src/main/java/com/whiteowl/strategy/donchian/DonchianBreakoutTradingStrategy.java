@@ -29,10 +29,24 @@ public class DonchianBreakoutTradingStrategy {
 		final TradeType tradeType = position.getEntryTrades().iterator().next().getType();
 		if(BUY.equals(tradeType)) {
 			final double stopLossPrice = entryPrice - (entryPrice * stopLossPercentage / 100);
-			
+			if(lastPrice <= stopLossPrice) {
+				closePosition(position);
+				return true;
+			}
+		} else {
+			final double stopLossPrice = entryPrice + (entryPrice * stopLossPercentage / 100);
+			if(lastPrice >= stopLossPrice) {
+				closePosition(position);
+				return true;
+			}
 		}
-		
 		return false;
+	}
+	
+	private void closePosition(Position position) {
+		position.getEntryTrades().stream()
+			.map(this::createExitTrade)
+			.forEach(position.getExitTrades()::add);
 	}
 
 	Position openPosition(
@@ -78,27 +92,33 @@ public class DonchianBreakoutTradingStrategy {
 		position.setScrip(scrip);
 		position.setStatus(PositionStatus.NEW);
 		position.setTradingStrategyConfigId(config.getId());
-		final Trade trade = createNewTrade(scrip, bars, tradeType, config);
+		final Trade trade = createEntryTrade(scrip, bars, tradeType, config);
 		position.getEntryTrades().add(trade);
 		return position;
 	}
 	
-	private Trade createNewTrade(
+	private Trade createEntryTrade(
 			@NonNull final Scrip scrip,
 			@NonNull final List<Bar> bars,
 			@NonNull final TradeType tradeType,
 			@NonNull final DonchianBreakoutTradingStrategyConfig config) {
-		final Trade trade = new Trade();
-		trade.setScrip(scrip);
-		trade.setQuantity(1); // TODO calculate quantity
-		trade.setType(tradeType);
-		trade.setPrice(bars.get(bars.size() - 1).getClosePrice().doubleValue());
-		trade.setProduct(TradeProduct.NRML);
-		trade.setStatus(TradeStatus.NEW);
-		trade.setLimitType(TradeLimitType.LIMIT);
-		trade.setValidity(TradeValidity.DAY);
-		trade.setVariety(TradeVariety.REGULAR);
-		return trade;
+		final Trade entryTrade = new Trade();
+		entryTrade.setScrip(scrip);
+		entryTrade.setQuantity(1); // TODO calculate quantity
+		entryTrade.setType(tradeType);
+		entryTrade.setPrice(bars.get(bars.size() - 1).getClosePrice().doubleValue());
+		entryTrade.setProduct(TradeProduct.NRML);
+		entryTrade.setStatus(TradeStatus.NEW);
+		entryTrade.setLimitType(TradeLimitType.LIMIT);
+		entryTrade.setValidity(TradeValidity.DAY);
+		entryTrade.setVariety(TradeVariety.REGULAR);
+		return entryTrade;
+	}
+	
+	private Trade createExitTrade(@NonNull final Trade entryTrade) {
+		final Trade exitTrade = entryTrade.complement();
+		exitTrade.setLimitType(TradeLimitType.MARKET);
+		return exitTrade;
 	}
 
 }

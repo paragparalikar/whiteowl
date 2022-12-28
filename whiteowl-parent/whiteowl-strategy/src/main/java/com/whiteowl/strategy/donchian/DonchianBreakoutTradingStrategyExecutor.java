@@ -28,10 +28,12 @@ import com.whiteowl.core.trade.Trade;
 import com.whiteowl.strategy.TradingStrategyExecutor;
 import com.whiteowl.strategy.TradingStrategyTemplate;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+@Builder
 @Component
 @Validated
 @RequiredArgsConstructor
