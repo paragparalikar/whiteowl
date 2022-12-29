@@ -51,4 +51,9 @@ public class MockPositionService implements PositionService {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public boolean existsByScripAndStatusNot(Scrip scrip, PositionStatus status) {
+		throw new UnsupportedOperationException();
+	}
+
 }

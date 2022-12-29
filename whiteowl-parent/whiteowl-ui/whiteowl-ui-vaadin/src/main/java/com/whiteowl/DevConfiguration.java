@@ -1,5 +1,7 @@
 package com.whiteowl;
 
+import java.util.List;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +13,8 @@ import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.user.User;
 import com.whiteowl.core.user.UserService;
+import com.whiteowl.strategy.TradingStrategyTemplate;
+import com.whiteowl.strategy.config.TradingStrategyConfig;
 import com.whiteowl.strategy.config.TradingStrategyConfigService;
 import com.whiteowl.strategy.shortstrangle.ShortStraddleConfig;
 
@@ -36,11 +40,9 @@ public class DevConfiguration {
 	@Bean
 	public CommandLineRunner configureTradingStrategyConfigs(TradingStrategyConfigService configService) {
 		return args -> { 
-			if(0 == configService.count()) {
-				final ShortStraddleConfig config = new ShortStraddleConfig();
-				config.setPercentageStopLoss(24D);
-				configService.save(config); 
-			}
+			final List<TradingStrategyConfig> configs = configService
+					.findByTemplate(TradingStrategyTemplate.SHORT_STRADDLE);
+			if(configs.isEmpty()) configService.save(new ShortStraddleConfig()); 
 		};
 	}
 	
