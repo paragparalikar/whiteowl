@@ -26,6 +26,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -62,21 +63,23 @@ public class Position {
 	@Valid
 	@NotNull @NonNull
 	@ManyToOne(optional = false)
+	@Column(nullable = false, updatable = false)
 	private Scrip scrip;
+	
+	@NotBlank @NonNull
+	@Column(nullable = false, updatable = false)
+	private String tradingStrategyConfigId;
 	
 	@Valid
 	@NotNull @NonNull
 	@ManyToOne(optional = false)
+	@Column(nullable = false, updatable = false)
 	private Portfolio portfolio;
 	
 	@NotNull @NonNull
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private PositionStatus status = PositionStatus.NEW;
-	
-	@NotNull @NonNull
-	@Column(nullable = false, updatable = false)
-	private String tradingStrategyConfigId;
 	
 	@NotEmpty
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)

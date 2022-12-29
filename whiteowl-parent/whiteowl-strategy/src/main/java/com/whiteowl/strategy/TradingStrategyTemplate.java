@@ -8,8 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum TradingStrategyTemplate {
 
 	DONCHIAN("donchian-breakout", "Donchian Channel Breakout"),
-	SHORT_STRADDLE("short-straddle", "Short Straddle, Intraday"),
-	MEAN_REVERSION_UPTREND("mean-reversion-uptrend", "Mean Reversion in Uptrend");
+	SHORT_STRADDLE("short-straddle", "Short Straddle, Intraday");
 	
 	private final String id;
 	private final String displayName;

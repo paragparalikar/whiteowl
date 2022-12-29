@@ -12,15 +12,10 @@ import lombok.Data;
 public class DonchianBreakoutTradingStrategyConfig implements TradingStrategyConfig {
 
 	@NotBlank private String id;
-	private boolean enabled = true;
 	@Positive private int lowerBandLength = 20;
 	@Positive private int upperBandLength = 20;
 	@Positive private double priceTargetPercentage = 10;
 	@Positive private double initialPriceStopPercentage = 5;
 	private final TradingStrategyTemplate tradingStrategyTemplate = TradingStrategyTemplate.DONCHIAN;
 
-	@Override
-	public int getBarCount() {
-		return Math.max(upperBandLength, lowerBandLength) + 2;
-	}
 }

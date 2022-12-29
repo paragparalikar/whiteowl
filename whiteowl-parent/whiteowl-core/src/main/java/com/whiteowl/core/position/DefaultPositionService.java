@@ -23,6 +23,13 @@ public class DefaultPositionService implements PositionService {
 	}
 	
 	@Override
+	public boolean existsByScripAndStatusNot(
+			@NonNull final Scrip scrip, 
+			@NonNull final PositionStatus status) {
+		return positionRepository.existsByScripAndStatusNot(scrip, status);
+	}
+	
+	@Override
 	public List<Position> findByTradingStrategyConfigIdAndStatusNot(
 			@NonNull final String tradingStrategyConfigId,
 			@NonNull final PositionStatus status) {

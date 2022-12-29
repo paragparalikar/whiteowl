@@ -9,6 +9,8 @@ public interface PositionService {
 
 	Position save(Position position);
 	
+	boolean existsByScripAndStatusNot(Scrip scrip, PositionStatus status);
+	
 	List<Position> findByPortfolioAndStatusNot(Portfolio portfolio, PositionStatus status);
 	
 	List<Position> findByTradingStrategyConfigIdAndStatusNot(String tradingStrategyConfigId, PositionStatus status);

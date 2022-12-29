@@ -1,48 +1,17 @@
 package com.whiteowl.strategy.config;
 
-import java.util.List;
-import java.util.Optional;
-
-import javax.validation.Valid;
-
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import com.whiteowl.strategy.TradingStrategyTemplate;
-
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Delegate;
 
 @Service
 @Validated
 @RequiredArgsConstructor
 public class DefaultTradingStrategyConfigService implements TradingStrategyConfigService {
 
+	@Delegate
 	private final TradingStrategyConfigRepository tradingStrategyConfigRepository;
-	
-	@Override
-	public long count() {
-		return tradingStrategyConfigRepository.count();
-	}
-
-	@Override
-	public Optional<TradingStrategyConfig> findById(@NonNull String id) {
-		return tradingStrategyConfigRepository.findById(id);
-	}
-
-	@Override
-	public TradingStrategyConfig save(@NonNull @Valid TradingStrategyConfig config) {
-		return tradingStrategyConfigRepository.save(config);
-	}
-
-	@Override
-	public List<TradingStrategyConfig> findByEnabled(boolean value) {
-		return tradingStrategyConfigRepository.findByEnabled(value);
-	}
-	
-	@Override
-	public List<TradingStrategyConfig> findByEnabledAndTemplate(boolean enabled, TradingStrategyTemplate template) {
-		return tradingStrategyConfigRepository.findByEnabledAndTemplate(enabled, template);
-	}
 	
 }

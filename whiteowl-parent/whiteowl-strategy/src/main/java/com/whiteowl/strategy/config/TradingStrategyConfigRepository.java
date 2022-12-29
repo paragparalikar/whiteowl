@@ -3,18 +3,33 @@ package com.whiteowl.strategy.config;
 import java.util.List;
 import java.util.Optional;
 
+import javax.validation.Valid;
+
+import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.strategy.TradingStrategyTemplate;
+
+import lombok.NonNull;
 
 public interface TradingStrategyConfigRepository {
 	
-	long count();
+	List<TradingStrategyConfig> findAll();
 	
-	Optional<TradingStrategyConfig> findById(String id);
+	Optional<TradingStrategyConfig> findById(
+			@NonNull final String id);
 	
-	TradingStrategyConfig save(TradingStrategyConfig config);
+	TradingStrategyConfig save(
+			@NonNull @Valid final TradingStrategyConfig config);
 
-	List<TradingStrategyConfig> findByEnabled(boolean value);
+	List<TradingStrategyConfig> findByTemplate(
+			@NonNull final TradingStrategyTemplate template);
 	
-	List<TradingStrategyConfig> findByEnabledAndTemplate(boolean enabled, TradingStrategyTemplate template);
+	List<TradingStrategyConfig> findByScripCodeAndTimeframe(
+			@NonNull final String scripCode,
+			@NonNull final Timeframe timeframe);
+	
+	Optional<TradingStrategyConfig> findByScripCodeAndTimeframeAndTemplate(
+			@NonNull final String scripCode,
+			@NonNull final Timeframe timeframe,
+			@NonNull final TradingStrategyTemplate template);
 	
 }

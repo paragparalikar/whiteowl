@@ -11,6 +11,8 @@ import com.whiteowl.core.scrip.Scrip;
 @Repository
 public interface PositionRepository extends JpaRepository<Position, Long> {
 	
+	boolean existsByScripAndStatusNot(Scrip scrip, PositionStatus status);
+	
 	List<Position> findByPortfolioAndStatusNot(Portfolio portfolio, PositionStatus status);
 	
 	List<Position> findByTradingStrategyConfigIdAndStatusNot(String tradingStrategyConfigId, PositionStatus status);

@@ -1,7 +1,10 @@
 package com.whiteowl.strategy.shortstrangle;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.springframework.scheduling.support.CronExpression;
 import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.derivative.option.OptionChain;
@@ -18,36 +21,65 @@ import com.whiteowl.core.trade.TradeProduct;
 import com.whiteowl.core.trade.TradeStatus;
 import com.whiteowl.core.trade.TradeValidity;
 import com.whiteowl.core.trade.TradeVariety;
+import com.whiteowl.strategy.TradingStrategy;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class ShortStraddleTradingStrategy {
+@RequiredArgsConstructor
+public class ShortStraddleTradingStrategy implements TradingStrategy {
 	
-	Position closePosition(@NonNull final Position position) {
-		position.getEntryTrades().stream()
-			.filter(entryTrade -> !position.getExitTrades().stream()
-					.map(Trade::getScrip)
-					.anyMatch(Predicate.isEqual(entryTrade.getScrip())))
-			.map(Trade::complement)
-			.forEach(position.getExitTrades()::add);
-		return position;
+	@NonNull private final OptionChain optionChain;
+	@NonNull private final ShortStraddleConfig config;
+	
+	@Override
+	public Optional<Position> enter() {
+		final LocalDateTime now = LocalDateTime.now();
+		final CronExpression cronExpression = CronExpression.parse(config.getPositionOpenCron());
+		if(now.plusMinutes(1).isAfter(cronExpression.next(now.minusMinutes(1)))) {
+			final OptionInfo optionInfo = optionChain.findByDeltaAndScripType(0.5, ScripType.CE).orElseThrow();
+			final OptionChainItem item = optionChain.findByStrikePrice(optionInfo.getStrikePrice()).orElseThrow();
+			final OptionInfo callInfo = item.getCallOptionInfo();
+			final OptionInfo putInfo = item.getPutOptionInfo(); 
+			final Position position = createNewPosition(optionChain.getUnderlying(), callInfo.getScrip(), 
+					putInfo.getScrip(), config.getId(), config.getQuantity());
+			return Optional.of(position);
+		}
+		return Optional.empty();
+	}
+	
+	@Override
+	public boolean manage(@NonNull Position position) {
+		final LocalDateTime now = LocalDateTime.now();
+		final CronExpression cronExpression = CronExpression.parse(config.getPositionCloseCron());
+		if(now.plusMinutes(1).isAfter(cronExpression.next(now.minusMinutes(1)))) {
+			position.getEntryTrades().stream()
+				.filter(entryTrade -> !position.getExitTrades().stream()
+						.map(Trade::getScrip)
+						.anyMatch(Predicate.isEqual(entryTrade.getScrip())))
+				.map(Trade::complement)
+				.forEach(position.getExitTrades()::add);
+			return true;
+		}
+		return false;
+	}
+	
+	@Override
+	public boolean manage(@NonNull Position position, @NonNull Quote quote) {
+		final double stopLossMultiplier = 1 + (position.getExitTrades().isEmpty() ? config.getPercentageStopLoss() / 100 : 0);
+		return 0 < position.getEntryTrades().stream()
+				.filter(trade -> position.getExitTrades().stream()
+						.map(Trade::getScrip)
+						.anyMatch(Predicate.isEqual(trade.getScrip())))
+				.filter(trade -> quote.getCode().equalsIgnoreCase(trade.getScrip().getCode()))
+				.filter(trade -> quote.getLastPrice() >= trade.getAveragePrice() * stopLossMultiplier)
+				.map(Trade::complement)
+				.map(position.getExitTrades()::add)
+				.count();
 	}
 
-	Position openPosition(@NonNull final OptionChain optionChain, @NonNull final ShortStraddleConfig config) {
-		final OptionInfo optionInfo = optionChain.findByDeltaAndScripType(0.5, ScripType.CE).orElseThrow();
-		final OptionChainItem item = optionChain.findByStrikePrice(optionInfo.getStrikePrice()).orElseThrow();
-		final OptionInfo callInfo = item.getCallOptionInfo();
-		final OptionInfo putInfo = item.getPutOptionInfo(); 
-		final Position position = createNewPosition(optionChain.getUnderlying(), callInfo.getScrip(), 
-				putInfo.getScrip(), config.getId(), config.getQuantity());
-		return position;
-	}
-	
 	private Position createNewPosition(Scrip underlying, Scrip call, Scrip put, String configId, int quantity) {
 		final Position position = new Position();
 		position.setScrip(underlying);
@@ -69,19 +101,6 @@ public class ShortStraddleTradingStrategy {
 				.validity(TradeValidity.DAY)
 				.variety(TradeVariety.REGULAR)
 				.build();
-	}
-	
-	boolean onQuote(@NonNull final Position position, @NonNull final Quote quote, @NonNull final ShortStraddleConfig config) {
-		final double stopLossMultiplier = 1 + (position.getExitTrades().isEmpty() ? config.getPercentageStopLoss() / 100 : 0);
-		return 0 < position.getEntryTrades().stream()
-				.filter(trade -> position.getExitTrades().stream()
-						.map(Trade::getScrip)
-						.anyMatch(Predicate.isEqual(trade.getScrip())))
-				.filter(trade -> quote.getCode().equalsIgnoreCase(trade.getScrip().getCode()))
-				.filter(trade -> quote.getLastPrice() >= trade.getAveragePrice() * stopLossMultiplier)
-				.map(Trade::complement)
-				.map(position.getExitTrades()::add)
-				.count();
 	}
 	
 }
