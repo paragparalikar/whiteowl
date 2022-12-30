@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.stream.Stream;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -48,7 +49,7 @@ public class TradingStrategyExecutionJob implements AutoCloseable {
 	@EventListener
 	public void handle(final ApplicationReadyEvent event) {
 		for(TradingStrategyConfig config : tradingStrategyConfigService.findAll()){
-			config.getCronExpressions().stream()
+			Stream.of(config.getEntryCronExpression(), config.getExitCronExpression())
 				.map(CronTrigger::new)
 				.map(trigger -> taskScheduler.schedule(() -> execute(config), trigger))
 				.forEach(futures::add);

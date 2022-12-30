@@ -16,7 +16,7 @@ import com.whiteowl.core.user.UserService;
 import com.whiteowl.strategy.TradingStrategyTemplate;
 import com.whiteowl.strategy.config.TradingStrategyConfig;
 import com.whiteowl.strategy.config.TradingStrategyConfigService;
-import com.whiteowl.strategy.shortstrangle.ShortStraddleConfig;
+import com.whiteowl.strategy.impl.shortstrangle.ShortStraddleConfig;
 
 @Profile("dev")
 @Configuration

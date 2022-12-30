@@ -7,7 +7,6 @@ import org.ta4j.core.Bar;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.scrip.Scrip;
-import com.whiteowl.strategy.TradingStrategyExecutor;
 import com.whiteowl.strategy.config.TradingStrategyConfig;
 import com.whiteowl.strategy.test.mock.MockBarService;
 import com.whiteowl.strategy.test.mock.MockPositionService;
@@ -35,14 +34,6 @@ public class DefaultBackTestService implements BackTestService {
 		final MockQuoteService quoteService = new MockQuoteService();
 		final MockPositionService positionService = new MockPositionService();
 		final MockTaskScheduler taskScheduler = new MockTaskScheduler();
-		
-		
-	}
-	
-	public <T extends TradingStrategyConfig> void test(
-			@NonNull final T config, 
-			@NonNull final Scrip scrip,
-			@NonNull final TradingStrategyExecutor<T> executor) {
 		
 		
 	}

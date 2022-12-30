@@ -1,4 +1,4 @@
-package com.whiteowl.strategy.donchian;
+package com.whiteowl.strategy.impl.donchian;
 
 import static org.ta4j.core.Trade.TradeType.BUY;
 

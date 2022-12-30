@@ -1,10 +1,8 @@
-package com.whiteowl.strategy.shortstrangle;
+package com.whiteowl.strategy.impl.shortstrangle;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import org.springframework.scheduling.support.CronExpression;
 import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.derivative.option.OptionChain;
@@ -36,34 +34,24 @@ public class ShortStraddleTradingStrategy implements TradingStrategy {
 	
 	@Override
 	public Optional<Position> enter() {
-		final LocalDateTime now = LocalDateTime.now();
-		final CronExpression cronExpression = CronExpression.parse(config.getPositionOpenCron());
-		if(now.plusMinutes(1).isAfter(cronExpression.next(now.minusMinutes(1)))) {
-			final OptionInfo optionInfo = optionChain.findByDeltaAndScripType(0.5, ScripType.CE).orElseThrow();
-			final OptionChainItem item = optionChain.findByStrikePrice(optionInfo.getStrikePrice()).orElseThrow();
-			final OptionInfo callInfo = item.getCallOptionInfo();
-			final OptionInfo putInfo = item.getPutOptionInfo(); 
-			final Position position = createNewPosition(optionChain.getUnderlying(), callInfo.getScrip(), 
-					putInfo.getScrip(), config.getId(), config.getQuantity());
-			return Optional.of(position);
-		}
-		return Optional.empty();
+		final OptionInfo optionInfo = optionChain.findByDeltaAndScripType(0.5, ScripType.CE).orElseThrow();
+		final OptionChainItem item = optionChain.findByStrikePrice(optionInfo.getStrikePrice()).orElseThrow();
+		final OptionInfo callInfo = item.getCallOptionInfo();
+		final OptionInfo putInfo = item.getPutOptionInfo(); 
+		final Position position = createNewPosition(optionChain.getUnderlying(), callInfo.getScrip(), 
+				putInfo.getScrip(), config.getId(), config.getQuantity());
+		return Optional.of(position);
 	}
 	
 	@Override
 	public boolean manage(@NonNull Position position) {
-		final LocalDateTime now = LocalDateTime.now();
-		final CronExpression cronExpression = CronExpression.parse(config.getPositionCloseCron());
-		if(now.plusMinutes(1).isAfter(cronExpression.next(now.minusMinutes(1)))) {
-			position.getEntryTrades().stream()
-				.filter(entryTrade -> !position.getExitTrades().stream()
-						.map(Trade::getScrip)
-						.anyMatch(Predicate.isEqual(entryTrade.getScrip())))
-				.map(Trade::complement)
-				.forEach(position.getExitTrades()::add);
-			return true;
-		}
-		return false;
+		position.getEntryTrades().stream()
+			.filter(entryTrade -> !position.getExitTrades().stream()
+				.map(Trade::getScrip)
+				.anyMatch(Predicate.isEqual(entryTrade.getScrip())))
+			.map(Trade::complement)
+			.forEach(position.getExitTrades()::add);
+		return true;
 	}
 	
 	@Override
