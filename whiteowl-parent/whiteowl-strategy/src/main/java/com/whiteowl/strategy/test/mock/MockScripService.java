@@ -9,8 +9,14 @@ import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public class MockScripService implements ScripService {
 
+	private final Scrip scrip;
+	
 	@Override
 	public List<Scrip> findAll() {
 		throw new UnsupportedOperationException();
@@ -37,8 +43,9 @@ public class MockScripService implements ScripService {
 	}
 
 	@Override
-	public Scrip findByCode(String code) {
-		throw new UnsupportedOperationException();
+	public Scrip findByCode(@NonNull final String code) {
+		if(!code.equals(scrip.getCode())) throw new IllegalArgumentException();
+		return scrip;
 	}
 
 }

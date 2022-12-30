@@ -36,8 +36,8 @@ public class TradingStrategyFactory {
 		case SHORT_STRADDLE: return buildShortStraddleTradingStrategy(config);
 		case DONCHIAN: return buildDonchianBreakoutTradingStrategy(config);
 		case TREND_FOLLOWING: return buildTrendFollowingTradingStrategy(config);
+		default: return TradingStrategy.NULL;
 		}
-		return null;
 	}
 	
 	private TradingStrategy buildTrendFollowingTradingStrategy(TradingStrategyConfig config) {

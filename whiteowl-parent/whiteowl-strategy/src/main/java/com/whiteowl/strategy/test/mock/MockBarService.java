@@ -1,7 +1,6 @@
 package com.whiteowl.strategy.test.mock;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -12,21 +11,32 @@ import org.ta4j.core.Bar;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
 
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import lombok.Setter;
+import lombok.RequiredArgsConstructor;
 
-@Setter
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class MockBarService implements BarService {
 	
 	private int index;
-	@NonNull private String code;
-	@NonNull private List<Bar> bars;
-	@NonNull private Timeframe timeframe;
+	@NonNull private final String code;
+	@NonNull private final List<Bar> bars;
+	@NonNull private final Timeframe timeframe;
 	
 	public void setIndex(int index) {
 		if(null == bars || bars.isEmpty()) throw new IllegalStateException();
 		if(0 > index || index >= bars.size()) throw new IllegalArgumentException();
 		this.index = index;
+	}
+	
+	public boolean next() {
+		if(index < bars.size() - 1) {
+			index++;
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	@Override
@@ -69,10 +79,7 @@ public class MockBarService implements BarService {
 			@NonNull final String code, 
 			@NonNull final Timeframe timeframe, 
 			@NonNull final Collection<Bar> bars) {
-		if(!code.equalsIgnoreCase(this.code)) throw new IllegalArgumentException();
-		if(!timeframe.equals(this.timeframe)) throw new IllegalArgumentException();
-		if(null == bars || bars.isEmpty()) throw new IllegalArgumentException();
-		this.bars = new ArrayList<>(bars);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
