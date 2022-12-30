@@ -33,6 +33,7 @@ import javax.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.position.stateMachine.PositionEntityListener;
@@ -130,40 +131,31 @@ public class Position {
 	
 	public int getEntryQuantity() {
 		return entryTrades.stream()
-				.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
-				.collect(Collectors.summingInt(Trade::getQuantity));
+				.collect(Collectors.summingInt(Trade::getFilledQuantity));
 	}
 	
 	public int getExitQuantity() {
 		return exitTrades.stream()
-				.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
-				.collect(Collectors.summingInt(Trade::getQuantity));
-	}
-	
-	public double getAverageEntryPrice() {
-		return entryTrades.stream()
-				.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
-				.collect(Collectors.averagingDouble(Trade::getAveragePrice));
-	}
-	
-	public double getAverageExitPrice() {
-		return exitTrades.stream()
-				.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
-				.collect(Collectors.averagingDouble(Trade::getAveragePrice));
+				.collect(Collectors.summingInt(Trade::getFilledQuantity));
 	}
 	
 	public double getEntryAmount() {
 		return entryTrades.stream()
-				.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
-				.map(trade -> trade.getQuantity() * trade.getAveragePrice())
+				.map(trade -> trade.getFilledQuantity() * trade.getAveragePrice())
 				.collect(Collectors.summingDouble(Double::doubleValue));
 	}
 	
 	public double getExitAmount() {
 		return exitTrades.stream()
-				.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
-				.map(trade -> trade.getQuantity() * trade.getAveragePrice())
+				.map(trade -> trade.getFilledQuantity() * trade.getAveragePrice())
 				.collect(Collectors.summingDouble(Double::doubleValue));
+	}
+	
+	public TradeType getEntryTradeType() {
+		return entryTrades.stream()
+				.map(Trade::getType)
+				.findFirst()
+				.orElse(null);
 	}
 	
 	public boolean areAllEntryTradesCompleted() {

@@ -37,6 +37,7 @@ public class OpenTradeStateTransition implements TradeStateTransition {
 		} catch(Exception e) {
 			trade.setStatus(getInitialStatus());
 			log.error("", e);
+			throw e;
 		}
 	}
 
