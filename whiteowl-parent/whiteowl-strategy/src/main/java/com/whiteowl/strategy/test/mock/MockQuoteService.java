@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import org.ta4j.core.Bar;
-import org.ta4j.core.num.DoubleNum;
+import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.num.Num;
 
 import com.whiteowl.core.quote.Quote;
@@ -17,7 +17,6 @@ import com.whiteowl.core.scrip.Scrip;
 import lombok.NonNull;
 
 public class MockQuoteService implements QuoteService {
-	private static final Num TWO = DoubleNum.valueOf(2);
 
 	private final Map<Scrip, QuoteSubscription> subscriptions = new ConcurrentHashMap<>();
 	
@@ -38,23 +37,21 @@ public class MockQuoteService implements QuoteService {
 		return subscription;
 	}
 	
-	public void publish(@NonNull final Scrip scrip, @NonNull final Bar bar) {
+	public void publish(
+			@NonNull final Bar bar,
+			@NonNull final Scrip scrip, 
+			@NonNull final TradeType tradeType) {
 		final QuoteSubscription subscription = subscriptions.get(scrip);
 		if(null != subscription) {
 			Stream.of(bar.getOpenPrice(),
-					bar.getOpenPrice().plus(bar.getHighPrice()).dividedBy(TWO),
-					bar.getHighPrice(),
-					bar.getHighPrice().plus(bar.getLowPrice()).dividedBy(TWO),
-					bar.getLowPrice(),
-					bar.getLowPrice().plus(bar.getClosePrice()).dividedBy(TWO),
+					TradeType.BUY.equals(tradeType) ? bar.getLowPrice() : bar.getHighPrice(),
+					TradeType.BUY.equals(tradeType) ? bar.getHighPrice() : bar.getLowPrice(),
 					bar.getClosePrice())
 			.map(Num::doubleValue)
 			.map(value -> Quote.builder().code(scrip.getCode()).lastPrice(value).build())
 			.forEach(subscription::onQuote);
 		}
 	}
-	
-	
 
 	@Override
 	public Quote getQuote(@NonNull final Scrip scrip, @NonNull final QuoteMode mode) {

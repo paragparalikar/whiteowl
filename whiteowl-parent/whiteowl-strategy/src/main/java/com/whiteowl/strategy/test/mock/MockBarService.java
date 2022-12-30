@@ -38,12 +38,12 @@ public class MockBarService implements BarService {
 			return false;
 		}
 	}
-
+	
 	@Override
 	public List<Bar> findByCodeAndTimeframe(@NonNull final String code, @NonNull final Timeframe timeframe) {
 		if(!code.equalsIgnoreCase(this.code)) throw new IllegalArgumentException();
 		if(!timeframe.equals(this.timeframe)) throw new IllegalArgumentException();
-		return bars;
+		return bars.subList(0, index);
 	}
 
 	@Override
