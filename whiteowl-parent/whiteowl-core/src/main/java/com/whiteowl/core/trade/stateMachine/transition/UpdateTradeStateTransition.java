@@ -11,7 +11,9 @@ import com.whiteowl.core.trade.TradeStatus;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class UpdateTradeStateTransition implements TradeStateTransition {
@@ -30,7 +32,13 @@ public class UpdateTradeStateTransition implements TradeStateTransition {
 		final BrokerServiceProvider brokerServiceProvider = brokerServiceProviderFactory
 				.getBrokerServiceProvider(portfolio.getBroker());
 		brokerServiceProvider.update(trade, portfolio);
-		trade.setStatus(TradeStatus.PENDING);
+		try {
+			trade.setStatus(TradeStatus.PENDING);
+			brokerServiceProvider.update(trade, portfolio);
+		} catch(Exception e) {
+			trade.setStatus(getInitialStatus());
+			log.error("", e);
+		}
 	}
 
 }

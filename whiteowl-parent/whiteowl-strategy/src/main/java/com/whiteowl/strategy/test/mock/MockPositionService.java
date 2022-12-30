@@ -42,7 +42,8 @@ public class MockPositionService implements PositionService {
 	public List<Position> findByPortfolioAndStatusNot(
 			@NonNull final Portfolio portfolioIgnored, 
 			@NonNull final PositionStatus status) {
-		throw new UnsupportedOperationException();
+		final Map<Long, Position> cache = status.isTerminal() ? nonTerminalPositions : terminalPositions;
+		return new ArrayList<>(cache.values());
 	}
 
 	@Override

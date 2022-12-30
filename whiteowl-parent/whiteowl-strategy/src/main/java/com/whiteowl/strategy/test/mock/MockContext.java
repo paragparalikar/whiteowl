@@ -1,25 +1,31 @@
 package com.whiteowl.strategy.test.mock;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.scheduling.TaskScheduler;
 import org.ta4j.core.Bar;
+import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.broker.BrokerServiceProvider;
 import com.whiteowl.core.broker.BrokerServiceProviderFactory;
 import com.whiteowl.core.derivative.option.OptionChainService;
+import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
+import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.position.stateMachine.PositionStateMachine;
 import com.whiteowl.core.position.stateMachine.transition.ClosePositionStateTransition;
 import com.whiteowl.core.position.stateMachine.transition.OpenPositionStateTransition;
 import com.whiteowl.core.quote.QuoteService;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
+import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.stateMachine.TradeStateMachine;
 import com.whiteowl.core.trade.stateMachine.transition.CancelTradeStateTransition;
 import com.whiteowl.core.trade.stateMachine.transition.OpenTradeStateTransition;
@@ -41,9 +47,10 @@ public class MockContext {
 	private final List<Bar> bars;
 	private final Timeframe timeframe;
 	private final TradingStrategyConfig config;
+	private final Portfolio portfolio = new Portfolio();
 	
 	private final MockBarService barService;
-	private final QuoteService quoteService;
+	private final MockQuoteService quoteService;
 	private final ScripService scripService;
 	private final TaskScheduler taskScheduler;
 	private final PositionService positionService;
@@ -85,12 +92,11 @@ public class MockContext {
 		this.positionStateMachine = new PositionStateMachine(positionService, Arrays.asList(
 				new OpenPositionStateTransition(tradeStateMachine),
 				new ClosePositionStateTransition(tradeStateMachine)));
-		
 		this.tradingStrategyConfigService = new MockTradingStrategyConfigService(config);
 		final TradingStrategyFactory mockTradingStrategyFactory = new MockTradingStrategyFactory(config, tradingStrategy);
 		this.tradingStrategyExecutor = new TradingStrategyExecutor(
 				quoteService, taskScheduler, positionService, mockTradingStrategyFactory, tradingStrategyConfigService);
-		
+		tradingStrategyExecutor.onApplicationReady();
 	}
 	
 	private void onPositionSaved(Position position) {
@@ -101,8 +107,31 @@ public class MockContext {
 		return barService;
 	}
 	
+	public QuoteService getQuoteService() {
+		return quoteService;
+	}
+	
 	public boolean next() {
-		return barService.next();
+		if(barService.next()) {
+			final Bar bar = barService.findLatestBar(scrip.getCode(), timeframe).orElseThrow();
+			final TradeType tradeType = resolveTradeType();
+			quoteService.publish(bar, scrip, tradeType);
+			tradingStrategyExecutor.onScripBarDownloaded(scrip, timeframe);
+			Stream.concat(
+					positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream(), 
+					positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream())
+					.forEach(tradingStrategyExecutor::onPositionSynchronized);
+		};
+		return false;
 	}
 
+	private TradeType resolveTradeType() {
+		return positionService.findByPortfolioAndStatusNot(
+				portfolio, PositionStatus.CLOSED).stream()
+			.map(Position::getEntryTrades)
+			.flatMap(Collection::stream)
+			.map(Trade::getType)
+			.findFirst()
+			.orElse(TradeType.BUY);
+	}
 }

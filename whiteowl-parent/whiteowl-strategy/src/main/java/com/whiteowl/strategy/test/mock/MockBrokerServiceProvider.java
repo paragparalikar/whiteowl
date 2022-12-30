@@ -43,7 +43,7 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 
 	@Override
 	public void create(Trade trade, Portfolio portfolio) {
-		if(!TradeStatus.NEW.equals(trade.getStatus())) throw new IllegalStateException();
+		if(!TradeStatus.PENDING.equals(trade.getStatus())) throw new IllegalStateException();
 		if(null == trade.getId()) trade.setId(idGenerator.incrementAndGet());
 		trade.setStatus(TradeStatus.OPEN);
 		trades.put(trade.getId(), trade);
@@ -51,14 +51,14 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	
 	@Override
 	public void update(Trade trade, Portfolio portfolio) {
-		if(!TradeStatus.UPDATABLE.equals(trade.getStatus())) throw new IllegalStateException();
+		if(!TradeStatus.PENDING.equals(trade.getStatus())) throw new IllegalStateException();
 		trade.setStatus(TradeStatus.OPEN);
 		trades.put(trade.getId(), trade);
 	}
 
 	@Override
 	public void cancel(Trade trade, Portfolio portfolio) {
-		if(!TradeStatus.CANCELLABLE.equals(trade.getStatus())) throw new IllegalStateException();
+		if(!TradeStatus.PENDING.equals(trade.getStatus())) throw new IllegalStateException();
 		trade.setStatus(TradeStatus.CANCELLED);
 	}
 
