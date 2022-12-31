@@ -27,6 +27,7 @@ import com.whiteowl.core.scrip.Scrip;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
@@ -40,6 +41,8 @@ import lombok.NonNull;
 	@Index(columnList = "scrip_code")
 })
 @EntityListeners(AuditingEntityListener.class)
+@EqualsAndHashCode(of = {"id", "brokerTradeId", "scrip", "type", "limitType", 
+		"variety", "product", "validity", "quantity", "price", "triggerPrice"})
 public class Trade {
 
 	@Id

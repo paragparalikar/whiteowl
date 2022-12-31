@@ -23,7 +23,6 @@ import com.whiteowl.core.trade.TradeStatus;
 import com.whiteowl.core.trade.TradeValidity;
 import com.whiteowl.core.util.Constant;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -32,7 +31,7 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	private final Timeframe timeframe;
 	private final BarService barService;
 	private final AtomicLong idGenerator = new AtomicLong();
-	private final Map<Long, Trade> trades = new ConcurrentHashMap<>();
+	private final Map<Trade, Portfolio> trades = new ConcurrentHashMap<>();
 	
 	@Override
 	public Broker getBrokerType() {
@@ -46,7 +45,7 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 
 	@Override
 	public List<Trade> findAllTrades(Portfolio portfolio) {
-		return new ArrayList<>(trades.values());
+		return new ArrayList<>(trades.keySet());
 	}
 
 	@Override
@@ -56,10 +55,8 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		final Bar bar = barService.findLatestBar(trade.getScrip().getCode(), timeframe).orElseThrow();
 		trade.setTimestamp(bar.getEndTime().toLocalDateTime());
 		trade.setStatus(TradeStatus.OPEN);
-		trades.put(trade.getId(), trade);
-		final double executionPrice = resolveExecutionPrice(trade, bar);
-		portfolio.setAvailableMargin(portfolio.getAvailableMargin() + 
-				executionPrice * (TradeType.BUY.equals(trade.getType()) ? - 1 : 1));
+		trades.put(trade, portfolio);
+		updateAvailableMargin(portfolio, trade, bar);
 	}
 	
 	@Override
@@ -77,19 +74,21 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		throw new UnsupportedOperationException();
 	}
 	
-	public void execute(@NonNull final Timeframe timeframe) {
-		for(Trade trade : trades.values()) {
+	public void execute() {
+		for(Trade trade : trades.keySet()) {
+			final Portfolio portfolio = trades.get(trade);
 			if(TradeStatus.OPEN.equals(trade.getStatus())) {
 				barService.findLatestBar(trade.getScrip().getCode(), timeframe)
-					.ifPresent(bar -> execute(trade, bar));
+					.ifPresent(bar -> execute(trade, bar, portfolio));
 			}
 		}
 	}
 	
-	private void execute(Trade trade, Bar bar) {
+	private void execute(Trade trade, Bar bar, Portfolio portfolio) {
 		if(TradeProduct.MIS.equals(trade.getProduct())) {
 			if(!bar.getEndTime().toLocalTime().isBefore(Constant.ZERODHA_SQUARE_OFF_TIME)) {
 				trade.setStatus(TradeStatus.CANCELLED);
+				updateAvailableMargin(portfolio, trade, bar);
 				return;
 			}
 		}
@@ -98,6 +97,7 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		} else if(TradeValidity.DAY.equals(trade.getValidity())) {
 			if(bar.getBeginTime().toLocalDate().isAfter(trade.getTimestamp().toLocalDate())) {
 				trade.setStatus(TradeStatus.CANCELLED);
+				updateAvailableMargin(portfolio, trade, bar);
 				return;
 			}
 		}
@@ -164,6 +164,26 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		trade.setAveragePrice(price);
 		trade.setStatus(TradeStatus.COMPLETE);
 		trade.setFilledQuantity(trade.getQuantity());
+	}
+	
+	private void updateAvailableMargin(Portfolio portfolio, Trade trade, Bar bar) {
+		int multiple = 1;
+		if(TradeType.BUY.equals(trade.getType())) {
+			if(TradeStatus.PENDING.equals(trade.getStatus())) {
+				multiple = -1;
+			} else if(TradeStatus.CANCELLED.equals(trade.getStatus())) {
+				multiple = 1;
+			}
+		} else if(TradeType.SELL.equals(trade.getType())) {
+			if(TradeStatus.PENDING.equals(trade.getStatus())) {
+				multiple = 1;
+			} else if(TradeStatus.CANCELLED.equals(trade.getStatus())) {
+				multiple = -1;
+			}
+		}
+		final double executionPrice = resolveExecutionPrice(trade, bar);
+		final double effectOnMargin = multiple * executionPrice;
+		portfolio.setAvailableMargin(portfolio.getAvailableMargin() + effectOnMargin);
 	}
 	
 }
