@@ -60,6 +60,7 @@ public class DevConfiguration {
 				portfolio.setBroker(Broker.TEST);
 				portfolio.setMaxTradableAmount(1000000);
 				portfolio.setName("TEST");
+				portfolioService.save(portfolio);
 			}
 		};
 	}

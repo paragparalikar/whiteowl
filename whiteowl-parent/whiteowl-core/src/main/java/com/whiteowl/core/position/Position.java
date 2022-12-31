@@ -122,6 +122,11 @@ public class Position {
 				.collect(Collectors.summingDouble(Double::doubleValue));
 	}
 	
+	public double getAverageEntryPrice() {
+		return getEntryAmount() / entryTrades.stream().map(Trade::getFilledQuantity)
+				.collect(Collectors.summingInt(Integer::intValue));
+	}
+	
 	public int getHoldingTimeInMinutes() {
 		final LocalDateTime now = LocalDateTime.now();
 		final LocalDateTime minEntryTime = entryTrades.stream()
@@ -168,4 +173,5 @@ public class Position {
 			}
 		}
 	}
+
 }

@@ -5,41 +5,23 @@ import org.springframework.stereotype.Component;
 import com.whiteowl.core.broker.BrokerServiceProvider;
 import com.whiteowl.core.broker.BrokerServiceProviderFactory;
 import com.whiteowl.core.portfolio.Portfolio;
-import com.whiteowl.core.position.Position;
+import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.TradeStatus;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Component
-@RequiredArgsConstructor
-public class UpdateTradeStateTransition implements TradeStateTransition {
-	
-	private final BrokerServiceProviderFactory brokerServiceProviderFactory;
+public class UpdateTradeStateTransition extends AbstractTradeStateTransition {
 
-	@Override
-	public TradeStatus getInitialStatus() {
-		return TradeStatus.UPDATABLE;
+	public UpdateTradeStateTransition(
+			PortfolioService portfolioService,
+			BrokerServiceProviderFactory brokerServiceProviderFactory) {
+		super(TradeStatus.UPDATABLE, portfolioService, brokerServiceProviderFactory);
 	}
 
 	@Override
-	public void transition(@NonNull final Trade trade, @NonNull final Position position) {
-		if(!getInitialStatus().equals(trade.getStatus())) throw new IllegalStateException();
-		final Portfolio portfolio = position.getPortfolio();
-		final BrokerServiceProvider brokerServiceProvider = brokerServiceProviderFactory
-				.getBrokerServiceProvider(portfolio.getBroker());
+	protected void doTransition(Trade trade, Portfolio portfolio, 
+			BrokerServiceProvider brokerServiceProvider) {
 		brokerServiceProvider.update(trade, portfolio);
-		try {
-			trade.setStatus(TradeStatus.PENDING);
-			brokerServiceProvider.update(trade, portfolio);
-		} catch(Exception e) {
-			trade.setStatus(getInitialStatus());
-			log.error("", e);
-			throw e;
-		}
 	}
 
 }

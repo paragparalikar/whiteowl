@@ -1,9 +1,6 @@
 package com.whiteowl.core.position.stateMachine;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.function.Predicate;
+import java.util.List;
 import java.util.stream.Stream;
 
 import javax.persistence.PostPersist;
@@ -29,10 +26,14 @@ public class PositionEntityListener {
 
 	@PrePersist
 	public void prePersist(@NonNull final Position position) {
-		resolvePortfolios(position).stream()
-			.map(position::withPortfolio)
-			.filter(Predicate.isEqual(position).negate())
-			.forEach(positionService::save);
+		if(null == position.getPortfolio()) {
+			final List<Portfolio> portfolios = portfolioService.findAll();
+			if(portfolios.isEmpty()) throw new IllegalStateException();
+			position.setPortfolio(portfolios.get(0));
+			portfolios.stream().skip(1)
+				.map(position::withPortfolio)
+				.forEach(positionService::save);
+		}
 	}
 	
 	@PostUpdate
@@ -45,12 +46,6 @@ public class PositionEntityListener {
 			.anyMatch(TradeStatus::isActionable)) {
 			positionStateMachine.handle(position);
 		}
-	}
-	
-	private Collection<Portfolio> resolvePortfolios(Position position){
-		return Optional.ofNullable(position.getPortfolio())
-					.map(Collections::singletonList)
-					.orElseGet(portfolioService::findAll);
 	}
 	
 }

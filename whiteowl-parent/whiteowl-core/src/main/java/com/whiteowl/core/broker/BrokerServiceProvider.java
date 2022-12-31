@@ -11,6 +11,8 @@ import com.whiteowl.core.trade.TradeProduct;
 public interface BrokerServiceProvider {
 	
 	Broker getBrokerType();
+	
+	double getAvailableMargin(Portfolio portfolio);
 
 	List<Trade> findAllTrades(Portfolio portfolio);
 	

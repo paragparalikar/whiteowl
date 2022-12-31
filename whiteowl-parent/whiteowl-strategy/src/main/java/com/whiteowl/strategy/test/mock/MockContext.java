@@ -1,7 +1,6 @@
 package com.whiteowl.strategy.test.mock;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
@@ -16,6 +15,7 @@ import com.whiteowl.core.broker.BrokerServiceProvider;
 import com.whiteowl.core.broker.BrokerServiceProviderFactory;
 import com.whiteowl.core.derivative.option.OptionChainService;
 import com.whiteowl.core.portfolio.Portfolio;
+import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
 import com.whiteowl.core.position.PositionStatus;
@@ -25,7 +25,6 @@ import com.whiteowl.core.position.stateMachine.transition.OpenPositionStateTrans
 import com.whiteowl.core.quote.QuoteService;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
-import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.stateMachine.TradeStateMachine;
 import com.whiteowl.core.trade.stateMachine.transition.CancelTradeStateTransition;
 import com.whiteowl.core.trade.stateMachine.transition.OpenTradeStateTransition;
@@ -47,14 +46,14 @@ public class MockContext {
 	private final List<Bar> bars;
 	private final Timeframe timeframe;
 	private final TradingStrategyConfig config;
-	private final Portfolio portfolio = new Portfolio();
-	
+
 	private final MockBarService barService;
 	private final MockQuoteService quoteService;
 	private final ScripService scripService;
 	private final TaskScheduler taskScheduler;
 	private final PositionService positionService;
 	private final TradingStrategy tradingStrategy;
+	private final PortfolioService portfolioService;
 	private final TradeStateMachine tradeStateMachine;
 	private final OptionChainService optionChainService;
 	private final PositionStateMachine positionStateMachine;
@@ -75,6 +74,9 @@ public class MockContext {
 		this.config = config;
 		this.timeframe = timeframe;
 		
+		final Portfolio portfolio = new Portfolio();
+		portfolio.setMaxTradableAmount(100000);
+		this.portfolioService = new MockPortfolioService(portfolio);
 		this.quoteService = new MockQuoteService();
 		this.taskScheduler = new MockTaskScheduler();
 		this.scripService = new MockScripService(scrip);
@@ -86,9 +88,9 @@ public class MockContext {
 		this.tradingStrategy = tradingStrategyFactory.getTradingStrategy(config);
 		this.brokerServiceProviderFactory = new BrokerServiceProviderFactory(Collections.singletonList(brokerServiceProvider));
 		this.tradeStateMachine = new TradeStateMachine(Arrays.asList(
-				new OpenTradeStateTransition(brokerServiceProviderFactory), 
-				new UpdateTradeStateTransition(brokerServiceProviderFactory),
-				new CancelTradeStateTransition(brokerServiceProviderFactory)));
+				new OpenTradeStateTransition(portfolioService, brokerServiceProviderFactory), 
+				new UpdateTradeStateTransition(portfolioService, brokerServiceProviderFactory),
+				new CancelTradeStateTransition(portfolioService, brokerServiceProviderFactory)));
 		this.positionStateMachine = new PositionStateMachine(positionService, Arrays.asList(
 				new OpenPositionStateTransition(tradeStateMachine),
 				new ClosePositionStateTransition(tradeStateMachine)));
@@ -114,24 +116,16 @@ public class MockContext {
 	public boolean next() {
 		if(barService.next()) {
 			final Bar bar = barService.findLatestBar(scrip.getCode(), timeframe).orElseThrow();
-			final TradeType tradeType = resolveTradeType();
+			final TradeType tradeType = TradeType.BUY; // TODO ???
 			quoteService.publish(bar, scrip, tradeType);
 			tradingStrategyExecutor.onScripBarDownloaded(scrip, timeframe);
-			Stream.concat(
-					positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream(), 
-					positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream())
-					.forEach(tradingStrategyExecutor::onPositionSynchronized);
+			portfolioService.findAll().stream()
+				.flatMap(portfolio -> Stream.concat(
+						positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream(), 
+						positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream()))
+				.forEach(tradingStrategyExecutor::onPositionSynchronized);
 		};
 		return false;
 	}
 
-	private TradeType resolveTradeType() {
-		return positionService.findByPortfolioAndStatusNot(
-				portfolio, PositionStatus.CLOSED).stream()
-			.map(Position::getEntryTrades)
-			.flatMap(Collection::stream)
-			.map(Trade::getType)
-			.findFirst()
-			.orElse(TradeType.BUY);
-	}
 }

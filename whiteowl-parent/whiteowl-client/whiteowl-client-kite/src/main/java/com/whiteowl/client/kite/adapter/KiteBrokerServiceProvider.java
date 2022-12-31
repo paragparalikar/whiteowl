@@ -39,15 +39,21 @@ public class KiteBrokerServiceProvider implements BrokerServiceProvider {
 	public Broker getBrokerType() {
 		return Broker.ZERODHA;
 	}
+	
+	@Override
+	public double getAvailableMargin(@NonNull final Portfolio portfolio) {
+		final KiteConnectApi api = getKiteConnectApi(portfolio);
+		return api.getMargin().getEquity().getNet();
+	}
 
-	private KiteConnectApi getKiteConnectApi(Portfolio portfolio) {
+	private KiteConnectApi getKiteConnectApi(@NonNull final Portfolio portfolio) {
 		final Credentials credentials = portfolio.getCredentials();
 		final KiteCredentials kiteCredentials = kiteMapper.toKiteCredentials(credentials);
 		return kiteClientProvider.getClient(kiteCredentials);
 	}
 	
 	@Override
-	public List<Trade> findAllTrades(Portfolio portfolio) {
+	public List<Trade> findAllTrades(@NonNull final Portfolio portfolio) {
 		final KiteConnectApi api = getKiteConnectApi(portfolio);
 		final List<Order> orders = Optional.ofNullable(api.getOrders()).orElse(Collections.emptyList());
 		return orders.stream()
@@ -56,7 +62,7 @@ public class KiteBrokerServiceProvider implements BrokerServiceProvider {
 	}
 	
 	@Override
-	public void create(Trade trade, Portfolio portfolio) {
+	public void create(@NonNull final Trade trade, @NonNull final Portfolio portfolio) {
 		final Order order = kiteMapper.toOrder(trade);
 		final KiteConnectApi api = getKiteConnectApi(portfolio);
 		final OrderId orderId = api.createOrder(order);
@@ -64,22 +70,25 @@ public class KiteBrokerServiceProvider implements BrokerServiceProvider {
 	}
 	
 	@Override
-	public void update(Trade trade, Portfolio portfolio) {
+	public void update(@NonNull final Trade trade, @NonNull final Portfolio portfolio) {
 		final Order order = kiteMapper.toOrder(trade);
 		final KiteConnectApi api = getKiteConnectApi(portfolio);
 		api.update(order);
 	}
 	
 	@Override
-	public void cancel(Trade trade, Portfolio portfolio) {
+	public void cancel(@NonNull final Trade trade, @NonNull final Portfolio portfolio) {
 		final Order order = kiteMapper.toOrder(trade);
 		final KiteConnectApi api = getKiteConnectApi(portfolio);
 		api.cancel(order);
 	}
 	
 	@Override
-	public int getAvailableQuantity(@NonNull Scrip scrip, @NonNull Exchange exchange, 
-			@NonNull TradeProduct product, @NonNull Portfolio portfolio) {
+	public int getAvailableQuantity(
+			@NonNull Scrip scrip, 
+			@NonNull Exchange exchange, 
+			@NonNull TradeProduct product, 
+			@NonNull Portfolio portfolio) {
 		final int holdingQuantity = getHoldingQuantity(scrip, exchange, product, portfolio);
 		final int positionQuantity = getPositionQuantity(scrip, exchange, product, portfolio);
 		return holdingQuantity + positionQuantity;

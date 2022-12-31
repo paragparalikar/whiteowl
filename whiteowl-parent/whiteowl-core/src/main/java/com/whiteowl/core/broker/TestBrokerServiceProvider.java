@@ -28,7 +28,12 @@ public class TestBrokerServiceProvider implements BrokerServiceProvider {
 	public Broker getBrokerType() {
 		return Broker.TEST;
 	}
-
+	
+	@Override
+	public double getAvailableMargin(Portfolio portfolio) {
+		return 0;
+	}
+	
 	@Override
 	public List<Trade> findAllTrades(Portfolio portfolio) {
 		return new ArrayList<>(trades.values());

@@ -53,4 +53,6 @@ public class Portfolio {
 	@PositiveOrZero
 	private double maxTradableAmount;
 
+	private double availableMargin;
+	
 }
