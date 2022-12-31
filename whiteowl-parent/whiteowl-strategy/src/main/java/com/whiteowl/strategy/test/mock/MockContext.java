@@ -113,7 +113,8 @@ public class MockContext {
 						positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream(), 
 						positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream()))
 				.forEach(tradingStrategyExecutor::onPositionSynchronized);
-			brokerServiceProvider.execute(timeframe);
+			brokerServiceProvider.execute();
+			return true;
 		};
 		return false;
 	}
