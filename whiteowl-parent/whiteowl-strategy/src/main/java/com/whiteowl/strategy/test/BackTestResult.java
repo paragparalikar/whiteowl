@@ -33,5 +33,6 @@ public class BackTestResult {
 	private final double sharpeRatio; 
 	private final double profitFactor; 
 	private final double maxDrawdown;
+	private final double exposure;
 
 }

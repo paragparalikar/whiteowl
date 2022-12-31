@@ -1,12 +1,10 @@
 package com.whiteowl.core.position;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -106,56 +104,35 @@ public class Position {
 		return position;
 	}
 	
-	public Stream<Trade> allTrades() {
-		return Stream.concat(entryTrades.stream(), exitTrades.stream());
+	public double getProfitLossAmount() {
+		return getAmount(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.SELL)
+				- getAmount(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.BUY);
 	}
 	
-	public boolean shouldClose() {
-		return 0 < getEntryQuantity() && getExitQuantity() == getEntryQuantity();
-	}
-	
-	public boolean isClosed() {
-		return PositionStatus.CLOSED.equals(status);
-	}
-	
-	public boolean isOpen() {
-		return !isClosed();
-	}
-	
-	public Optional<LocalDateTime> getEntryTimestamp() {
-		return entryTrades.stream()
-				.map(Trade::getExchangeTimestamp)
-				.filter(Objects::nonNull)
-				.min(Comparator.naturalOrder());
-	}
-	
-	public int getEntryQuantity() {
-		return entryTrades.stream()
-				.collect(Collectors.summingInt(Trade::getFilledQuantity));
-	}
-	
-	public int getExitQuantity() {
-		return exitTrades.stream()
-				.collect(Collectors.summingInt(Trade::getFilledQuantity));
+	private double getAmount(Stream<Trade> trades, TradeType tradeType) {
+		return trades
+				.filter(trade -> tradeType.equals(trade.getType()))
+				.map(Trade::getAmount)
+				.collect(Collectors.summingDouble(Double::doubleValue));
 	}
 	
 	public double getEntryAmount() {
 		return entryTrades.stream()
-				.map(trade -> trade.getFilledQuantity() * trade.getAveragePrice())
+				.map(Trade::getAmount)
 				.collect(Collectors.summingDouble(Double::doubleValue));
 	}
 	
-	public double getExitAmount() {
-		return exitTrades.stream()
-				.map(trade -> trade.getFilledQuantity() * trade.getAveragePrice())
-				.collect(Collectors.summingDouble(Double::doubleValue));
-	}
-	
-	public TradeType getEntryTradeType() {
-		return entryTrades.stream()
-				.map(Trade::getType)
-				.findFirst()
-				.orElse(null);
+	public int getHoldingTimeInMinutes() {
+		final LocalDateTime now = LocalDateTime.now();
+		final LocalDateTime minEntryTime = entryTrades.stream()
+			.map(Trade::getTimestamp)
+			.min(Comparator.naturalOrder())
+			.orElse(now);
+		final LocalDateTime maxExitTime = exitTrades.stream()
+			.map(Trade::getTimestamp)
+			.max(Comparator.naturalOrder())
+			.orElse(now);
+		return (int) Duration.between(minEntryTime, maxExitTime).abs().toMinutes();
 	}
 	
 	public boolean areAllEntryTradesCompleted() {
@@ -168,20 +145,6 @@ public class Position {
 		return exitTrades.stream()
 				.map(Trade::getStatus)
 				.allMatch(TradeStatus::isTerminal);
-	}
-	
-	public boolean hasEntryTrade(Scrip scrip) {
-		return null != scrip && entryTrades.stream()
-				.map(Trade::getScrip)
-				.map(Scrip::getCode)
-				.anyMatch(Predicate.isEqual(scrip.getCode()));
-	}
-	
-	public boolean hasExitTrade(Scrip scrip) {
-		return null != scrip && exitTrades.stream()
-				.map(Trade::getScrip)
-				.map(Scrip::getCode)
-				.anyMatch(Predicate.isEqual(scrip.getCode()));
 	}
 	
 	@PreUpdate

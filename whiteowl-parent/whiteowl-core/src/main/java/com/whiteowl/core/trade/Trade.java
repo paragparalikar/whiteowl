@@ -161,4 +161,8 @@ public class Trade {
 				.quantity(filledQuantity)
 				.build();
 	}
+	
+	public double getAmount() {
+		return averagePrice * filledQuantity;
+	}
 }
