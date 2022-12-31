@@ -26,7 +26,6 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 			@NonNull final List<Bar> bars,
 			@NonNull final List<Position> positions,
 			@NonNull final TradingStrategyConfig config) {
-		
 		int openPositionCount = 0;
 		int closedPositionCount = 0;
 		int losingPositionCount = 0;
@@ -74,8 +73,6 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 			}
 		}
 		
-		
-		
 		final Bar firstBar = bars.get(0);
 		final Bar lastBar = bars.get(bars.size() - 1);
 		final int totalTimeInMinutes = (int) Duration.between(
@@ -84,6 +81,22 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 				.abs().toMinutes();
 		final double buyAndHoldProfitLossAmount = lastBar.getClosePrice().minus(firstBar.getOpenPrice()).doubleValue();
 		final double buyAndHoldProfitLossPercentage = buyAndHoldProfitLossAmount * 100 / firstBar.getOpenPrice().doubleValue();
+		final int averageHoldingTimeInMinutes = netHoldingTimeInMinutes / totalPositionCount;
+		final double holdingTimeInMinutesPercentage = netHoldingTimeInMinutes * 100 / totalTimeInMinutes;
+		final double netLossPercentage = netLossAmount * 100 / initialCapital;
+		final double netProfitPercentage = netProfitAmount * 100 / initialCapital;
+		final double netProfitLossPercentage = netProfitLossAmount * 100 / initialCapital;
+		final double averageLossAmount = netLossAmount / losingPositionCount;
+		final double averageProfitAmount = netProfitAmount / winningPositionCount;
+		final double averageProfitLossAmount = netProfitLossAmount / totalPositionCount;
+		final double averageLossPercentage = lossPercentageSum / losingPositionCount;
+		final double averageProfitPercentage = profitPercentageSum / winningPositionCount;
+		final double averageProfitLossPercentage = profitLossPercentageSum / totalPositionCount;
+		final double winRatio = winningPositionCount / totalPositionCount;
+		final double lossRatio = losingPositionCount / totalPositionCount;
+		final double expectancy = ((1 + (averageProfitAmount / averageLossAmount)) * winRatio) - 1;
+		final double profitFactor = netProfitAmount / netLossAmount;
+		
 		return TradingStrategyPerformance.builder()
 				.totalPositionCount(totalPositionCount)
 				.openPositionCount(openPositionCount)
@@ -92,26 +105,30 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 				.winningPositionCount(winningPositionCount)
 				.breakEventPositionCount(breakEventPositionCount)
 				.netHoldingTimeInMinutes(netHoldingTimeInMinutes)
-				.averageHoldingTimeInMinutes(netHoldingTimeInMinutes / totalPositionCount)
-				.holdingTimeInMinutesPercentage(netHoldingTimeInMinutes * 100 / totalTimeInMinutes)
+				.averageHoldingTimeInMinutes(averageHoldingTimeInMinutes)
+				.holdingTimeInMinutesPercentage(holdingTimeInMinutesPercentage)
 				.netLossAmount(netLossAmount)
 				.netProfitAmount(netProfitAmount)
 				.netProfitLossAmount(netProfitLossAmount)
 				.buyAndHoldProfitLossAmount(buyAndHoldProfitLossAmount)
-				.netLossPercentage(netLossAmount * 100 / initialCapital)
-				.netProfitPercentage(netProfitAmount * 100 / initialCapital)
-				.netProfitLossPercentage(netProfitLossAmount * 100 / initialCapital)
+				.netLossPercentage(netLossPercentage)
+				.netProfitPercentage(netProfitPercentage)
+				.netProfitLossPercentage(netProfitLossPercentage)
 				.buyAndHoldProfitLossPercentage(buyAndHoldProfitLossPercentage)
-				.averageLossAmount(netLossAmount / losingPositionCount)
-				.averageProfitAmount(netProfitAmount / winningPositionCount)
-				.averageProfitLossAmount(netProfitLossAmount / totalPositionCount)
-				.averageLossPercentage(lossPercentageSum / losingPositionCount)
-				.averageProfitPercentage(profitPercentageSum / winningPositionCount)
-				.averageProfitLossPercentage(profitLossPercentageSum / totalPositionCount)
+				.averageLossAmount(averageLossAmount)
+				.averageProfitAmount(averageProfitAmount)
+				.averageProfitLossAmount(averageProfitLossAmount)
+				.averageLossPercentage(averageLossPercentage)
+				.averageProfitPercentage(averageProfitPercentage)
+				.averageProfitLossPercentage(averageProfitLossPercentage)
 				.maxLossAmount(maxLossAmount)
 				.maxProfitAmount(maxProfitAmount)
 				.maxLossPercentage(maxLossPercentage)
 				.maxProfitPercentage(maxProfitPercentage)
+				.winRatio(winRatio)
+				.lossRatio(lossRatio)
+				.expectancy(expectancy)
+				.profitFactor(profitFactor)
 				.build();
 	}
 	

@@ -26,7 +26,7 @@ public class TradingStrategyPerformance {
 	private int breakEventPositionCount;
 	private int netHoldingTimeInMinutes;
 	private int averageHoldingTimeInMinutes;
-	private int holdingTimeInMinutesPercentage;
+	private double holdingTimeInMinutesPercentage;
 	private double netLossAmount;
 	private double netProfitAmount;
 	private double netProfitLossAmount;
@@ -47,6 +47,7 @@ public class TradingStrategyPerformance {
 	private double maxProfitPercentage;
 	
 	private double winRatio; 
+	private double lossRatio;
 	private double expectancy;
 	private double profitFactor; 
 	private double cagr;
