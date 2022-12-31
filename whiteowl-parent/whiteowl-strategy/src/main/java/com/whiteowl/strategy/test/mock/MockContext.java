@@ -98,14 +98,14 @@ public class MockContext {
 		this.tradingStrategyConfigService = new MockTradingStrategyConfigService(config);
 		final TradingStrategyFactory mockTradingStrategyFactory = new MockTradingStrategyFactory(config, tradingStrategy);
 		this.tradingStrategyExecutor = TradingStrategyExecutor.builder()
-			.quoteService(quoteService)
-			.taskScheduler(taskScheduler)
-			.positionService(positionService)
-			.portfolioService(portfolioService)
-			.tradingStrategyFactory(mockTradingStrategyFactory)
-			.positionSizingStrategy(positionSizingStrategy)
-			.tradingStrategyConfigService(tradingStrategyConfigService)
-			.build();
+				.tradingStrategyConfigService(tradingStrategyConfigService)
+				.tradingStrategyFactory(mockTradingStrategyFactory)
+				.positionSizingStrategy(positionSizingStrategy)
+				.portfolioService(portfolioService)
+				.positionService(positionService)
+				.taskScheduler(taskScheduler)
+				.quoteService(quoteService)
+				.build();
 		tradingStrategyExecutor.onApplicationReady();
 	}
 	
