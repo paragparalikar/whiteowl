@@ -75,7 +75,7 @@ public class MockContext {
 		this.timeframe = timeframe;
 		
 		final Portfolio portfolio = new Portfolio();
-		portfolio.setMaxTradableAmount(100000);
+		portfolio.setMaxTradableAmount(10000000); // 1 Cr
 		this.portfolioService = new MockPortfolioService(portfolio);
 		this.quoteService = new MockQuoteService();
 		this.taskScheduler = new MockTaskScheduler();
