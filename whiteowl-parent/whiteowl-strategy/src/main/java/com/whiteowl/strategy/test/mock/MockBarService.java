@@ -24,12 +24,6 @@ public class MockBarService implements BarService {
 	@NonNull private final List<Bar> bars;
 	@NonNull private final Timeframe timeframe;
 	
-	public void setIndex(int index) {
-		if(null == bars || bars.isEmpty()) throw new IllegalStateException();
-		if(0 > index || index >= bars.size()) throw new IllegalArgumentException();
-		this.index = index;
-	}
-	
 	public boolean next() {
 		if(index < bars.size() - 1) {
 			index++;
@@ -40,54 +34,32 @@ public class MockBarService implements BarService {
 	}
 	
 	@Override
-	public List<Bar> findByCodeAndTimeframe(@NonNull final String code, @NonNull final Timeframe timeframe) {
-		if(!code.equalsIgnoreCase(this.code)) throw new IllegalArgumentException();
-		if(!timeframe.equals(this.timeframe)) throw new IllegalArgumentException();
+	public List<Bar> findByCodeAndTimeframe(String code, Timeframe timeframe) {
 		return bars.subList(0, index);
 	}
 
 	@Override
-	public Optional<ZonedDateTime> findMaxBeginTimeByCodeAndTimeframe(
-			@NonNull final String code, 
-			@NonNull final Timeframe timeframe) {
-		if(!code.equalsIgnoreCase(this.code)) throw new IllegalArgumentException();
-		if(!timeframe.equals(this.timeframe)) throw new IllegalArgumentException();
+	public Optional<ZonedDateTime> findMaxBeginTimeByCodeAndTimeframe(String code, Timeframe timeframe) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Optional<Bar> findTopByCodeAndTimeframeOrderByTimeframeDesc(
-			@NonNull final String code, 
-			@NonNull final Timeframe timeframe) {
-		if(!code.equalsIgnoreCase(this.code)) throw new IllegalArgumentException();
-		if(!timeframe.equals(this.timeframe)) throw new IllegalArgumentException();
+	public Optional<Bar> findTopByCodeAndTimeframeOrderByTimeframeDesc(String code, Timeframe timeframe) {
 		return Optional.of(bars.get(index));
 	}
 
 	@Override
-	public List<Bar> findLatestByCodeAndTimeframe(
-			@NonNull final String code, 
-			@NonNull final Timeframe timeframe, 
-			long count) {
-		if(!code.equalsIgnoreCase(this.code)) throw new IllegalArgumentException();
-		if(!timeframe.equals(this.timeframe)) throw new IllegalArgumentException();
+	public List<Bar> findLatestByCodeAndTimeframe(String code, Timeframe timeframe, long count) {
 		return index < count ? Collections.emptyList() : bars.subList(index - (int) count, index);
 	}
 
 	@Override
-	public void saveAll(
-			@NonNull final String code, 
-			@NonNull final Timeframe timeframe, 
-			@NonNull final Collection<Bar> bars) {
+	public void saveAll(String code, Timeframe timeframe, Collection<Bar> bars) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Optional<Bar> findLatestBar(
-			@NonNull final String code, 
-			@NonNull final Timeframe timeframe) {
-		if(!code.equalsIgnoreCase(this.code)) throw new IllegalArgumentException();
-		if(!timeframe.equals(this.timeframe)) throw new IllegalArgumentException();
+	public Optional<Bar> findLatestBar(String code, Timeframe timeframe) {
 		return Optional.of(bars.get(index));
 	}
 	

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.springframework.scheduling.TaskScheduler;
@@ -13,6 +14,8 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import com.whiteowl.core.bar.Timeframe;
+import com.whiteowl.core.portfolio.Portfolio;
+import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
 import com.whiteowl.core.position.PositionStatus;
@@ -24,10 +27,15 @@ import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.util.Tuple2;
 import com.whiteowl.strategy.config.TradingStrategyConfig;
 import com.whiteowl.strategy.config.TradingStrategyConfigService;
+import com.whiteowl.strategy.size.PositionSizingStrategy;
 
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@Builder
 @Component
 @RequiredArgsConstructor
 public class TradingStrategyExecutor implements AutoCloseable {
@@ -35,7 +43,9 @@ public class TradingStrategyExecutor implements AutoCloseable {
 	private final QuoteService quoteService;
 	private final TaskScheduler taskScheduler;
 	private final PositionService positionService;
+	private final PortfolioService portfolioService;
 	private final TradingStrategyFactory tradingStrategyFactory;
+	private final PositionSizingStrategy positionSizingStrategy;
 	private final TradingStrategyConfigService tradingStrategyConfigService;
 	private final Collection<ScheduledFuture<?>> futures = new LinkedList<>();
 	private final Map<Tuple2<Scrip, TradingStrategyConfig>, QuoteSubscription> subscriptions = new ConcurrentHashMap<>();
@@ -87,9 +97,24 @@ public class TradingStrategyExecutor implements AutoCloseable {
 	}
 	
 	private void handle(Position position, TradingStrategyConfig config) {
-		position = positionService.save(position);
-		if(position.getStatus().isTerminal()) unsubscribe(position, config);
-		else subscribe(position, config);
+		if(null == position.getPortfolio()) {
+			for(Portfolio portfolio : portfolioService.findAll()) {
+				final Position clonePosition = position.withPortfolio(portfolio);
+				positionSizingStrategy.size(clonePosition, portfolio);
+				if(clonePosition.getEntryTrades().stream()
+						.map(Trade::getQuantity)
+						.anyMatch(Predicate.isEqual(0).negate())) {
+					handle(clonePosition, config);
+				} else {
+					log.warn("Position is being skipped due to insufficient funds in portfolio : "
+							+ "Position - {}, Portfolio - {}", clonePosition, portfolio);
+				}
+			}
+		} else {
+			position = positionService.save(position);
+			if(position.getStatus().isTerminal()) unsubscribe(position, config);
+			else subscribe(position, config);
+		}
 	}
 	
 	private void subscribe(Position position, TradingStrategyConfig config) {

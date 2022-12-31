@@ -31,6 +31,8 @@ import com.whiteowl.strategy.TradingStrategyExecutor;
 import com.whiteowl.strategy.TradingStrategyFactory;
 import com.whiteowl.strategy.config.TradingStrategyConfig;
 import com.whiteowl.strategy.config.TradingStrategyConfigService;
+import com.whiteowl.strategy.size.FixedPercentagePositionSizingStrategy;
+import com.whiteowl.strategy.size.PositionSizingStrategy;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -56,6 +58,7 @@ public class MockContext {
 	private final PositionStateMachine positionStateMachine;
 	private final MockBrokerServiceProvider brokerServiceProvider;
 	private final TradingStrategyFactory tradingStrategyFactory;
+	private final PositionSizingStrategy positionSizingStrategy;
 	private final TradingStrategyExecutor tradingStrategyExecutor;
 	private final TradingStrategyConfigService tradingStrategyConfigService;
 	private final BrokerServiceProviderFactory brokerServiceProviderFactory;
@@ -80,6 +83,7 @@ public class MockContext {
 		this.optionChainService = new MockOptionChainService();
 		this.positionService = new MockPositionService(this::onPositionSaved);
 		this.barService = new MockBarService(config.getMinBarCount() - 1, scrip.getCode(), bars, timeframe);
+		this.positionSizingStrategy = new FixedPercentagePositionSizingStrategy(barService, 100);
 		this.brokerServiceProvider = new MockBrokerServiceProvider(timeframe, barService);
 		this.tradingStrategyFactory = new TradingStrategyFactory(barService, scripService, optionChainService);
 		this.tradingStrategy = tradingStrategyFactory.getTradingStrategy(config);
@@ -93,8 +97,15 @@ public class MockContext {
 				new ClosePositionStateTransition(tradeStateMachine)));
 		this.tradingStrategyConfigService = new MockTradingStrategyConfigService(config);
 		final TradingStrategyFactory mockTradingStrategyFactory = new MockTradingStrategyFactory(config, tradingStrategy);
-		this.tradingStrategyExecutor = new TradingStrategyExecutor(
-				quoteService, taskScheduler, positionService, mockTradingStrategyFactory, tradingStrategyConfigService);
+		this.tradingStrategyExecutor = TradingStrategyExecutor.builder()
+			.quoteService(quoteService)
+			.taskScheduler(taskScheduler)
+			.positionService(positionService)
+			.portfolioService(portfolioService)
+			.tradingStrategyFactory(mockTradingStrategyFactory)
+			.positionSizingStrategy(positionSizingStrategy)
+			.tradingStrategyConfigService(tradingStrategyConfigService)
+			.build();
 		tradingStrategyExecutor.onApplicationReady();
 	}
 	
