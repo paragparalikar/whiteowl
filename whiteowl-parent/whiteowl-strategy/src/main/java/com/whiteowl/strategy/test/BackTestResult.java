@@ -22,17 +22,5 @@ public class BackTestResult {
 	@NonNull private final Timeframe timeframe;
 	@NonNull private final Set<Position> positions;
 	
-	private final int totalPositionCount;
-	private final int openPositionCount;
-	private final int closedPositionCount;
-	private final double cagr;
-	private final double alpha;
-	private final double beta;
-	private final double winRate; 
-	private final double expectancy;
-	private final double sharpeRatio; 
-	private final double profitFactor; 
-	private final double maxDrawdown;
-	private final double exposure;
 
 }

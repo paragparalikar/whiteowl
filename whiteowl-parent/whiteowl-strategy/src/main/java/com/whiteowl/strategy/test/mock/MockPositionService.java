@@ -27,6 +27,7 @@ public class MockPositionService implements PositionService {
 	@Override
 	public Position save(@NonNull final Position position) {
 		if(null == position.getId()) position.setId(idGenerator.incrementAndGet());
+		position.updateStatus();
 		if(position.getStatus().isTerminal()) {
 			nonTerminalPositions.remove(position.getId());
 			terminalPositions.put(position.getId(), position);

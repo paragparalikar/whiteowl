@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -154,7 +155,7 @@ public class Position {
 	
 	@PreUpdate
 	@PrePersist
-	void updateStatus() {
+	public void updateStatus() {
 		if(exitTrades.isEmpty()) {
 			if(entryTrades.isEmpty()) {
 				status = PositionStatus.NEW;
@@ -162,14 +163,21 @@ public class Position {
 				status = PositionStatus.OPEN;
 			} 
 		} else {
-			if(areAllEntryTradesCompleted()) {
-				if(areAllExitTradesCompleted()) {
-					status = PositionStatus.CLOSED;
-				} else {
-					status = PositionStatus.OPEN;
-				} 
-			} else {
-				status = PositionStatus.OPEN;
+			status = PositionStatus.OPEN;
+			if(entryTrades.stream().map(Trade::getStatus).allMatch(TradeStatus::isTerminal)) {
+				if(exitTrades.stream().map(Trade::getStatus).allMatch(TradeStatus::isTerminal)) {
+					final Map<Scrip, Integer> buyQuantities = Stream.concat(entryTrades.stream(), exitTrades.stream())
+							.filter(trade -> TradeType.BUY.equals(trade.getType()))
+							.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
+							.collect(Collectors.groupingBy(Trade::getScrip, Collectors.summingInt(Trade::getFilledQuantity)));
+					final Map<Scrip, Integer> sellQuantities = Stream.concat(entryTrades.stream(), exitTrades.stream())
+							.filter(trade -> TradeType.SELL.equals(trade.getType()))
+							.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
+							.collect(Collectors.groupingBy(Trade::getScrip, Collectors.summingInt(Trade::getFilledQuantity)));
+					if(buyQuantities.equals(sellQuantities)) {
+						status = PositionStatus.CLOSED;
+					}
+				}
 			}
 		}
 	}

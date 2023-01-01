@@ -2,7 +2,6 @@ package com.whiteowl.strategy.test.mock;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.stream.Stream;
 
 import org.springframework.scheduling.TaskScheduler;
 import org.ta4j.core.Bar;
@@ -119,12 +118,10 @@ public class MockContext {
 			final TradeType tradeType = TradeType.BUY; // TODO ???
 			quoteService.publish(bar, scrip, tradeType);
 			tradingStrategyExecutor.onScripBarDownloaded(scrip, timeframe);
-			portfolioService.findAll().stream()
-				.flatMap(portfolio -> Stream.concat(
-						positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream(), 
-						positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream()))
-				.forEach(tradingStrategyExecutor::onPositionSynchronized);
 			brokerServiceProvider.execute();
+			portfolioService.findAll().stream()
+				.flatMap(portfolio ->  positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream())
+				.forEach(tradingStrategyExecutor::onPositionSynchronized);
 			return true;
 		};
 		return false;
