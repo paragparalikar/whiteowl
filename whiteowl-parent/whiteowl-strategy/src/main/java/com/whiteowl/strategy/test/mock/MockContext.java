@@ -83,7 +83,7 @@ public class MockContext {
 		this.optionChainService = new MockOptionChainService();
 		this.positionService = new MockPositionService(this::onPositionSaved);
 		this.barService = new MockBarService(barSeries);
-		this.positionSizingStrategy = new FixedPercentagePositionSizingStrategy(barService, 100);
+		this.positionSizingStrategy = new FixedPercentagePositionSizingStrategy(100);
 		this.brokerServiceProvider = new MockBrokerServiceProvider(timeframe, barService);
 		this.tradingStrategyFactory = new TradingStrategyFactory(barService, scripService, optionChainService);
 		this.tradingStrategy = tradingStrategyFactory.getTradingStrategy(config);

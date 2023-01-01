@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.springframework.scheduling.TaskScheduler;
@@ -32,9 +31,7 @@ import com.whiteowl.strategy.size.PositionSizingStrategy;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Builder
 @Component
 @RequiredArgsConstructor
@@ -77,15 +74,15 @@ public class TradingStrategyExecutor implements AutoCloseable {
 		final TradingStrategy tradingStrategy = tradingStrategyFactory.getTradingStrategy(config);
 		if(positions.isEmpty()) {
 			tradingStrategy.enter()
-				.ifPresent(position -> handle(position, config));
+				.ifPresent(position -> handle(position, tradingStrategy, config));
 		} else if(null == quote) {
 			positions.stream()
 				.filter(tradingStrategy::manage)
-				.forEach(position -> handle(position, config));
+				.forEach(position -> handle(position, tradingStrategy, config));
 		} else {
 			positions.stream()
 				.filter(position -> tradingStrategy.manage(position, quote))
-				.forEach(position -> handle(position, config));
+				.forEach(position -> handle(position, tradingStrategy, config));
 		}
 	}
 	
@@ -93,27 +90,26 @@ public class TradingStrategyExecutor implements AutoCloseable {
 		final String configId = position.getTradingStrategyConfigId();
 		final TradingStrategyConfig config = tradingStrategyConfigService.findById(configId).orElseThrow();
 		final TradingStrategy tradingStrategy = tradingStrategyFactory.getTradingStrategy(config);
-		if(tradingStrategy.manage(position)) handle(position, config);
+		if(tradingStrategy.manage(position)) handle(position, tradingStrategy, config);
 	}
 	
-	private void handle(Position position, TradingStrategyConfig config) {
+	private void handle(Position position, TradingStrategy tradingStrategy, TradingStrategyConfig config) {
 		if(null == position.getPortfolio()) {
-			for(Portfolio portfolio : portfolioService.findAll()) {
-				final Position clonePosition = position.withPortfolio(portfolio);
-				positionSizingStrategy.size(clonePosition, portfolio);
-				if(clonePosition.getEntryTrades().stream()
-						.map(Trade::getQuantity)
-						.anyMatch(Predicate.isEqual(0).negate())) {
-					handle(clonePosition, config);
-				} else {
-					log.warn("Position is being skipped due to insufficient funds in portfolio : "
-							+ "Position - {}, Portfolio - {}", clonePosition, portfolio);
-				}
-			}
+			multicast(position, tradingStrategy, config);
 		} else {
 			position = positionService.save(position);
 			if(position.getStatus().isTerminal()) unsubscribe(position, config);
 			else subscribe(position, config);
+		}
+	}
+	
+	private void multicast(Position position, TradingStrategy tradingStrategy, TradingStrategyConfig config) {
+		for(Portfolio portfolio : portfolioService.findAll()) {
+			final Position clonePosition = position.withPortfolio(portfolio);
+			final double amount = positionSizingStrategy.size(clonePosition, portfolio, config);
+			if(tradingStrategy.quantify(clonePosition, amount)) {
+				handle(clonePosition, tradingStrategy, config);
+			}
 		}
 	}
 	

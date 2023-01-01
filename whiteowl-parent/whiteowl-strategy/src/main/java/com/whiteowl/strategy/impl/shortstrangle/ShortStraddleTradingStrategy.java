@@ -44,6 +44,11 @@ public class ShortStraddleTradingStrategy implements TradingStrategy {
 	}
 	
 	@Override
+	public boolean quantify(@NonNull Position position, double amount) {
+		return false;
+	}
+	
+	@Override
 	public boolean manage(@NonNull Position position) {
 		position.getEntryTrades().stream()
 			.filter(entryTrade -> !position.getExitTrades().stream()

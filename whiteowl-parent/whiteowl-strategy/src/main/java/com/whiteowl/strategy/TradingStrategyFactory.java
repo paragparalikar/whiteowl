@@ -9,8 +9,6 @@ import com.whiteowl.core.derivative.option.OptionChainService;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
 import com.whiteowl.strategy.config.TradingStrategyConfig;
-import com.whiteowl.strategy.impl.donchian.DonchianBreakoutTradingStrategy;
-import com.whiteowl.strategy.impl.donchian.DonchianBreakoutTradingStrategyConfig;
 import com.whiteowl.strategy.impl.shortstrangle.ShortStraddleConfig;
 import com.whiteowl.strategy.impl.shortstrangle.ShortStraddleTradingStrategy;
 import com.whiteowl.strategy.impl.trendfollowing.TrendFollowingTradingStrategy;
@@ -31,7 +29,6 @@ public class TradingStrategyFactory {
 			@NonNull final TradingStrategyConfig config) {
 		switch(config.getTradingStrategyTemplate()) {
 		case SHORT_STRADDLE: return buildShortStraddleTradingStrategy(config);
-		case DONCHIAN: return buildDonchianBreakoutTradingStrategy(config);
 		case TREND_FOLLOWING: return buildTrendFollowingTradingStrategy(config);
 		default: return TradingStrategy.NULL;
 		}
@@ -50,15 +47,6 @@ public class TradingStrategyFactory {
 		final Scrip scrip = scripService.findByCode(config.getScripCode());
 		final OptionChain optionChain = optionChainService.findByScrip(scrip).orElseThrow();
 		return new ShortStraddleTradingStrategy(optionChain, shortStraddleConfig);
-	}
-	
-	private TradingStrategy buildDonchianBreakoutTradingStrategy(TradingStrategyConfig config) {
-		final DonchianBreakoutTradingStrategyConfig donchianConfig = 
-				(DonchianBreakoutTradingStrategyConfig) config;
-		final Scrip scrip = scripService.findByCode(config.getScripCode());
-		final BarSeries barSeries = barService.findLatestByCodeAndTimeframe(scrip.getCode(), 
-				config.getTimeframe(), config.getMinBarCount());
-		return new DonchianBreakoutTradingStrategy(scrip, barSeries.getBarData(), donchianConfig);
 	}
 	
 }

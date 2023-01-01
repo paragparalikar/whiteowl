@@ -59,7 +59,7 @@ public class TrendFollowingTradingStrategy implements TradingStrategy {
 	private Trade createEntryTrade(final double price, final TradeType tradeType) {
 		final Trade entryTrade = new Trade();
 		entryTrade.setScrip(scrip);
-		entryTrade.setQuantity(1); // TODO calculate quantity
+		entryTrade.setQuantity(1); 
 		entryTrade.setType(tradeType);
 		entryTrade.setPrice(price);
 		entryTrade.setProduct(TradeProduct.MIS);
@@ -84,6 +84,23 @@ public class TrendFollowingTradingStrategy implements TradingStrategy {
 			return Optional.of(createNewPosition(price, tradeType));
 		}
 		return Optional.empty();
+	}
+	
+	@Override
+	public boolean quantify(@NonNull Position position, final double amount) {
+		if(!PositionStatus.NEW.equals(position.getStatus())) throw new IllegalStateException("Position must be in NEW status");
+		if(!position.getExitTrades().isEmpty()) throw new IllegalStateException("There should be no exit trades at this point");
+		if(position.getEntryTrades().isEmpty()) throw new IllegalStateException("There are no entry trade to quantify");
+		if(1 < position.getEntryTrades().size()) throw new IllegalStateException("This strategy does not support multiple entry trades");
+		final Trade entryTrade = position.getEntryTrades().iterator().next();
+		if(!TradeStatus.NEW.equals(entryTrade.getStatus())) throw new IllegalStateException("Entry trade must be in NEW state to quantify");
+		final double price = entryTrade.getPrice();
+		if(amount < price) {
+			return false;
+		} else {
+			entryTrade.setQuantity((int) (amount / price));
+			return true;
+		}
 	}
 
 	@Override

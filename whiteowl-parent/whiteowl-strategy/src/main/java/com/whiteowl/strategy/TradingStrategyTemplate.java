@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum TradingStrategyTemplate {
 
-	DONCHIAN("donchian-breakout", "Donchian Channel Breakout"),
 	SHORT_STRADDLE("short-straddle", "Short Straddle, Intraday"),
 	TREND_FOLLOWING("trend-following", "Trend Following");
 	

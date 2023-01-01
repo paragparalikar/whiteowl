@@ -13,9 +13,12 @@ public interface TradingStrategy {
 		@Override public Optional<Position> enter() { return Optional.empty(); }
 		@Override public boolean manage(@NonNull Position position) { return false; }
 		@Override public boolean manage(@NonNull Position position, @NonNull Quote quote) { return false; }
+		@Override public boolean quantify(@NonNull final Position position, final double amount) {return false; }
 	};
 
 	Optional<Position> enter();
+	
+	boolean quantify(@NonNull final Position position, final double amount);
 	
 	boolean manage(@NonNull final Position position);
 	
