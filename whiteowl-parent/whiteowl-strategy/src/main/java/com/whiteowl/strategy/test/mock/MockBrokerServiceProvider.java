@@ -23,6 +23,7 @@ import com.whiteowl.core.trade.TradeStatus;
 import com.whiteowl.core.trade.TradeValidity;
 import com.whiteowl.core.util.Constant;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -39,17 +40,17 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	}
 	
 	@Override
-	public double getAvailableMargin(Portfolio portfolio) {
+	public double getAvailableMargin(@NonNull final Portfolio portfolio) {
 		return portfolio.getAvailableMargin();
 	}
 
 	@Override
-	public List<Trade> findAllTrades(Portfolio portfolio) {
+	public List<Trade> findAllTrades(@NonNull final Portfolio portfolio) {
 		return new ArrayList<>(trades.keySet());
 	}
 
 	@Override
-	public void create(Trade trade, Portfolio portfolio) {
+	public void create(@NonNull final Trade trade, @NonNull final Portfolio portfolio) {
 		if(!TradeStatus.PENDING.equals(trade.getStatus())) throw new IllegalStateException();
 		if(null == trade.getId()) trade.setId(idGenerator.incrementAndGet());
 		final Bar bar = barService.findLatestBar(trade.getScrip().getCode(), timeframe).orElseThrow();
@@ -60,17 +61,19 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	}
 	
 	@Override
-	public void update(Trade trade, Portfolio portfolio) {
+	public void update(@NonNull final Trade trade, @NonNull final Portfolio portfolio) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void cancel(Trade trade, Portfolio portfolio) {
+	public void cancel(@NonNull final Trade trade, @NonNull final Portfolio portfolio) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public int getAvailableQuantity(Scrip scrip, Exchange exchange, TradeProduct product, Portfolio portfolio) {
+	public int getAvailableQuantity(
+			@NonNull final Scrip scrip, @NonNull final Exchange exchange, 
+			@NonNull final TradeProduct product, @NonNull final Portfolio portfolio) {
 		throw new UnsupportedOperationException();
 	}
 	

@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.ta4j.core.Bar;
+import org.ta4j.core.BarSeries;
+import org.ta4j.core.BaseBarSeries;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,8 +19,9 @@ public class DefaultBarService implements BarService {
 	private final BarRepository barRepository;
 	
 	@Override
-	public List<Bar> findByCodeAndTimeframe(String code, Timeframe timeframe) {
-		return barRepository.findByCodeAndTimeframe(code, timeframe);
+	public BarSeries findByCodeAndTimeframe(String code, Timeframe timeframe) {
+		final List<Bar> bars = barRepository.findByCodeAndTimeframe(code, timeframe);
+		return new BaseBarSeries(bars);
 	}
 	
 	@Override
@@ -32,8 +35,9 @@ public class DefaultBarService implements BarService {
 	}
 	
 	@Override
-	public List<Bar> findLatestByCodeAndTimeframe(String code, Timeframe timeframe, long count){
-		return barRepository.findLatestByCodeAndTimeframe(code, timeframe, count);
+	public BarSeries findLatestByCodeAndTimeframe(String code, Timeframe timeframe, long count){
+		final List<Bar> bars = barRepository.findLatestByCodeAndTimeframe(code, timeframe, count);
+		return new BaseBarSeries(bars);
 	}
 	
 	@Override

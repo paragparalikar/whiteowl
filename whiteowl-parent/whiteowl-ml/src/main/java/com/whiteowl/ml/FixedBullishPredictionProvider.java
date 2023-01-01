@@ -18,7 +18,6 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
-import org.ta4j.core.BaseBarSeries;
 import org.ta4j.core.indicators.SMAIndicator;
 import org.ta4j.core.indicators.helpers.TypicalPriceIndicator;
 import org.ta4j.core.num.DoubleNum;
@@ -100,8 +99,7 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 	
 	@SneakyThrows
 	private Classifier build(Scrip scrip, Timeframe timeframe) {
-		final List<Bar> bars = barService.findByCodeAndTimeframe(scrip.getCode(), timeframe);
-		final BarSeries series = new BaseBarSeries(bars);
+		final BarSeries series = barService.findByCodeAndTimeframe(scrip.getCode(), timeframe);
 		final LongSuccessClassificationRule buyTradeule = new LongSuccessClassificationRule(series, timeStopBarCount, targetPercentage, stopLossPercentage);
 		final FeatureExtracter featureExtracter = createFeatureExtracter();
 		final Instances instances = createInstances(featureExtracter.getAttributeNames());
@@ -166,9 +164,8 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 		
 		final FeatureExtracter featureExtracter = createFeatureExtracter();
 		final int minBarCount = featureExtracter.getMinBarCount();
-		final List<Bar> bars = barService.findLatestByCodeAndTimeframe(scrip.getCode(), timeframe, minBarCount);
-		if(minBarCount > bars.size()) return Collections.emptySet();
-		final BarSeries series = new BaseBarSeries(bars);
+		final BarSeries series = barService.findLatestByCodeAndTimeframe(scrip.getCode(), timeframe, minBarCount);
+		if(minBarCount > series.getBarCount()) return Collections.emptySet();
 		final BarSeries normalSeries = barSeriesNormalizer.normalise(series);
 		final Instances instances = createInstances(featureExtracter.getAttributeNames());
 		final Instance instance = createInstance(featureExtracter.extract(series.getEndIndex(), normalSeries), instances);

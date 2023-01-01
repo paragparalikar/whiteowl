@@ -25,7 +25,7 @@ public class MockPortfolioService implements PortfolioService {
 	}
 
 	@Override
-	public Portfolio save(Portfolio portfolio) {
+	public Portfolio save(@NonNull final Portfolio portfolio) {
 		return this.portfolio = portfolio;
 	}
 
@@ -35,22 +35,26 @@ public class MockPortfolioService implements PortfolioService {
 	}
 
 	@Override
-	public Page<Portfolio> findAll(Pageable pageable) {
+	public Page<Portfolio> findAll(@NonNull final Pageable pageable) {
 		return new PageImpl<>(findAll(), pageable, 1);
 	}
 
 	@Override
-	public void delete(Portfolio portfolio) {
+	public void delete(@NonNull final Portfolio portfolio) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public boolean existsByNameIgnoreCaseAndIdNot(String name, Long id) {
+	public boolean existsByNameIgnoreCaseAndIdNot(
+			@NonNull final String name, @NonNull final Long id) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public boolean existsByCredentialsUsernameIgnoreCaseAndBrokerAndIdNot(String username, Broker broker, Long id) {
+	public boolean existsByCredentialsUsernameIgnoreCaseAndBrokerAndIdNot(
+			@NonNull final String username, 
+			@NonNull final Broker broker, 
+			@NonNull final Long id) {
 		throw new UnsupportedOperationException();
 	}
 

@@ -2,65 +2,65 @@ package com.whiteowl.strategy.test.mock;
 
 import java.time.ZonedDateTime;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import org.ta4j.core.Bar;
+import org.ta4j.core.BarSeries;
+import org.ta4j.core.BaseBarSeries;
+import org.ta4j.core.num.DoubleNum;
 
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
 
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor
 @RequiredArgsConstructor
 public class MockBarService implements BarService {
 	
-	private int index;
-	@NonNull private final String code;
-	@NonNull private final List<Bar> bars;
-	@NonNull private final Timeframe timeframe;
+	@NonNull private final BarSeries originalBarSeries;
+	@NonNull private final BarSeries barSeries = new BaseBarSeries("", DoubleNum::valueOf);
 	
 	public boolean next() {
-		if(index < bars.size() - 1) {
-			index++;
+		if(originalBarSeries.getEndIndex() > barSeries.getEndIndex()) {
+			barSeries.addBar(originalBarSeries.getBar(barSeries.getEndIndex() + 1));
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	}
 	
 	@Override
-	public List<Bar> findByCodeAndTimeframe(String code, Timeframe timeframe) {
-		return bars.subList(0, index);
+	public BarSeries findByCodeAndTimeframe(@NonNull final String code, @NonNull final Timeframe timeframe) {
+		return barSeries;
 	}
 
 	@Override
-	public Optional<ZonedDateTime> findMaxBeginTimeByCodeAndTimeframe(String code, Timeframe timeframe) {
+	public Optional<ZonedDateTime> findMaxBeginTimeByCodeAndTimeframe(
+			@NonNull final String code, @NonNull final Timeframe timeframe) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Optional<Bar> findTopByCodeAndTimeframeOrderByTimeframeDesc(String code, Timeframe timeframe) {
-		return Optional.of(bars.get(index));
+	public Optional<Bar> findTopByCodeAndTimeframeOrderByTimeframeDesc(
+			@NonNull final String code, @NonNull final Timeframe timeframe) {
+		return barSeries.isEmpty() ? Optional.empty() : Optional.of(barSeries.getLastBar());
 	}
 
 	@Override
-	public List<Bar> findLatestByCodeAndTimeframe(String code, Timeframe timeframe, long count) {
-		return index < count ? Collections.emptyList() : bars.subList(index - (int) count, index);
+	public BarSeries findLatestByCodeAndTimeframe(
+			@NonNull final String code, @NonNull final Timeframe timeframe, final long count) {
+		return barSeries;
 	}
 
 	@Override
-	public void saveAll(String code, Timeframe timeframe, Collection<Bar> bars) {
+	public void saveAll(
+			@NonNull final String code, @NonNull final Timeframe timeframe, @NonNull final Collection<Bar> bars) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Optional<Bar> findLatestBar(String code, Timeframe timeframe) {
-		return Optional.of(bars.get(index));
+	public Optional<Bar> findLatestBar(@NonNull final String code, @NonNull final Timeframe timeframe) {
+		return barSeries.isEmpty() ? Optional.empty() : Optional.of(barSeries.getLastBar());
 	}
 	
 }

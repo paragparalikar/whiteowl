@@ -6,35 +6,43 @@ import java.util.concurrent.ScheduledFuture;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.Trigger;
 
+import lombok.NonNull;
+
 public class MockTaskScheduler implements TaskScheduler {
 
 	@Override
-	public ScheduledFuture<?> schedule(Runnable task, Trigger trigger) {
+	public ScheduledFuture<?> schedule(@NonNull final Runnable task, @NonNull final Trigger trigger) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public ScheduledFuture<?> schedule(Runnable task, Date startTime) {
+	public ScheduledFuture<?> schedule(@NonNull final Runnable task, @NonNull final Date startTime) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Date startTime, long period) {
+	public ScheduledFuture<?> scheduleAtFixedRate(
+			@NonNull final Runnable task, 
+			@NonNull final Date startTime, 
+			final long period) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, long period) {
+	public ScheduledFuture<?> scheduleAtFixedRate(@NonNull final Runnable task, final long period) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, Date startTime, long delay) {
+	public ScheduledFuture<?> scheduleWithFixedDelay(
+			@NonNull final Runnable task, 
+			@NonNull final Date startTime, 
+			final long delay) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, long delay) {
+	public ScheduledFuture<?> scheduleWithFixedDelay(@NonNull final Runnable task, final long delay) {
 		throw new UnsupportedOperationException();
 	}
 

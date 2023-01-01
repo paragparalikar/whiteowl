@@ -23,22 +23,22 @@ public class MockScripService implements ScripService {
 	}
 
 	@Override
-	public Page<Scrip> findByIndices(Index index, Pageable pageable) {
+	public Page<Scrip> findByIndices(@NonNull final Index index, @NonNull final Pageable pageable) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public long countByIndices(Index index) {
+	public long countByIndices(@NonNull final Index index) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public List<Scrip> findByIndices(Index index) {
+	public List<Scrip> findByIndices(@NonNull final Index index) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public List<Scrip> saveAll(List<Scrip> scrips) {
+	public List<Scrip> saveAll(@NonNull final List<Scrip> scrips) {
 		throw new UnsupportedOperationException();
 	}
 

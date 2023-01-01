@@ -1,8 +1,6 @@
 package com.whiteowl.strategy.test;
 
-import java.util.List;
-
-import org.ta4j.core.Bar;
+import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
@@ -23,8 +21,8 @@ public class DefaultBackTestService implements BackTestService {
 	public BackTestResult test(@NonNull final TradingStrategyConfig config) {
 		final Timeframe timeframe = config.getTimeframe();
 		final Scrip scrip = scripService.findByCode(config.getScripCode());
-		final List<Bar> bars = barService.findByCodeAndTimeframe(scrip.getCode(), timeframe);
-		final MockContext context = new MockContext(scrip, bars, timeframe, config);
+		final BarSeries barSeries = barService.findByCodeAndTimeframe(scrip.getCode(), timeframe);
+		final MockContext context = new MockContext(scrip, barSeries, timeframe, config);
 		while(context.next()) {
 			
 			

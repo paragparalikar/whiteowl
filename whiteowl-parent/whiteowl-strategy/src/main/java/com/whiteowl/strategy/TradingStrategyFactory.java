@@ -1,10 +1,7 @@
 package com.whiteowl.strategy;
 
-import java.util.List;
-
 import org.springframework.stereotype.Component;
-import org.ta4j.core.Bar;
-import org.ta4j.core.BaseBarSeries;
+import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.derivative.option.OptionChain;
@@ -43,9 +40,9 @@ public class TradingStrategyFactory {
 	private TradingStrategy buildTrendFollowingTradingStrategy(TradingStrategyConfig config) {
 		final TrendFollowingTradingStrategyConfig trendFollowingConfig = (TrendFollowingTradingStrategyConfig) config;
 		final Scrip scrip = scripService.findByCode(config.getScripCode());
-		final List<Bar> bars = barService.findLatestByCodeAndTimeframe(scrip.getCode(), 
+		final BarSeries barSeries = barService.findLatestByCodeAndTimeframe(scrip.getCode(), 
 				config.getTimeframe(), config.getMinBarCount());
-		return new TrendFollowingTradingStrategy(scrip, new BaseBarSeries(bars), trendFollowingConfig); 
+		return new TrendFollowingTradingStrategy(scrip, barSeries, trendFollowingConfig); 
 	}
 	
 	private TradingStrategy buildShortStraddleTradingStrategy(TradingStrategyConfig config) {
@@ -59,9 +56,9 @@ public class TradingStrategyFactory {
 		final DonchianBreakoutTradingStrategyConfig donchianConfig = 
 				(DonchianBreakoutTradingStrategyConfig) config;
 		final Scrip scrip = scripService.findByCode(config.getScripCode());
-		final List<Bar> bars = barService.findLatestByCodeAndTimeframe(scrip.getCode(), 
+		final BarSeries barSeries = barService.findLatestByCodeAndTimeframe(scrip.getCode(), 
 				config.getTimeframe(), config.getMinBarCount());
-		return new DonchianBreakoutTradingStrategy(scrip, bars, donchianConfig);
+		return new DonchianBreakoutTradingStrategy(scrip, barSeries.getBarData(), donchianConfig);
 	}
 	
 }

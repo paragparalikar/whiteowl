@@ -2,11 +2,11 @@ package com.whiteowl.strategy.test.mock;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.stream.Stream;
 
 import org.springframework.scheduling.TaskScheduler;
 import org.ta4j.core.Bar;
+import org.ta4j.core.BarSeries;
 import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.bar.Timeframe;
@@ -42,7 +42,7 @@ import lombok.Value;
 public class MockContext {
 	
 	private final Scrip scrip;
-	private final List<Bar> bars;
+	private final BarSeries barSeries;
 	private final Timeframe timeframe;
 	private final TradingStrategyConfig config;
 
@@ -66,12 +66,12 @@ public class MockContext {
 	@Builder
 	public MockContext(
 			@NonNull final Scrip scrip, 
-			@NonNull final List<Bar> bars, 
+			@NonNull final BarSeries barSeries, 
 			@NonNull final Timeframe timeframe,
 			@NonNull final TradingStrategyConfig config) {
-		this.bars = bars;
 		this.scrip = scrip;
 		this.config = config;
+		this.barSeries = barSeries;
 		this.timeframe = timeframe;
 		
 		final Portfolio portfolio = new Portfolio();
@@ -82,7 +82,7 @@ public class MockContext {
 		this.scripService = new MockScripService(scrip);
 		this.optionChainService = new MockOptionChainService();
 		this.positionService = new MockPositionService(this::onPositionSaved);
-		this.barService = new MockBarService(config.getMinBarCount() - 1, scrip.getCode(), bars, timeframe);
+		this.barService = new MockBarService(barSeries);
 		this.positionSizingStrategy = new FixedPercentagePositionSizingStrategy(barService, 100);
 		this.brokerServiceProvider = new MockBrokerServiceProvider(timeframe, barService);
 		this.tradingStrategyFactory = new TradingStrategyFactory(barService, scripService, optionChainService);
