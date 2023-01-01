@@ -22,7 +22,8 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 	private final TradingStrategyPerformanceRepository repository;
 	
 	public TradingStrategyPerformance calculate(
-			double initialCapital,
+			final double initialCapital,
+			final double endCapital,
 			@NonNull final List<Bar> bars,
 			@NonNull final List<Position> positions,
 			@NonNull final TradingStrategyConfig config) {
@@ -96,6 +97,9 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		final double lossRatio = losingPositionCount / totalPositionCount;
 		final double expectancy = ((1 + (averageProfitAmount / averageLossAmount)) * winRatio) - 1;
 		final double profitFactor = netProfitAmount / netLossAmount;
+		final double netHoldingTimeInYears = netHoldingTimeInMinutes / 60 * 24 * 365;
+		final double cagr = Math.pow((endCapital / initialCapital), 1 / netHoldingTimeInYears) - 1;
+		
 		
 		return TradingStrategyPerformance.builder()
 				.totalPositionCount(totalPositionCount)
@@ -129,6 +133,7 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 				.lossRatio(lossRatio)
 				.expectancy(expectancy)
 				.profitFactor(profitFactor)
+				.cagr(cagr)
 				.build();
 	}
 	

@@ -44,6 +44,7 @@ public class MockContext {
 	private final BarSeries barSeries;
 	private final Timeframe timeframe;
 	private final TradingStrategyConfig config;
+	private final Portfolio portfolio = new Portfolio();
 
 	private final MockBarService barService;
 	private final MockQuoteService quoteService;
@@ -73,7 +74,6 @@ public class MockContext {
 		this.barSeries = barSeries;
 		this.timeframe = timeframe;
 		
-		final Portfolio portfolio = new Portfolio();
 		portfolio.setMaxTradableAmount(10000000); // 1 Cr
 		this.portfolioService = new MockPortfolioService(portfolio);
 		this.quoteService = new MockQuoteService();
@@ -119,8 +119,7 @@ public class MockContext {
 			quoteService.publish(bar, scrip, tradeType);
 			tradingStrategyExecutor.onScripBarDownloaded(scrip, timeframe);
 			brokerServiceProvider.execute();
-			portfolioService.findAll().stream()
-				.flatMap(portfolio ->  positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream())
+			positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED)
 				.forEach(tradingStrategyExecutor::onPositionSynchronized);
 			return true;
 		};

@@ -51,8 +51,8 @@ public class TradingStrategyPerformance {
 	private double expectancy;
 	private double profitFactor; 
 	private double cagr;
-	private double alpha;
-	private double sharpeRatio; 
 	private double maxDrawdown;
+	private double sharpeRatio; 
+	
 
 }
