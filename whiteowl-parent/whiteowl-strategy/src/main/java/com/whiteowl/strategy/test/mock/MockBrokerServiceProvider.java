@@ -32,7 +32,8 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	private final Timeframe timeframe;
 	private final BarService barService;
 	private final AtomicLong idGenerator = new AtomicLong();
-	private final Map<Trade, Portfolio> trades = new ConcurrentHashMap<>();
+	private final Map<Portfolio, Double> margins = new ConcurrentHashMap<>();
+	private final Map<Trade, Portfolio> cache = new ConcurrentHashMap<>();
 	
 	@Override
 	public Broker getBrokerType() {
@@ -41,12 +42,12 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	
 	@Override
 	public double getAvailableMargin(@NonNull final Portfolio portfolio) {
-		return portfolio.getAvailableMargin();
+		return margins.getOrDefault(portfolio, portfolio.getMaxTradableAmount());
 	}
 
 	@Override
 	public List<Trade> findAllTrades(@NonNull final Portfolio portfolio) {
-		return new ArrayList<>(trades.keySet());
+		return new ArrayList<>(cache.keySet());
 	}
 
 	@Override
@@ -56,7 +57,7 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		final Bar bar = barService.findLatestBar(trade.getScrip().getCode(), timeframe).orElseThrow();
 		trade.setTimestamp(bar.getEndTime().toLocalDateTime());
 		trade.setStatus(TradeStatus.OPEN);
-		trades.put(trade, portfolio);
+		cache.put(trade, portfolio);
 		updateAvailableMargin(portfolio, trade, bar);
 	}
 	
@@ -78,13 +79,12 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	}
 	
 	public void execute() {
-		for(Trade trade : trades.keySet()) {
-			final Portfolio portfolio = trades.get(trade);
+		cache.forEach((trade, portfolio) -> {
 			if(TradeStatus.OPEN.equals(trade.getStatus())) {
 				barService.findLatestBar(trade.getScrip().getCode(), timeframe)
 					.ifPresent(bar -> execute(trade, bar, portfolio));
 			}
-		}
+		});
 	}
 	
 	private void execute(Trade trade, Bar bar, Portfolio portfolio) {
@@ -186,7 +186,8 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		}
 		final double executionPrice = resolveExecutionPrice(trade, bar);
 		final double effectOnMargin = multiple * executionPrice;
-		portfolio.setAvailableMargin(portfolio.getAvailableMargin() + effectOnMargin);
+		final double availableMargin = margins.computeIfAbsent(portfolio, Portfolio::getMaxTradableAmount);
+		margins.put(portfolio, availableMargin + effectOnMargin);
 	}
 	
 }
