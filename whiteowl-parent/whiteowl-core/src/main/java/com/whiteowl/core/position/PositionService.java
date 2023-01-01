@@ -9,6 +9,8 @@ public interface PositionService {
 
 	Position save(Position position);
 	
+	List<Position> findAll();
+	
 	boolean existsByScripAndStatusNot(Scrip scrip, PositionStatus status);
 	
 	List<Position> findByPortfolioAndStatusNot(Portfolio portfolio, PositionStatus status);

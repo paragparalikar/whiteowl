@@ -22,6 +22,11 @@ public class DefaultPositionService implements PositionService {
 	}
 	
 	@Override
+	public List<Position> findAll() {
+		return positionRepository.findAll();
+	}
+	
+	@Override
 	public boolean existsByScripAndStatusNot(
 			@NonNull final Scrip scrip, 
 			@NonNull final PositionStatus status) {

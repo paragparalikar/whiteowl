@@ -21,11 +21,11 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 	@Delegate
 	private final TradingStrategyPerformanceRepository repository;
 	
+	@Override
 	public TradingStrategyPerformance calculate(
-			final double initialCapital,
-			final double endCapital,
 			@NonNull final List<Bar> bars,
 			@NonNull final List<Position> positions,
+			@NonNull final List<Double> equityCurve,
 			@NonNull final TradingStrategyConfig config) {
 		int openPositionCount = 0;
 		int closedPositionCount = 0;
@@ -44,6 +44,8 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		double maxProfitAmount = 0;
 		double maxLossPercentage = 0;
 		double maxProfitPercentage = 0;
+		final double initialCapital = equityCurve.get(0);
+		final double endCapital = equityCurve.get(equityCurve.size() - 1);
 		
 		for(Position position : positions) {
 			double entryAmount = position.getEntryAmount();

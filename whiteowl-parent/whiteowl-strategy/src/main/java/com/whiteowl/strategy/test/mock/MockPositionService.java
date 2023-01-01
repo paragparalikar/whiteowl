@@ -38,6 +38,14 @@ public class MockPositionService implements PositionService {
 		saveCallback.accept(position);
 		return position;
 	}
+	
+	@Override
+	public List<Position> findAll() {
+		final List<Position> positions = new ArrayList<>(terminalPositions.size() + nonTerminalPositions.size());
+		positions.addAll(terminalPositions.values());
+		positions.addAll(nonTerminalPositions.values());
+		return positions;
+	}
 
 	@Override
 	public List<Position> findByPortfolioAndStatusNot(
