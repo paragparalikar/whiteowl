@@ -103,9 +103,21 @@ public class Position {
 		return position;
 	}
 	
+	public int getOnBalanceQuantity(Scrip scrip) {
+		return getQuantity(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.BUY)
+				- getQuantity(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.SELL);
+	}
+	
 	public double getProfitLossAmount() {
 		return getAmount(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.SELL)
 				- getAmount(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.BUY);
+	}
+	
+	private int getQuantity(Stream<Trade> trades, TradeType tradeType) {
+		return trades
+				.filter(trade -> tradeType.equals(trade.getType()))
+				.map(Trade::getFilledQuantity)
+				.collect(Collectors.summingInt(Integer::intValue));
 	}
 	
 	private double getAmount(Stream<Trade> trades, TradeType tradeType) {

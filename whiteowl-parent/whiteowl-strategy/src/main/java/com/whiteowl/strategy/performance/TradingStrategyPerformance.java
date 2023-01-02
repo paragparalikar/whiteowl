@@ -47,6 +47,8 @@ public class TradingStrategyPerformance {
 	private double maxProfitAmount;
 	private double maxLossPercentage;
 	private double maxProfitPercentage;
+	private double maxDrawdownAmount;
+	private double maxDrawdownPercentage;
 	
 	private double winRatio; 
 	private double lossRatio;
@@ -54,7 +56,6 @@ public class TradingStrategyPerformance {
 	private double profitFactor; 
 	private double cagr;
 	private double romad;
-	private double maxDrawdown;
 	private double sharpeRatio;
 	private double sortinoRatio;
 	private double calmerRatio;
