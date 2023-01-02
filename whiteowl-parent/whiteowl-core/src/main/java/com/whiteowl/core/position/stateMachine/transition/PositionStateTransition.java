@@ -7,6 +7,6 @@ public interface PositionStateTransition {
 	
 	PositionStatus getInitialStatus();
 	
-	void transition(Position position);
+	boolean transition(Position position);
 
 }

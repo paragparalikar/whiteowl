@@ -21,5 +21,9 @@ public class BackTestResult {
 	@NonNull private final List<Position> positions;
 	@NonNull private final TradingStrategyConfig config;
 	@NonNull private final TradingStrategyPerformance performance;
+	
+	public String toString() {
+		return performance.toString();
+	}
 
 }

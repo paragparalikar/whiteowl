@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Stream;
@@ -50,6 +51,7 @@ public class TradingStrategyExecutor implements AutoCloseable {
 	public void onApplicationReady() {
 		for(TradingStrategyConfig config : tradingStrategyConfigService.findAll()){
 			Stream.of(config.getEntryCronExpression(), config.getExitCronExpression())
+				.filter(Objects::nonNull)
 				.map(CronTrigger::new)
 				.map(trigger -> taskScheduler.schedule(() -> execute(config), trigger))
 				.forEach(futures::add);

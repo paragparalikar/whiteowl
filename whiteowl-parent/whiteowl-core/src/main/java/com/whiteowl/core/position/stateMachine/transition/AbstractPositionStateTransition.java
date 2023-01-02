@@ -1,6 +1,7 @@
 package com.whiteowl.core.position.stateMachine.transition;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionStatus;
@@ -20,17 +21,19 @@ public abstract class AbstractPositionStateTransition implements PositionStateTr
 	@Getter private final PositionStatus initialStatus;
 
 	@Override
-	public void transition(@NonNull final Position position) {
+	public boolean transition(@NonNull final Position position) {
 		if(!initialStatus.equals(position.getStatus())) throw new IllegalStateException();
 		if(log.isInfoEnabled()) log.info("Position transition triggered : {}", position);
-		handle(position, position.getExitTrades());
-		handle(position, position.getEntryTrades());
+		final boolean exitTradesModified = handle(position, position.getExitTrades());
+		final boolean entryTradesModified = handle(position, position.getEntryTrades());
+		return exitTradesModified || entryTradesModified;
 	}
 
-	private void handle(Position position, Collection<Trade> trades) {
-		trades.stream()
+	private boolean handle(Position position, Collection<Trade> trades) {
+		return trades.stream()
 			.filter(trade -> trade.getStatus().isActionable())
-			.forEach(trade -> tradeStateMachine.handle(trade, position));
+			.map(trade -> tradeStateMachine.handle(trade, position))
+			.anyMatch(Predicate.isEqual(true));
 	}
 
 }

@@ -2,6 +2,7 @@ package com.whiteowl.core.position.stateMachine;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.springframework.core.OrderComparator;
 import org.springframework.stereotype.Component;
@@ -22,12 +23,13 @@ public class PositionStateMachine {
 	
 	public void handle(@NonNull final Position position) {
 		if(position.getStatus().isTerminal()) throw new IllegalStateException();
-		positionStateTransitions.stream()
+		final boolean positionModified = positionStateTransitions.stream()
 			.filter(positionStateTransition -> Objects.equals(position.getStatus(), 
 					positionStateTransition.getInitialStatus()))
 			.sorted(OrderComparator.INSTANCE)
-			.forEach(positionStateTransition -> positionStateTransition.transition(position));
-		positionService.save(position);
+			.map(positionStateTransition -> positionStateTransition.transition(position))
+			.anyMatch(Predicate.isEqual(true));
+		if(positionModified) positionService.save(position);
 	}
 	
 }

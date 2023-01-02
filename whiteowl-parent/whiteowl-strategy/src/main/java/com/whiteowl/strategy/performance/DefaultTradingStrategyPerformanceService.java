@@ -52,11 +52,16 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		final double initialCapital = equityCurve.get(0);
 		final double endCapital = equityCurve.get(equityCurve.size() - 1);
 		
+		double maxAmount = 0;
+		double maxDrawDown = 0;
 		final Bar firstBar = bars.get(0);
 		final Bar lastBar = bars.get(bars.size() - 1);
 		final Map<LocalDateTime, Integer> timestampIndices = new HashMap<>();
 		for(int index = 0; index < bars.size(); index++) {
 			timestampIndices.put(bars.get(index).getEndTime().toLocalDateTime(), index);
+			double amount = equityCurve.get(index);
+			maxAmount = Math.max(maxAmount, amount);
+			maxDrawDown = Math.max(maxDrawDown, Math.abs(maxAmount - amount));
 		}
 		
 		for(Position position : positions) {
@@ -112,12 +117,17 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		final double averageLossPercentage = lossPercentageSum / losingPositionCount;
 		final double averageProfitPercentage = profitPercentageSum / winningPositionCount;
 		final double averageProfitLossPercentage = profitLossPercentageSum / totalPositionCount;
+		final double maxDrawDownPercentage = maxDrawDown * 100 / maxAmount;
 		final double winRatio = winningPositionCount / totalPositionCount;
 		final double lossRatio = losingPositionCount / totalPositionCount;
 		final double expectancy = ((1 + (averageProfitAmount / averageLossAmount)) * winRatio) - 1;
 		final double profitFactor = netProfitAmount / netLossAmount;
 		final double years = Duration.between(lastBar.getEndTime(), firstBar.getBeginTime()).abs().toMinutes() / 60 * 24 * 365;
 		final double cagr = Math.pow((endCapital / initialCapital), 1 / years) - 1;
+		final double romad = (endCapital - initialCapital) / maxDrawDown;
+		final double riskFreeReturn = initialCapital * Math.pow((1 + 6/100), years) - initialCapital;
+		final double riskFreeReturnPercentage = riskFreeReturn * 100 / initialCapital;
+		final double calmarRatio = (netProfitLossPercentage - riskFreeReturnPercentage) / (maxDrawDownPercentage * years);
 		
 		return TradingStrategyPerformance.builder()
 				.initialCapital(initialCapital)
@@ -154,6 +164,12 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 				.expectancy(expectancy)
 				.profitFactor(profitFactor)
 				.cagr(cagr)
+				.maxDrawdownAmount(maxDrawDown)
+				.maxDrawdownPercentage(maxDrawDownPercentage)
+				.romad(romad)
+				.riskFreeReturn(riskFreeReturn)
+				.riskFreeReturnPercentage(riskFreeReturnPercentage)
+				.calmarRatio(calmarRatio)
 				.build();
 	}
 	

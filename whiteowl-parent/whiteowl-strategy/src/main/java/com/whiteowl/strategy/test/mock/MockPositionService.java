@@ -19,8 +19,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MockPositionService implements PositionService {
 	
-	@NonNull private final Consumer<Position> saveCallback;
 	private final AtomicLong idGenerator = new AtomicLong();
+	@NonNull private final Consumer<Position> transitionCallback;
 	private final Map<Long, Position> terminalPositions = new ConcurrentHashMap<>();
 	private final Map<Long, Position> nonTerminalPositions = new ConcurrentHashMap<>();
 
@@ -35,7 +35,7 @@ public class MockPositionService implements PositionService {
 			terminalPositions.remove(position.getId());
 			nonTerminalPositions.put(position.getId(), position);
 		}
-		saveCallback.accept(position);
+		transitionCallback.accept(position);
 		return position;
 	}
 	
