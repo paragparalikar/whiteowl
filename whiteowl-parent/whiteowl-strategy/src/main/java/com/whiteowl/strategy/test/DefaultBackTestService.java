@@ -35,7 +35,9 @@ public class DefaultBackTestService implements BackTestService {
 		final List<Double> equityCurve = new ArrayList<>(barSeries.getBarCount());
 		final Portfolio portfolio = context.getPortfolio();
 		equityCurve.add(portfolio.getAvailableMargin());
-		while(context.next()) equityCurve.add(portfolio.getAvailableMargin());
+		while(context.next()) {
+			equityCurve.add(portfolio.getAvailableMargin()); // add position value
+		}
 		final List<Position> positions = context.getPositionService().findAll();
 		final TradingStrategyPerformance performance = tradingStrategyPerformaceService
 				.calculate(barSeries.getBarData(), positions, equityCurve, config);

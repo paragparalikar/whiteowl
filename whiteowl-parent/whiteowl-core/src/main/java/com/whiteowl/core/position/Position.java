@@ -1,8 +1,6 @@
 package com.whiteowl.core.position;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -126,31 +124,6 @@ public class Position {
 	public double getAverageEntryPrice() {
 		return getEntryAmount() / entryTrades.stream().map(Trade::getFilledQuantity)
 				.collect(Collectors.summingInt(Integer::intValue));
-	}
-	
-	public int getHoldingTimeInMinutes() {
-		final LocalDateTime now = LocalDateTime.now();
-		final LocalDateTime minEntryTime = entryTrades.stream()
-			.map(Trade::getTimestamp)
-			.min(Comparator.naturalOrder())
-			.orElse(now);
-		final LocalDateTime maxExitTime = exitTrades.stream()
-			.map(Trade::getTimestamp)
-			.max(Comparator.naturalOrder())
-			.orElse(now);
-		return (int) Duration.between(minEntryTime, maxExitTime).abs().toMinutes();
-	}
-	
-	public boolean areAllEntryTradesCompleted() {
-		return entryTrades.stream()
-				.map(Trade::getStatus)
-				.allMatch(TradeStatus::isTerminal);
-	}
-	
-	public boolean areAllExitTradesCompleted() {
-		return exitTrades.stream()
-				.map(Trade::getStatus)
-				.allMatch(TradeStatus::isTerminal);
 	}
 	
 	@PreUpdate

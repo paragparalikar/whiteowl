@@ -1,13 +1,18 @@
 package com.whiteowl.strategy.performance;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.ta4j.core.Bar;
 
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionStatus;
+import com.whiteowl.core.trade.Trade;
 import com.whiteowl.strategy.config.TradingStrategyConfig;
 
 import lombok.NonNull;
@@ -33,7 +38,7 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		int winningPositionCount = 0;
 		int breakEventPositionCount = 0;
 		int totalPositionCount = positions.size();
-		int netHoldingTimeInMinutes = 0;
+		int netHoldingBarCount = 0;
 		double netLossAmount = 0;
 		double netProfitAmount = 0;
 		double netProfitLossAmount = 0;
@@ -47,9 +52,27 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		final double initialCapital = equityCurve.get(0);
 		final double endCapital = equityCurve.get(equityCurve.size() - 1);
 		
+		final Bar firstBar = bars.get(0);
+		final Bar lastBar = bars.get(bars.size() - 1);
+		final Map<LocalDateTime, Integer> timestampIndices = new HashMap<>();
+		for(int index = 0; index < bars.size(); index++) {
+			timestampIndices.put(bars.get(index).getEndTime().toLocalDateTime(), index);
+		}
+		
 		for(Position position : positions) {
+			final LocalDateTime entryTime = position.getEntryTrades().stream()
+					.map(Trade::getTimestamp)
+					.min(Comparator.naturalOrder())
+					.orElseThrow();
+			final LocalDateTime exitTime = position.getExitTrades().stream()
+					.map(Trade::getTimestamp)
+					.max(Comparator.naturalOrder())
+					.orElseGet(lastBar.getEndTime()::toLocalDateTime);
+			final Integer entryIndex = timestampIndices.get(entryTime);
+			final Integer exitIndex = timestampIndices.get(exitTime);
+			netHoldingBarCount += exitIndex - entryIndex;
+			
 			double entryAmount = position.getEntryAmount();
-			netHoldingTimeInMinutes += position.getHoldingTimeInMinutes();
 			final double profitLossAmount = position.getProfitLossAmount();
 			netProfitLossAmount += profitLossAmount;
 			final double profitLossPercentage = profitLossAmount * 100 / entryAmount;
@@ -76,16 +99,10 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 			}
 		}
 		
-		final Bar firstBar = bars.get(0);
-		final Bar lastBar = bars.get(bars.size() - 1);
-		final int totalTimeInMinutes = (int) Duration.between(
-				firstBar.getBeginTime(), 
-				lastBar.getEndTime())
-				.abs().toMinutes();
 		final double buyAndHoldProfitLossAmount = lastBar.getClosePrice().minus(firstBar.getOpenPrice()).doubleValue();
 		final double buyAndHoldProfitLossPercentage = buyAndHoldProfitLossAmount * 100 / firstBar.getOpenPrice().doubleValue();
-		final int averageHoldingTimeInMinutes = netHoldingTimeInMinutes / totalPositionCount;
-		final double holdingTimeInMinutesPercentage = netHoldingTimeInMinutes * 100 / totalTimeInMinutes;
+		final int averageHoldingBarCount = netHoldingBarCount / totalPositionCount;
+		final double holdingBarCountPercentage = netHoldingBarCount * 100 / bars.size();
 		final double netLossPercentage = netLossAmount * 100 / initialCapital;
 		final double netProfitPercentage = netProfitAmount * 100 / initialCapital;
 		final double netProfitLossPercentage = netProfitLossAmount * 100 / initialCapital;
@@ -99,20 +116,21 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		final double lossRatio = losingPositionCount / totalPositionCount;
 		final double expectancy = ((1 + (averageProfitAmount / averageLossAmount)) * winRatio) - 1;
 		final double profitFactor = netProfitAmount / netLossAmount;
-		final double netHoldingTimeInYears = netHoldingTimeInMinutes / 60 * 24 * 365;
-		final double cagr = Math.pow((endCapital / initialCapital), 1 / netHoldingTimeInYears) - 1;
-		
+		final double years = Duration.between(lastBar.getEndTime(), firstBar.getBeginTime()).abs().toMinutes() / 60 * 24 * 365;
+		final double cagr = Math.pow((endCapital / initialCapital), 1 / years) - 1;
 		
 		return TradingStrategyPerformance.builder()
+				.initialCapital(initialCapital)
+				.endCapital(endCapital)
 				.totalPositionCount(totalPositionCount)
 				.openPositionCount(openPositionCount)
 				.closedPositionCount(closedPositionCount)
 				.losingPositionCount(losingPositionCount)
 				.winningPositionCount(winningPositionCount)
 				.breakEventPositionCount(breakEventPositionCount)
-				.netHoldingTimeInMinutes(netHoldingTimeInMinutes)
-				.averageHoldingTimeInMinutes(averageHoldingTimeInMinutes)
-				.holdingTimeInMinutesPercentage(holdingTimeInMinutesPercentage)
+				.netHoldingBarCount(netHoldingBarCount)
+				.averageHoldingBarCount(averageHoldingBarCount)
+				.holdingBarCountPercentage(holdingBarCountPercentage)
 				.netLossAmount(netLossAmount)
 				.netProfitAmount(netProfitAmount)
 				.netProfitLossAmount(netProfitLossAmount)

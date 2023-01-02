@@ -18,15 +18,17 @@ public class TradingStrategyPerformance {
 	@Id
 	private String tradingStrategyConfigId;
 
+	private double initialCapital;
+	private double endCapital;
 	private int totalPositionCount;
 	private int openPositionCount;
 	private int closedPositionCount;
 	private int winningPositionCount;
 	private int losingPositionCount;
 	private int breakEventPositionCount;
-	private int netHoldingTimeInMinutes;
-	private int averageHoldingTimeInMinutes;
-	private double holdingTimeInMinutesPercentage;
+	private int netHoldingBarCount;
+	private int averageHoldingBarCount;
+	private double holdingBarCountPercentage;
 	private double netLossAmount;
 	private double netProfitAmount;
 	private double netProfitLossAmount;
@@ -53,7 +55,9 @@ public class TradingStrategyPerformance {
 	private double cagr;
 	private double romad;
 	private double maxDrawdown;
-	private double sharpeRatio; 
+	private double sharpeRatio;
+	private double sortinoRatio;
 	private double calmerRatio;
+	private double treynorRatio;
 
 }
