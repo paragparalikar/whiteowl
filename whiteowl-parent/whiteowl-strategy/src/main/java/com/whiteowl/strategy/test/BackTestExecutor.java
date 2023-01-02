@@ -36,7 +36,8 @@ public class BackTestExecutor {
 			quoteService.publish(bar, scrip, TradeType.BUY);
 			tradingStrategyExecutor.onScripBarDownloaded(scrip, timeframe);
 			brokerServiceProvider.execute();
-			positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED)
+			positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream()
+				.map(position -> {position.updateStatus(); return position;})
 				.forEach(tradingStrategyExecutor::onPositionSynchronized);
 			equityCurveObserver.next(bar.getClosePrice().doubleValue());
 		}
