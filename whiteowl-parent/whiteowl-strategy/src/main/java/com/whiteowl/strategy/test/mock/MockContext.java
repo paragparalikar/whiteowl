@@ -92,7 +92,7 @@ public class MockContext {
 				.positionService(positionService)
 				.build();
 		this.positionSizingStrategy = new FixedPercentagePositionSizingStrategy(100);
-		this.brokerServiceProvider = new MockBrokerServiceProvider(timeframe, barService);
+		this.brokerServiceProvider = new MockBrokerServiceProvider(timeframe, portfolio, barService);
 		this.tradingStrategyFactory = new TradingStrategyFactory(barService, scripService, optionChainService);
 		this.tradingStrategy = tradingStrategyFactory.getTradingStrategy(config);
 		this.brokerServiceProviderFactory = new BrokerServiceProviderFactory(Collections.singletonList(brokerServiceProvider));

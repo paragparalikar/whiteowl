@@ -1,9 +1,11 @@
 package com.whiteowl.strategy.test.mock;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.ta4j.core.Bar;
@@ -30,10 +32,11 @@ import lombok.RequiredArgsConstructor;
 public class MockBrokerServiceProvider implements BrokerServiceProvider {
 
 	private final Timeframe timeframe;
+	private final Portfolio portfolio;
 	private final BarService barService;
+	private final Set<Trade> trades = new HashSet<>();
 	private final AtomicLong idGenerator = new AtomicLong();
-	private final Map<Portfolio, Double> margins = new ConcurrentHashMap<>();
-	private final Map<Trade, Portfolio> cache = new ConcurrentHashMap<>();
+	private final Map<Scrip, Integer> onBalanceQuantities = new HashMap<>();
 	
 	@Override
 	public Broker getBrokerType() {
@@ -42,12 +45,13 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	
 	@Override
 	public double getAvailableMargin(@NonNull final Portfolio portfolio) {
-		return margins.getOrDefault(portfolio, portfolio.getMaxTradableAmount());
+		return 0 == portfolio.getAvailableMargin() ? 
+				portfolio.getMaxTradableAmount() : portfolio.getAvailableMargin();
 	}
 
 	@Override
 	public List<Trade> findAllTrades(@NonNull final Portfolio portfolio) {
-		return new ArrayList<>(cache.keySet());
+		return new ArrayList<>(trades);
 	}
 
 	@Override
@@ -57,8 +61,8 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		final Bar bar = barService.findLatestBar(trade.getScrip().getCode(), timeframe).orElseThrow();
 		trade.setTimestamp(bar.getEndTime().toLocalDateTime());
 		trade.setStatus(TradeStatus.OPEN);
-		cache.put(trade, portfolio);
-		updateAvailableMargin(portfolio, trade, bar);
+		trades.add(trade);
+		updateAvailableMargin(trade, bar);
 	}
 	
 	@Override
@@ -79,23 +83,20 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	}
 	
 	public void execute() {
-		cache.forEach((trade, portfolio) -> {
-			if(TradeStatus.OPEN.equals(trade.getStatus())) {
-				barService.findLatestBar(trade.getScrip().getCode(), timeframe)
-					.ifPresent(bar -> execute(trade, bar, portfolio));
-			}
-		});
+		trades.stream()
+			.filter(trade -> TradeStatus.OPEN.equals(trade.getStatus()))
+			.forEach(this::execute);
 	}
 	
-	private void execute(Trade trade, Bar bar, Portfolio portfolio) {
+	private void execute(Trade trade) {
+		final Bar bar = barService.findLatestBar(trade.getScrip().getCode(), timeframe).orElseThrow();
 		if(TradeLimitType.MARKET.equals(trade.getLimitType())) {
-			complete(trade, bar);
+			trigger(trade, bar);
 			return;
 		}
 		if(TradeProduct.MIS.equals(trade.getProduct())) {
 			if(!bar.getEndTime().toLocalTime().isBefore(Constant.ZERODHA_SQUARE_OFF_TIME)) {
-				trade.setStatus(TradeStatus.CANCELLED);
-				updateAvailableMargin(portfolio, trade, bar);
+				cancel(trade, bar);
 				return;
 			}
 		}
@@ -103,8 +104,7 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 			throw new UnsupportedOperationException();
 		} else if(TradeValidity.DAY.equals(trade.getValidity())) {
 			if(bar.getBeginTime().toLocalDate().isAfter(trade.getTimestamp().toLocalDate())) {
-				trade.setStatus(TradeStatus.CANCELLED);
-				updateAvailableMargin(portfolio, trade, bar);
+				cancel(trade, bar);
 				return;
 			}
 		}
@@ -112,12 +112,12 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		if(TradeLimitType.LIMIT.equals(trade.getLimitType())) {
 			if(TradeType.BUY.equals(trade.getType())) {
 				if(bar.getLowPrice().doubleValue() < trade.getPrice()) {
-					complete(trade, bar);
+					trigger(trade, bar);
 					return;
 				}
 			} else if(TradeType.SELL.equals(trade.getType())) {
 				if(bar.getHighPrice().doubleValue() > trade.getPrice()) {
-					complete(trade, bar);
+					trigger(trade, bar);
 					return;
 				}
 			}
@@ -125,14 +125,14 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 			if(TradeType.BUY.equals(trade.getType())) {
 				if(bar.getHighPrice().doubleValue() > trade.getTriggerPrice()) {
 					if(bar.getLowPrice().doubleValue() < trade.getPrice()) {
-						complete(trade, bar);
+						trigger(trade, bar);
 						return;
 					}
 				}
 			} else if(TradeType.SELL.equals(trade.getType())) {
 				if(bar.getLowPrice().doubleValue() < trade.getTriggerPrice()) {
 					if(bar.getHighPrice().doubleValue() > trade.getPrice()) {
-						complete(trade, bar);
+						trigger(trade, bar);
 						return;
 					}
 				}
@@ -140,12 +140,12 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		} else if(TradeLimitType.SLM.equals(trade.getLimitType())) {
 			if(TradeType.BUY.equals(trade.getType())) {
 				if(bar.getHighPrice().doubleValue() > trade.getTriggerPrice()) {
-					complete(trade, bar);
+					trigger(trade, bar);
 					return;
 				}
 			} else if(TradeType.SELL.equals(trade.getType())) {
 				if(bar.getLowPrice().doubleValue() < trade.getTriggerPrice()) {
-					complete(trade, bar);
+					trigger(trade, bar);
 					return;
 				}
 			}
@@ -163,15 +163,50 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		}
 		throw new IllegalArgumentException("Could not resolve execution price");
 	}
-
-	private void complete(Trade trade, Bar bar) {
-		final double price = resolveExecutionPrice(trade, bar);
+	
+	private void trigger(Trade trade, Bar bar) {
+		if(TradeType.SELL.equals(trade.getType())) {
+			final int onBalanceQuantity = onBalanceQuantities.computeIfAbsent(trade.getScrip(), key -> 0);
+			if(onBalanceQuantity >= trade.getQuantity()) {
+				complete(trade, bar, resolveExecutionPrice(trade, bar));
+			} else {
+				final double executionPrice = resolveExecutionPrice(trade, bar);
+				final double requiredMargin = (trade.getQuantity() - onBalanceQuantity) * executionPrice;
+				if(portfolio.getAvailableMargin() >= requiredMargin) {
+					complete(trade, bar, executionPrice);
+				} else {
+					reject(trade, bar);
+				}
+			}
+		} else {
+			final double executionPrice = resolveExecutionPrice(trade, bar);
+			final double requiredMargin = executionPrice * trade.getQuantity();
+			if(portfolio.getAvailableMargin() >= requiredMargin) {
+				complete(trade, bar, executionPrice);
+			} else {
+				reject(trade, bar);
+			}
+		}
+	}
+	
+	private void complete(Trade trade, Bar bar, double price) {
 		trade.setAveragePrice(price);
 		trade.setStatus(TradeStatus.COMPLETE);
 		trade.setFilledQuantity(trade.getQuantity());
+		updateAvailableMargin(trade, bar);
 	}
 	
-	private void updateAvailableMargin(Portfolio portfolio, Trade trade, Bar bar) {
+	private void cancel(Trade trade, Bar bar) {
+		trade.setStatus(TradeStatus.CANCELLED);
+		updateAvailableMargin(trade, bar);
+	}
+
+	private void reject(Trade trade, Bar bar) {
+		trade.setStatus(TradeStatus.REJECTED);
+		updateAvailableMargin(trade, bar);
+	}
+	
+	private void updateAvailableMargin(Trade trade, Bar bar) {
 		int multiple = 1;
 		if(TradeType.BUY.equals(trade.getType())) {
 			if(TradeStatus.PENDING.equals(trade.getStatus())) {
@@ -188,8 +223,8 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		}
 		final double executionPrice = resolveExecutionPrice(trade, bar);
 		final double effectOnMargin = multiple * executionPrice;
-		final double availableMargin = margins.computeIfAbsent(portfolio, Portfolio::getMaxTradableAmount);
-		margins.put(portfolio, availableMargin + effectOnMargin);
+		final double availableMargin = portfolio.getAvailableMargin();
+		portfolio.setAvailableMargin(availableMargin + effectOnMargin);
 	}
 	
 }
