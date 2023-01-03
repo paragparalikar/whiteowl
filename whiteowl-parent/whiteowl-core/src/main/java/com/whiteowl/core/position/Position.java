@@ -3,6 +3,7 @@ package com.whiteowl.core.position;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -105,8 +106,8 @@ public class Position {
 	}
 	
 	public int getOnBalanceQuantity(Scrip scrip) {
-		return getQuantity(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.BUY)
-				- getQuantity(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.SELL);
+		return getQuantity(Stream.concat(entryTrades.stream(), exitTrades.stream()), scrip, TradeType.BUY)
+				- getQuantity(Stream.concat(entryTrades.stream(), exitTrades.stream()), scrip, TradeType.SELL);
 	}
 	
 	public double getProfitLossAmount() {
@@ -114,10 +115,11 @@ public class Position {
 				- getAmount(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.BUY);
 	}
 	
-	private int getQuantity(Stream<Trade> trades, TradeType tradeType) {
+	private int getQuantity(Stream<Trade> trades, Scrip scrip, TradeType tradeType) {
 		return trades
+				.filter(trade -> Objects.equals(trade.getScrip(), scrip))
 				.filter(trade -> tradeType.equals(trade.getType()))
-				.map(Trade::getFilledQuantity)
+				.map(Trade::getQuantity)
 				.collect(Collectors.summingInt(Integer::intValue));
 	}
 	

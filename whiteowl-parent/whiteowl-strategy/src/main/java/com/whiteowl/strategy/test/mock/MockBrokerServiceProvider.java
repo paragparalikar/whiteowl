@@ -216,7 +216,6 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 			}
 		}
 		final double effectOnMargin = multiple * executionPrice * trade.getQuantity();
-		System.out.println("Type : " + trade.getType() + ", effectOnMargin : " + effectOnMargin);
 		final double availableMargin = portfolio.getAvailableMargin();
 		portfolio.setAvailableMargin(availableMargin + effectOnMargin);
 	}

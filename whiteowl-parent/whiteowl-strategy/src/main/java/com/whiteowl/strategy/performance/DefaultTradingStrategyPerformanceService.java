@@ -54,7 +54,8 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		final double initialCapital = equityCurve.get(0);
 		final double endCapital = equityCurve.get(equityCurve.size() - 1);
 		
-		double maxAmount = 0;
+		double maxAmount = Double.MIN_VALUE;
+		double minAmount = Double.MAX_VALUE;
 		double maxDrawDown = 0;
 		final Bar firstBar = bars.get(0);
 		final Bar lastBar = bars.get(bars.size() - 1);
@@ -62,8 +63,13 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		for(int index = 0; index < bars.size(); index++) {
 			timestampIndices.put(bars.get(index).getEndTime().toLocalDateTime(), index);
 			double amount = equityCurve.get(index);
-			maxAmount = Math.max(maxAmount, amount);
-			maxDrawDown = Math.max(maxDrawDown, Math.abs(maxAmount - amount));
+			if(amount > maxAmount) {
+				maxAmount = amount;
+				minAmount = amount;
+			}
+			minAmount = Math.min(minAmount, amount);
+			maxDrawDown = Math.max(maxDrawDown, maxAmount - minAmount);
+			System.out.println("Amount " + amount + ", maxAmount " + maxAmount + ", maxDrawDown " + maxDrawDown );
 		}
 		
 		for(Position position : positions) {
