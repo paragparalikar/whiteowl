@@ -16,7 +16,7 @@ public class TrendFollowingTradingStrategyConfig implements TradingStrategyConfi
 
 	@Positive private int smaBarCount = 20;
 	@NotBlank @NonNull private String scripCode;
-	@NonNull @NotNull private Timeframe timeframe = Timeframe.M5;
+	@NonNull @NotNull private Timeframe timeframe = Timeframe.M15;
 	private final TradingStrategyTemplate tradingStrategyTemplate = TradingStrategyTemplate.TREND_FOLLOWING;
 	
 	@Override

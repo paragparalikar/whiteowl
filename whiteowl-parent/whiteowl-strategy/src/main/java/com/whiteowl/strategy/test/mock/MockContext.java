@@ -2,6 +2,7 @@ package com.whiteowl.strategy.test.mock;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.stream.Stream;
 
 import org.springframework.scheduling.TaskScheduler;
 import org.ta4j.core.BarSeries;
@@ -18,6 +19,8 @@ import com.whiteowl.core.position.stateMachine.transition.ClosePositionStateTran
 import com.whiteowl.core.position.stateMachine.transition.OpenPositionStateTransition;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
+import com.whiteowl.core.trade.Trade;
+import com.whiteowl.core.trade.TradeStatus;
 import com.whiteowl.core.trade.stateMachine.TradeStateMachine;
 import com.whiteowl.core.trade.stateMachine.transition.CancelTradeStateTransition;
 import com.whiteowl.core.trade.stateMachine.transition.OpenTradeStateTransition;
@@ -126,7 +129,13 @@ public class MockContext {
 	}
 	
 	private void onPositionSaved(Position position) {
-		positionStateMachine.handle(position);
+		if(!position.getStatus().isTerminal() && Stream.concat(
+				position.getExitTrades().stream(), 
+				position.getEntryTrades().stream())
+			.map(Trade::getStatus)
+			.anyMatch(TradeStatus::isActionable)) {
+			positionStateMachine.handle(position);
+		}
 	}
 
 }

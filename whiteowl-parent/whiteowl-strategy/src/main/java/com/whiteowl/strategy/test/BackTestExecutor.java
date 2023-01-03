@@ -37,7 +37,7 @@ public class BackTestExecutor {
 			tradingStrategyExecutor.onScripBarDownloaded(scrip, timeframe);
 			brokerServiceProvider.execute();
 			positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream()
-				.map(position -> {position.updateStatus(); return position;})
+				.map(positionService::save) // The position might have been modified by broker outside position service
 				.forEach(tradingStrategyExecutor::onPositionSynchronized);
 			equityCurveObserver.next(bar.getClosePrice().doubleValue());
 		}

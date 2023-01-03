@@ -50,7 +50,7 @@ public class DefaultBackTestService implements BackTestService {
 	}
 	
 	public static void main(String[] args) {
-		final Timeframe timeframe = Timeframe.M5;
+		final Timeframe timeframe = Timeframe.M15;
 		final Scrip scrip = Scrip.builder()
 				.code("RELIANCE")
 				.type(ScripType.EQ)
