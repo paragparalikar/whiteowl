@@ -127,7 +127,6 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		final double netProfitLossPercentage = netProfitLossAmount * 100 / initialCapital;
 		final double averageLossAmount = netLossAmount / losingPositionCount;
 		final double averageProfitAmount = netProfitAmount / winningPositionCount;
-		final double averageProfitLossAmount = netProfitLossAmount / totalPositionCount;
 		final double averageLossPercentage = lossPercentageSum / losingPositionCount;
 		final double averageProfitPercentage = profitPercentageSum / winningPositionCount;
 		final double averageProfitLossPercentage = profitLossPercentageSum / totalPositionCount;
@@ -152,25 +151,15 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 				.losingPositionCount((int) losingPositionCount)
 				.winningPositionCount((int) winningPositionCount)
 				.breakEventPositionCount((int) breakEventPositionCount)
-				.netHoldingBarCount((int) netHoldingBarCount)
 				.averageHoldingBarCount((int) averageHoldingBarCount)
 				.holdingBarCountPercentage(holdingBarCountPercentage)
-				.netLossAmount(netLossAmount)
-				.netProfitAmount(netProfitAmount)
-				.netProfitLossAmount(netProfitLossAmount)
-				.buyAndHoldProfitLossAmount(buyAndHoldProfitLossAmount)
 				.netLossPercentage(netLossPercentage)
 				.netProfitPercentage(netProfitPercentage)
 				.netProfitLossPercentage(netProfitLossPercentage)
 				.buyAndHoldProfitLossPercentage(buyAndHoldProfitLossPercentage)
-				.averageLossAmount(averageLossAmount)
-				.averageProfitAmount(averageProfitAmount)
-				.averageProfitLossAmount(averageProfitLossAmount)
 				.averageLossPercentage(averageLossPercentage)
 				.averageProfitPercentage(averageProfitPercentage)
 				.averageProfitLossPercentage(averageProfitLossPercentage)
-				.maxLossAmount(maxLossAmount)
-				.maxProfitAmount(maxProfitAmount)
 				.maxLossPercentage(maxLossPercentage)
 				.maxProfitPercentage(maxProfitPercentage)
 				.winRatio(winRatio)
@@ -178,10 +167,8 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 				.expectancy(expectancy)
 				.profitFactor(profitFactor)
 				.cagr(cagr)
-				.maxDrawdownAmount(maxDrawDown)
 				.maxDrawdownPercentage(maxDrawDownPercentage)
 				.romad(romad)
-				.riskFreeReturn(riskFreeReturn)
 				.riskFreeReturnPercentage(riskFreeReturnPercentage)
 				.calmarRatio(calmarRatio)
 				.build();
