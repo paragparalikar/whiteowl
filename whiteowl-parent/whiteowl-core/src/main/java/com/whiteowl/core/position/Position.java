@@ -127,6 +127,8 @@ public class Position {
 	private double getAmount(Stream<Trade> trades, TradeType tradeType) {
 		return trades
 				.filter(trade -> tradeType.equals(trade.getType()))
+				.filter(trade -> !TradeStatus.REJECTED.equals(trade.getStatus()))
+				.filter(trade -> !TradeStatus.CANCELLED.equals(trade.getStatus()))
 				.map(Trade::getAmount)
 				.collect(Collectors.summingDouble(Double::doubleValue));
 	}

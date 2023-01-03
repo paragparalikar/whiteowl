@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import org.ta4j.core.Bar;
+import org.ta4j.core.num.DoubleNum;
 
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionStatus;
@@ -38,7 +39,6 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		int losingPositionCount = 0;
 		int winningPositionCount = 0;
 		int breakEventPositionCount = 0;
-		int totalPositionCount = positions.size();
 		int netHoldingBarCount = 0;
 		double netLossAmount = 0;
 		double netProfitAmount = 0;
@@ -50,6 +50,7 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		double maxProfitAmount = 0;
 		double maxLossPercentage = 0;
 		double maxProfitPercentage = 0;
+		final int totalPositionCount = positions.size();
 		final double initialCapital = equityCurve.get(0);
 		final double endCapital = equityCurve.get(equityCurve.size() - 1);
 		
@@ -81,10 +82,12 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 			netHoldingBarCount += exitIndex - entryIndex;
 			
 			double entryAmount = position.getEntryAmount();
-			final double profitLossAmount = position.getProfitLossAmount();
+			final double profitLossAmount = PositionStatus.CLOSED.equals(position.getStatus()) ? position.getProfitLossAmount() : 
+				position.getOnBalanceQuantity(position.getScrip()) * lastBar.getClosePrice().doubleValue() - entryAmount;
 			netProfitLossAmount += profitLossAmount;
-			final double profitLossPercentage = profitLossAmount * 100 / entryAmount;
+			final double profitLossPercentage = 0 == entryAmount ? 0 : profitLossAmount * 100 / entryAmount;
 			profitLossPercentageSum += profitLossPercentage;
+			
 			if(0 < profitLossAmount) {
 				winningPositionCount++;
 				netProfitAmount += profitLossAmount;
@@ -95,8 +98,11 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 				losingPositionCount++;
 				netLossAmount += profitLossAmount;
 				lossPercentageSum += profitLossPercentage;
-				maxLossAmount = Math.max(maxLossAmount, profitLossAmount);
-				maxLossPercentage = Math.max(maxLossPercentage, profitLossPercentage);
+				maxLossAmount = Math.min(maxLossAmount, profitLossAmount);
+				maxLossPercentage = Math.min(maxLossPercentage, profitLossPercentage);
+				if(-100 == maxLossPercentage) {
+					System.out.println("maxLossPercentage " + maxLossPercentage);
+				}
 			} else {
 				breakEventPositionCount++;
 			}
@@ -107,8 +113,8 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 			}
 		}
 		
-		final double buyAndHoldProfitLossAmount = lastBar.getClosePrice().minus(firstBar.getOpenPrice()).doubleValue();
-		final double buyAndHoldProfitLossPercentage = buyAndHoldProfitLossAmount * 100 / firstBar.getOpenPrice().doubleValue();
+		final double buyAndHoldProfitLossAmount = lastBar.getClosePrice().multipliedBy(DoubleNum.valueOf(initialCapital)).dividedBy(firstBar.getOpenPrice()).doubleValue();
+		final double buyAndHoldProfitLossPercentage = buyAndHoldProfitLossAmount * 100 / initialCapital;
 		final int averageHoldingBarCount = netHoldingBarCount / totalPositionCount;
 		final double holdingBarCountPercentage = netHoldingBarCount * 100 / bars.size();
 		final double netLossPercentage = netLossAmount * 100 / initialCapital;
