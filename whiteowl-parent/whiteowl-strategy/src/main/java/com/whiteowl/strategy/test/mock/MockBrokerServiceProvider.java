@@ -88,6 +88,10 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	}
 	
 	private void execute(Trade trade, Bar bar, Portfolio portfolio) {
+		if(TradeLimitType.MARKET.equals(trade.getLimitType())) {
+			complete(trade, bar);
+			return;
+		}
 		if(TradeProduct.MIS.equals(trade.getProduct())) {
 			if(!bar.getEndTime().toLocalTime().isBefore(Constant.ZERODHA_SQUARE_OFF_TIME)) {
 				trade.setStatus(TradeStatus.CANCELLED);
@@ -104,6 +108,7 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 				return;
 			}
 		}
+		
 		if(TradeLimitType.LIMIT.equals(trade.getLimitType())) {
 			if(TradeType.BUY.equals(trade.getType())) {
 				if(bar.getLowPrice().doubleValue() < trade.getPrice()) {
@@ -116,9 +121,6 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 					return;
 				}
 			}
-		} else if(TradeLimitType.MARKET.equals(trade.getLimitType())) {
-			complete(trade, bar);
-			return;
 		} else if(TradeLimitType.SL.equals(trade.getLimitType())) {
 			if(TradeType.BUY.equals(trade.getType())) {
 				if(bar.getHighPrice().doubleValue() > trade.getTriggerPrice()) {

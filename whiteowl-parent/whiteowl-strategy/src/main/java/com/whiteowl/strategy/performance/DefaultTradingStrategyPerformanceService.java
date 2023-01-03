@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import org.ta4j.core.Bar;
@@ -67,12 +68,14 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		for(Position position : positions) {
 			final LocalDateTime entryTime = position.getEntryTrades().stream()
 					.map(Trade::getTimestamp)
+					.filter(Objects::nonNull)
 					.min(Comparator.naturalOrder())
 					.orElseThrow();
 			final LocalDateTime exitTime = position.getExitTrades().stream()
 					.map(Trade::getTimestamp)
+					.filter(Objects::nonNull)
 					.max(Comparator.naturalOrder())
-					.orElseGet(lastBar.getEndTime()::toLocalDateTime);
+					.orElse(entryTime);
 			final Integer entryIndex = timestampIndices.get(entryTime);
 			final Integer exitIndex = timestampIndices.get(exitTime);
 			netHoldingBarCount += exitIndex - entryIndex;
