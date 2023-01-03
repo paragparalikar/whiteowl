@@ -9,7 +9,6 @@ import com.whiteowl.core.derivative.option.OptionChain;
 import com.whiteowl.core.derivative.option.OptionChainItem;
 import com.whiteowl.core.derivative.option.OptionInfo;
 import com.whiteowl.core.position.Position;
-import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripType;
@@ -76,7 +75,6 @@ public class ShortStraddleTradingStrategy implements TradingStrategy {
 	private Position createNewPosition(Scrip underlying, Scrip call, Scrip put, String configId, int quantity) {
 		final Position position = new Position();
 		position.setScrip(underlying);
-		position.setStatus(PositionStatus.NEW);
 		position.setTradingStrategyConfigId(configId);
 		position.getEntryTrades().add(createEntryTrade(put, quantity));
 		position.getEntryTrades().add(createEntryTrade(call, quantity));

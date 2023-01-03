@@ -49,7 +49,6 @@ public class TrendFollowingTradingStrategy implements TradingStrategy {
 	private Position createNewPosition(final double price, final TradeType tradeType) {
 		final Position position = new Position();
 		position.setScrip(scrip);
-		position.setStatus(PositionStatus.NEW);
 		position.setTradingStrategyConfigId(config.getId());
 		final Trade trade = createEntryTrade(price, tradeType);
 		position.getEntryTrades().add(trade);

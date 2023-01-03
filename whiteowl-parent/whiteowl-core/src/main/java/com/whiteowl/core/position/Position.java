@@ -3,6 +3,7 @@ package com.whiteowl.core.position;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -141,8 +142,8 @@ public class Position {
 				.collect(Collectors.summingInt(Integer::intValue));
 	}
 	
-	public void setStatus(@NonNull final PositionStatus status) {
-		if(log.isInfoEnabled()) {
+	private void setStatus(@NonNull final PositionStatus status) {
+		if(log.isInfoEnabled() && !Objects.equals(status, this.status)) {
 			log.info("Position status transition, old = {}, new = {}, id = {}, scrip = {}, tradingStrategyConfigId = {}", 
 					this.status, status, id, null == scrip ? null : scrip.getCode(), tradingStrategyConfigId);
 		}
@@ -153,20 +154,20 @@ public class Position {
 	@PrePersist
 	public void updateStatus() {
 		if(entryTrades.isEmpty()) {
-			status = PositionStatus.NEW;
+			setStatus(PositionStatus.NEW);
 			return;
 		} else if(entryTrades.stream().map(Trade::getStatus).allMatch(Predicate.isEqual(TradeStatus.NEW))) {
-			status = PositionStatus.NEW;
+			setStatus(PositionStatus.NEW);
 			return;
 		} else if(entryTrades.stream().map(Trade::getStatus).allMatch(Predicate.isEqual(TradeStatus.CANCELLED))) {
-			status = PositionStatus.CLOSED;
+			setStatus(PositionStatus.CLOSED);
 			return;
 		} else if(entryTrades.stream().map(Trade::getStatus).allMatch(Predicate.isEqual(TradeStatus.REJECTED))) {
-			status = PositionStatus.CLOSED;
+			setStatus(PositionStatus.CLOSED);
 			return;
 		} else if(entryTrades.stream().map(Trade::getStatus).allMatch(TradeStatus::isTerminal)) {
 			if(exitTrades.isEmpty()) {
-				status = PositionStatus.OPEN;
+				setStatus(PositionStatus.OPEN);
 				return;
 			} else if(exitTrades.stream().map(Trade::getStatus).allMatch(TradeStatus::isTerminal)) {
 				final Map<Scrip, Integer> buyQuantities = Stream.concat(entryTrades.stream(), exitTrades.stream())
@@ -178,18 +179,18 @@ public class Position {
 						.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
 						.collect(Collectors.groupingBy(Trade::getScrip, Collectors.summingInt(Trade::getFilledQuantity)));
 				if(buyQuantities.equals(sellQuantities)) {
-					status = PositionStatus.CLOSED;
+					setStatus(PositionStatus.CLOSED);
 					return;
 				} else {
-					status = PositionStatus.OPEN;
+					setStatus(PositionStatus.OPEN);
 					return;
 				}
 			} else {
-				status = PositionStatus.OPEN;
+				setStatus(PositionStatus.OPEN);
 				return;
 			}
 		} else {
-			status = PositionStatus.OPEN;
+			setStatus(PositionStatus.OPEN);
 			return;
 		}
 	}
