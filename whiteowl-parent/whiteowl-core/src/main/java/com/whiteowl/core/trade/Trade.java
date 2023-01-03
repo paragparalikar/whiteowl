@@ -30,10 +30,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 
 @Data
-@Slf4j
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -171,11 +169,4 @@ public class Trade {
 		return averagePrice * filledQuantity;
 	}
 	
-	public void setStatus(@NonNull final TradeStatus status) {
-		if(log.isInfoEnabled()) {
-			log.info("Trade status transition, old = {}, new = {}, type = {}, id = {}, scrip = {}, timestamp = {}",
-					this.status, status, type, id, null == scrip ? null : scrip.getCode(), timestamp);
-		}
-		this.status = status;
-	}
 }

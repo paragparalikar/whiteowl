@@ -3,7 +3,6 @@ package com.whiteowl.core.position;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -44,10 +43,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 
 @Data
-@Slf4j
 @Entity
 @NoArgsConstructor
 @Table(name = "position", indexes = {
@@ -142,14 +139,6 @@ public class Position {
 	public double getAverageEntryPrice() {
 		return getEntryAmount() / entryTrades.stream().map(Trade::getFilledQuantity)
 				.collect(Collectors.summingInt(Integer::intValue));
-	}
-	
-	private void setStatus(@NonNull final PositionStatus status) {
-		if(log.isInfoEnabled() && !Objects.equals(status, this.status)) {
-			log.info("Position status transition, old = {}, new = {}, id = {}, scrip = {}, tradingStrategyConfigId = {}", 
-					this.status, status, id, null == scrip ? null : scrip.getCode(), tradingStrategyConfigId);
-		}
-		this.status = status;
 	}
 	
 	@PreUpdate
