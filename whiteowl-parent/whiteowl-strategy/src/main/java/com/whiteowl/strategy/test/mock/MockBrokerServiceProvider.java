@@ -193,6 +193,7 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		trade.setAveragePrice(price);
 		trade.setStatus(TradeStatus.COMPLETE);
 		trade.setFilledQuantity(trade.getQuantity());
+		updateOnBalanceQuantity(trade);
 		updateAvailableMargin(trade, bar);
 	}
 	
@@ -204,6 +205,12 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	private void reject(Trade trade, Bar bar) {
 		trade.setStatus(TradeStatus.REJECTED);
 		updateAvailableMargin(trade, bar);
+	}
+	
+	private void updateOnBalanceQuantity(Trade trade) {
+		final int multiple = TradeType.BUY.equals(trade.getType()) ? 1 : -1;
+		final int onBalanceQuantity = onBalanceQuantities.computeIfAbsent(trade.getScrip(), key -> 0);
+		onBalanceQuantities.put(trade.getScrip(), onBalanceQuantity + multiple * trade.getFilledQuantity());
 	}
 	
 	private void updateAvailableMargin(Trade trade, Bar bar) {
