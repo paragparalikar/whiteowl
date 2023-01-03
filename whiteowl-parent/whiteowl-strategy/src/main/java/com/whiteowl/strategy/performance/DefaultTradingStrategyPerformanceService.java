@@ -34,12 +34,12 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 			@NonNull final List<Position> positions,
 			@NonNull final List<Double> equityCurve,
 			@NonNull final TradingStrategyConfig config) {
-		int openPositionCount = 0;
-		int closedPositionCount = 0;
-		int losingPositionCount = 0;
-		int winningPositionCount = 0;
-		int breakEventPositionCount = 0;
-		int netHoldingBarCount = 0;
+		double openPositionCount = 0;
+		double closedPositionCount = 0;
+		double losingPositionCount = 0;
+		double winningPositionCount = 0;
+		double breakEventPositionCount = 0;
+		double netHoldingBarCount = 0;
 		double netLossAmount = 0;
 		double netProfitAmount = 0;
 		double netProfitLossAmount = 0;
@@ -50,7 +50,7 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		double maxProfitAmount = 0;
 		double maxLossPercentage = 0;
 		double maxProfitPercentage = 0;
-		final int totalPositionCount = positions.size();
+		final double totalPositionCount = positions.size();
 		final double initialCapital = equityCurve.get(0);
 		final double endCapital = equityCurve.get(equityCurve.size() - 1);
 		
@@ -69,7 +69,6 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 			}
 			minAmount = Math.min(minAmount, amount);
 			maxDrawDown = Math.max(maxDrawDown, maxAmount - minAmount);
-			System.out.println("Amount " + amount + ", maxAmount " + maxAmount + ", maxDrawDown " + maxDrawDown );
 		}
 		
 		for(Position position : positions) {
@@ -121,7 +120,7 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		
 		final double buyAndHoldProfitLossAmount = lastBar.getClosePrice().multipliedBy(DoubleNum.valueOf(initialCapital)).dividedBy(firstBar.getOpenPrice()).doubleValue();
 		final double buyAndHoldProfitLossPercentage = buyAndHoldProfitLossAmount * 100 / initialCapital;
-		final int averageHoldingBarCount = netHoldingBarCount / totalPositionCount;
+		final double averageHoldingBarCount = netHoldingBarCount / totalPositionCount;
 		final double holdingBarCountPercentage = netHoldingBarCount * 100 / bars.size();
 		final double netLossPercentage = netLossAmount * 100 / initialCapital;
 		final double netProfitPercentage = netProfitAmount * 100 / initialCapital;
@@ -137,24 +136,24 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		final double lossRatio = losingPositionCount / totalPositionCount;
 		final double expectancy = ((1 + (averageProfitAmount / averageLossAmount)) * winRatio) - 1;
 		final double profitFactor = netProfitAmount / netLossAmount;
-		final double years = Duration.between(lastBar.getEndTime(), firstBar.getBeginTime()).abs().toMinutes() / 60 * 24 * 365;
+		final double years = Duration.between(lastBar.getEndTime(), firstBar.getBeginTime()).abs().toMinutes() / (60 * 24 * 365);
 		final double cagr = Math.pow((endCapital / initialCapital), 1 / years) - 1;
 		final double romad = (endCapital - initialCapital) / maxDrawDown;
-		final double riskFreeReturn = initialCapital * Math.pow((1 + 6/100), years) - initialCapital;
+		final double riskFreeReturn = initialCapital * Math.pow((1d + 6d/100d), years) - initialCapital;
 		final double riskFreeReturnPercentage = riskFreeReturn * 100 / initialCapital;
 		final double calmarRatio = (netProfitLossPercentage - riskFreeReturnPercentage) / (maxDrawDownPercentage * years);
 		
 		return TradingStrategyPerformance.builder()
 				.initialCapital(initialCapital)
 				.endCapital(endCapital)
-				.totalPositionCount(totalPositionCount)
-				.openPositionCount(openPositionCount)
-				.closedPositionCount(closedPositionCount)
-				.losingPositionCount(losingPositionCount)
-				.winningPositionCount(winningPositionCount)
-				.breakEventPositionCount(breakEventPositionCount)
-				.netHoldingBarCount(netHoldingBarCount)
-				.averageHoldingBarCount(averageHoldingBarCount)
+				.totalPositionCount((int) totalPositionCount)
+				.openPositionCount((int) openPositionCount)
+				.closedPositionCount((int) closedPositionCount)
+				.losingPositionCount((int) losingPositionCount)
+				.winningPositionCount((int) winningPositionCount)
+				.breakEventPositionCount((int) breakEventPositionCount)
+				.netHoldingBarCount((int) netHoldingBarCount)
+				.averageHoldingBarCount((int) averageHoldingBarCount)
 				.holdingBarCountPercentage(holdingBarCountPercentage)
 				.netLossAmount(netLossAmount)
 				.netProfitAmount(netProfitAmount)
