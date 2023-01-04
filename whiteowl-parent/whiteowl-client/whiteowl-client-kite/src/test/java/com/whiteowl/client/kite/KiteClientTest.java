@@ -1,9 +1,6 @@
 package com.whiteowl.client.kite;
 
-import java.time.ZonedDateTime;
-
 import com.whiteowl.client.kite.adapter.KiteDataProviderCredentials;
-import com.whiteowl.client.kite.model.CandleSeries;
 
 public class KiteClientTest {
 
@@ -16,7 +13,6 @@ public class KiteClientTest {
 		final KiteCredentials credentials = dataProviderCredentials.toKiteCredentials();
 		final KiteSession session = new KiteSession(credentials);
 		final KiteConnectApi api = new ResilientKiteClient(new KiteClient(session));
-		final CandleSeries series = api.getData(738561L, "5minute", ZonedDateTime.now().minusMonths(1), ZonedDateTime.now());
-		series.getData().forEach(System.out::println);
+		api.getOrders().forEach(System.out::println);
 	}
 }

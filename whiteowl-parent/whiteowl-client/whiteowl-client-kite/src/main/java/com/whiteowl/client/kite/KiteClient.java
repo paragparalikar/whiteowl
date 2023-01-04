@@ -46,6 +46,7 @@ import com.whiteowl.client.kite.request.PositionsRequest;
 import com.whiteowl.client.kite.request.ProfileRequest;
 import com.whiteowl.client.kite.request.QuoteRequest;
 import com.whiteowl.client.kite.request.UpdateOrderRequest;
+import com.whiteowl.core.util.Strings;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -69,7 +70,9 @@ public class KiteClient implements KiteConnectApi {
 	@SneakyThrows
 	private <T> T execute(Request<?> request, TypeReference<Response<T>> ref){
 		final InputStream inputStream = resolveInputStream(request);
-		final Response<T> response = KiteConstant.JSON.readValue(inputStream, ref);
+		final String content = Strings.toString(inputStream);
+		if(log.isDebugEnabled()) log.debug(content);
+		final Response<T> response = KiteConstant.JSON.readValue(content, ref);
 		if(!"success".equalsIgnoreCase(response.getStatus())) {
 			final String message = String.join(" - ", 
 					String.valueOf(request.responseCode()),

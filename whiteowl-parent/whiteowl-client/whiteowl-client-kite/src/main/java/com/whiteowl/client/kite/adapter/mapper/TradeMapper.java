@@ -47,7 +47,7 @@ public class TradeMapper {
 				trade.setPendingQuantity(order.getPendingQuantity());
 				trade.setStatus(kiteMapper.toTradeStatus(order.getStatus()));
 				trade.setTimestamp(LocalDateTime.parse(order.getOrderTimestamp()));
-				trade.setExchangeTimestamp(LocalDateTime.parse(order.getExhangeTimestamp()));
+				trade.setExchangeTimestamp(LocalDateTime.parse(order.getExchangeTimestamp()));
 				return trade;
 			}).orElse(null);
 	}
