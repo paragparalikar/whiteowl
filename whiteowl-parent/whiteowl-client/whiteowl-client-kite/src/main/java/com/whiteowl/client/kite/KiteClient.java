@@ -71,7 +71,7 @@ public class KiteClient implements KiteConnectApi {
 	private <T> T execute(Request<?> request, TypeReference<Response<T>> ref){
 		final InputStream inputStream = resolveInputStream(request);
 		final String content = Strings.toString(inputStream);
-		if(log.isDebugEnabled()) log.debug(content);
+		if(log.isTraceEnabled()) log.trace(content);
 		final Response<T> response = KiteConstant.JSON.readValue(content, ref);
 		if(!"success".equalsIgnoreCase(response.getStatus())) {
 			final String message = String.join(" - ", 
