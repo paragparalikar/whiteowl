@@ -29,6 +29,7 @@ public class TradingStrategyPerformance {
 	private int losingPositionCount;
 	private int breakEventPositionCount;
 	private int averageHoldingBarCount;
+	private double backTestDurationInYears;
 	private double holdingBarCountPercentage;
 	private double netLossPercentage;
 	private double netProfitPercentage;
@@ -62,6 +63,7 @@ public class TradingStrategyPerformance {
 		builder.append("tradingStrategyConfigId           ").append(tradingStrategyConfigId).append(lineSeparator);
 		builder.append("initialCapital                    ").append(numberFormat.format(initialCapital)).append(lineSeparator);
 		builder.append("endCapital                        ").append(numberFormat.format(endCapital)).append(lineSeparator);
+		builder.append("backTestDurationInYears           ").append(numberFormat.format(backTestDurationInYears)).append(lineSeparator);
 		builder.append("totalPositionCount                ").append(String.valueOf(totalPositionCount)).append(lineSeparator);
 		builder.append("openPositionCount                 ").append(String.valueOf(openPositionCount)).append(lineSeparator);
 		builder.append("closedPositionCount               ").append(String.valueOf(closedPositionCount)).append(lineSeparator);
@@ -81,6 +83,7 @@ public class TradingStrategyPerformance {
 		builder.append("maxProfitPercentage               ").append(numberFormat.format(maxProfitPercentage)).append(lineSeparator);
 		builder.append("maxDrawdownPercentage             ").append(numberFormat.format(maxDrawdownPercentage)).append(lineSeparator);
 		builder.append("riskFreeReturnPercentage          ").append(numberFormat.format(riskFreeReturnPercentage)).append(lineSeparator);
+		builder.append("--------------------------------------------------\n");
 		builder.append("winRatio                          ").append(numberFormat.format(winRatio)).append(lineSeparator);
 		builder.append("lossRatio                         ").append(numberFormat.format(lossRatio)).append(lineSeparator);
 		builder.append("expectancy                        ").append(numberFormat.format(expectancy)).append(lineSeparator);

@@ -2,6 +2,7 @@ package com.whiteowl.strategy.performance;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.ta4j.core.num.DoubleNum;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.trade.Trade;
+import com.whiteowl.core.util.Maths;
 import com.whiteowl.strategy.config.TradingStrategyConfig;
 
 import lombok.NonNull;
@@ -24,6 +26,7 @@ import lombok.experimental.Delegate;
 @Service
 @RequiredArgsConstructor
 public class DefaultTradingStrategyPerformanceService implements TradingStrategyPerformanceService {
+	private static final double PERCENTAGE_FIXED_RATE_OF_RETURN = 6;
 
 	@Delegate
 	private final TradingStrategyPerformanceRepository repository;
@@ -118,6 +121,7 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 			}
 		}
 		
+		final double backTestDurationInYears = Duration.between(firstBar.getBeginTime(), lastBar.getEndTime()).abs().toDays() / 365d;
 		final double buyAndHoldProfitLossAmount = lastBar.getClosePrice().multipliedBy(DoubleNum.valueOf(initialCapital)).dividedBy(firstBar.getOpenPrice()).doubleValue();
 		final double buyAndHoldProfitLossPercentage = buyAndHoldProfitLossAmount * 100 / initialCapital;
 		final double averageHoldingBarCount = netHoldingBarCount / totalPositionCount;
@@ -135,16 +139,29 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 		final double lossRatio = losingPositionCount / totalPositionCount;
 		final double expectancy = ((1 + (averageProfitAmount / averageLossAmount)) * winRatio) - 1;
 		final double profitFactor = netProfitAmount / netLossAmount;
-		final double years = Duration.between(lastBar.getEndTime(), firstBar.getBeginTime()).abs().toMinutes() / (60 * 24 * 365);
-		final double cagr = Math.pow((endCapital / initialCapital), 1 / years) - 1;
+		final double cagr = Math.pow((endCapital / initialCapital), 1 / backTestDurationInYears) - 1;
 		final double romad = (endCapital - initialCapital) / maxDrawDown;
-		final double riskFreeReturn = initialCapital * Math.pow((1d + 6d/100d), years) - initialCapital;
+		final double riskFreeReturn = initialCapital * Math.pow((1d + PERCENTAGE_FIXED_RATE_OF_RETURN/100d), backTestDurationInYears) - initialCapital;
 		final double riskFreeReturnPercentage = riskFreeReturn * 100 / initialCapital;
-		final double calmarRatio = (netProfitLossPercentage - riskFreeReturnPercentage) / (maxDrawDownPercentage * years);
+		final double calmarRatio = 3 * (netProfitLossPercentage - riskFreeReturnPercentage) / (maxDrawDownPercentage * backTestDurationInYears);
+		
+		final List<Double> percentageDownsideReturns = new ArrayList<>();
+		final double[] percentageReturns = new double[equityCurve.size() - 1];
+		for(int index = 0; index < equityCurve.size() - 1; index++) {
+			percentageReturns[index] = (equityCurve.get(index + 1) - equityCurve.get(index)) * 100 / equityCurve.get(index);
+			if(0 > percentageReturns[index]) percentageDownsideReturns.add(-1 * percentageReturns[index]);
+		}
+		final double volatility = Maths.calculateStandardDeviation(percentageReturns);
+		final double downsideVolatility = Maths.calculateStandardDeviation(percentageDownsideReturns.stream().mapToDouble(Double::doubleValue).toArray());
+		final double annualizedVolatility = volatility / Math.sqrt(backTestDurationInYears);
+		final double annualizedDownsideVolatility = downsideVolatility / Math.sqrt(downsideVolatility);
+		final double sharpeRatio = (cagr - PERCENTAGE_FIXED_RATE_OF_RETURN) / annualizedVolatility;
+		final double sortinoRatio = (cagr - PERCENTAGE_FIXED_RATE_OF_RETURN) / annualizedDownsideVolatility;
 		
 		return TradingStrategyPerformance.builder()
 				.initialCapital(initialCapital)
 				.endCapital(endCapital)
+				.backTestDurationInYears(backTestDurationInYears)
 				.totalPositionCount((int) totalPositionCount)
 				.openPositionCount((int) openPositionCount)
 				.closedPositionCount((int) closedPositionCount)
@@ -170,6 +187,8 @@ public class DefaultTradingStrategyPerformanceService implements TradingStrategy
 				.maxDrawdownPercentage(maxDrawDownPercentage)
 				.romad(romad)
 				.riskFreeReturnPercentage(riskFreeReturnPercentage)
+				.sharpeRatio(sharpeRatio)
+				.sortinoRatio(sortinoRatio)
 				.calmarRatio(calmarRatio)
 				.build();
 	}
