@@ -2,6 +2,7 @@ package com.whiteowl.client.kite.adapter;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -58,6 +59,7 @@ public class KiteBrokerServiceProvider implements BrokerServiceProvider {
 		final List<Order> orders = Optional.ofNullable(api.getOrders()).orElse(Collections.emptyList());
 		return orders.stream()
 				.map(order -> kiteMapper.toTrade(order))
+				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
 	}
 	

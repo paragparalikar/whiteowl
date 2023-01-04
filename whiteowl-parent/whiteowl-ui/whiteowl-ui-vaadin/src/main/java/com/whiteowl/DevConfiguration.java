@@ -52,14 +52,14 @@ public class DevConfiguration {
 			if(0 == portfolioService.count()) {
 				final Portfolio portfolio = new Portfolio();
 				final Credentials credentials = Credentials.builder()
-						.username("TEST")
-						.password("TEST")
-						.pin("TEST")
+						.username("RP3497")
+						.password("Dark@Horse5")
+						.pin("TFGKP2YOIGOLEFBHHLJ7QQ6PBOKXARFL")
 						.build();
 				portfolio.setCredentials(credentials);
 				portfolio.setBroker(Broker.TEST);
 				portfolio.setMaxTradableAmount(1000000);
-				portfolio.setName("TEST");
+				portfolio.setName("Parag Paralikar");
 				portfolioService.save(portfolio);
 			}
 		};
