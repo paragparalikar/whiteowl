@@ -63,7 +63,6 @@ public class Position {
 	@Valid
 	@NotNull @NonNull
 	@ManyToOne(optional = false)
-	@Column(nullable = false, updatable = false)
 	private Scrip scrip;
 	
 	@NotBlank @NonNull
@@ -73,7 +72,6 @@ public class Position {
 	@Valid
 	@NotNull @NonNull
 	@ManyToOne(optional = false)
-	@Column(nullable = false, updatable = false)
 	private Portfolio portfolio;
 	
 	@NotNull @NonNull
