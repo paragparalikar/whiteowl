@@ -24,9 +24,11 @@ Features to predict NIFTY50
 23. Consecutive up bar count
 24. Consecutive down bar count
 25. VIX
+26. VIX - SMA[VIX, INT_ARRAY[8,13,21,34,55]]
+27. Percentage STDDEV[VIX, INT_ARRAY[3,5,8,13,21,34,55]]
 26. Dollar - Rupee value
 27. Advance/Decline ratio for timeframe
-28. Future to spot percentage difference
+28. Future to spot percentage difference ie contango/backwardation
 28. FII/FPI/DII PCR
 29. PCR
 30. Volatility skew
