@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import javax.sql.DataSource;
+import javax.annotation.PreDestroy;
 
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Repository;
@@ -35,14 +35,19 @@ import lombok.SneakyThrows;
 @Repository
 public class JdbcBarRepository implements BarRepository {
 	
-	private final DataSource dataSource;
+	private final HikariDataSource dataSource;
 
 	public JdbcBarRepository(final DataSourceProperties properties) {
 		this.dataSource = createDataSource(properties);
 		createTableIfNotExists();
 	}
 	
-	private DataSource createDataSource(final DataSourceProperties properties) {
+	@PreDestroy
+	public void destroy() throws Exception {
+		dataSource.close();
+	}
+	
+	private HikariDataSource createDataSource(final DataSourceProperties properties) {
 		final HikariConfig config = new HikariConfig();
 		config.setDriverClassName(properties.getDriverClassName());
 		config.setJdbcUrl(properties.getUrl().replace("entities", "bars"));

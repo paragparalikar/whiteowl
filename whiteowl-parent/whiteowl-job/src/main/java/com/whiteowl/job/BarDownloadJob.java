@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
+
+import javax.annotation.PostConstruct;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
@@ -47,6 +50,14 @@ public class BarDownloadJob {
 	@Async @Scheduled(cron = "1 0/5 9-16 * * MON-FRI") public void downloadM5() { download(Timeframe.M5); }
 	@Async @Scheduled(cron = "1 30 15 * * MON-FRI") public void downloadAll() { Arrays.asList(Timeframe.values()).forEach(this::download); }
 	
+	@Async
+	@PostConstruct
+	public void download() {
+		for(Timeframe timeframe : Timeframe.values()) {
+			download(timeframe);
+		}
+	}
+	
 	private void download(Timeframe timeframe) {
 		scripService.findAll().stream()
 			.filter(getScripCriteria())
@@ -54,8 +65,12 @@ public class BarDownloadJob {
 		eventPublisher.publishEvent(new TimeframeBarDownloadedEvent(timeframe));
 	}
 	
-	private ScripCriteria getScripCriteria() {
-		return new ScripCriteria().withIndex(Index.NIFTY50);
+	private Predicate<Scrip> getScripCriteria() {
+		return new ScripCriteria().withIndex(Index.NIFTY50)
+				.or(new ScripCriteria()
+						.withCode(Index.NIFTY50.getCode())
+						.withCode(Index.NIFTYBANK.getCode())
+						.withCode(Index.VIX.getCode()));
 	}
 	
 	private void download(Scrip scrip, Timeframe timeframe, BarDataProvider barDataProvider) {
@@ -84,9 +99,7 @@ public class BarDownloadJob {
 	
 	private ZonedDateTime getLastDownloadTimestamp(Scrip scrip, Timeframe timeframe) {
 		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), timeframe, 1);
-		return Optional.ofNullable(barSeries.getLastBar())
-				.map(Bar::getBeginTime)
-				.orElse(ZonedDateTime.now().minusYears(100));
+		return 0 < barSeries.getBarCount() ? barSeries.getLastBar().getBeginTime() : ZonedDateTime.now().minusYears(100);
 	}
 	
 }
