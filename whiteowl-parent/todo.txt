@@ -10,3 +10,7 @@ BrokerServiceProvider to throw various exceptions like InsufficientFundsExceptio
 How to handle funds allocation to each strategy ?
 How to handle limit type trade execution ?
 How to handle trade signal expiry ? 
+
+
+https://github.com/paragparalikar Personal Access Token (PAT)
+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
