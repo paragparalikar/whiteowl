@@ -1,3 +1,53 @@
+Features to predict NIFTY50 
+1. Previous High - Previous Low
+2. Previous High - Previous Close
+3. Previous Close - Previous Low
+4. Current High - Last Price
+5. Last Price - Current Low
+6. | Previous High - Last Price  |
+7. | Previous Close - Last Price |
+8. | Previous Low - Last Price   |
+9. Previous True Range
+10. Current True Range
+11. Current Open - Previous Close
+12. Current HLC3 - Previous HLC3 (Use Last price for current close)
+13. ATR[8]
+14. Percentage STDDEV[3,5,8,13,21,34,55]
+15. RATIO[Percentage STDDEV[3,5,8,13,21,34,55], Percentage STDDEV[3,5,8,13,21,34,55]]
+16. |Last Price - SMA[8, 13, 21, 34, 55]|
+17. RSI[2,3,5,8,13,21,34,55]
+18. RATIO[RSI[2,3,5,8,13,21,34,55], RSI[2,3,5,8,13,21,34,55]]
+19. Percentage ROC[2,3,5,8,13,21,34,55]
+20. RATIO[Percentage ROC[2,3,5,8,13,21,34,55], Percentage ROC[2,3,5,8,13,21,34,55]]
+21. PriceRejection bullish
+22. PriceRejection bearish
+23. Consecutive up bar count
+24. Consecutive down bar count
+25. VIX
+26. Dollar - Rupee value
+27. Advance/Decline ratio for timeframe
+28. Future to spot percentage difference
+28. FII/FPI/DII PCR
+29. PCR
+30. Volatility skew
+31. Sum of Vega change for ATM and OTMs for current, next week and current month
+
+
+
+
+A. Nifty 50 last bar and its relation with avgs, indicators
+B. India vix abs value, change and its relation with avgs
+C. Global indices VIX
+C. Option chain derived numbers like pcr
+D. World indices significant influence of Euro next & DAX and insignificant of FTSE and also negative influence of CAC and Euro on NIFTY
+E. Future values diff
+F. FII and DII money flow
+G. USD-INR value
+G. Advances and declines ratio for market breadth ie open vs current price
+
+
+
+
 To predict open, high, low and close prices for next 1 day : 
 
 1. Use world market indices closing values as features for Indian indices. 
