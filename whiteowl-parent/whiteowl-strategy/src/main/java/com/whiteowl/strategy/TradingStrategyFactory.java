@@ -37,7 +37,7 @@ public class TradingStrategyFactory {
 	private TradingStrategy buildTrendFollowingTradingStrategy(TradingStrategyConfig config) {
 		final TrendFollowingTradingStrategyConfig trendFollowingConfig = (TrendFollowingTradingStrategyConfig) config;
 		final Scrip scrip = scripService.findByCode(config.getScripCode());
-		final BarSeries barSeries = barService.findLatestByCodeAndTimeframe(scrip.getCode(), 
+		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), 
 				config.getTimeframe(), config.getMinBarCount());
 		return new TrendFollowingTradingStrategy(scrip, barSeries, trendFollowingConfig); 
 	}

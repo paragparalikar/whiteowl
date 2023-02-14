@@ -49,6 +49,7 @@ public class DefaultBackTestService implements BackTestService {
 				.build();
 	}
 	
+	@SuppressWarnings({ "removal", "deprecation" })
 	public static void main(String[] args) {
 		final Timeframe timeframe = Timeframe.M15;
 		final Scrip scrip = Scrip.builder()
@@ -57,7 +58,7 @@ public class DefaultBackTestService implements BackTestService {
 				.exchange(Exchange.NSE)
 				.build();
 		final BarRepository barRepository = new FileSystemBarRepository();
-		final List<Bar> bars = barRepository.findByCodeAndTimeframe(scrip.getCode(), timeframe);
+		final List<Bar> bars = barRepository.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), timeframe, Integer.MAX_VALUE);
 		final BarSeries barSeries = new BaseBarSeries("", bars, DoubleNum::valueOf);
 		final TradingStrategyConfig config = new TrendFollowingTradingStrategyConfig(scrip.getCode());
 		final TradingStrategyPerformanceService performanceService = new DefaultTradingStrategyPerformanceService(null);

@@ -99,7 +99,7 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 	
 	@SneakyThrows
 	private Classifier build(Scrip scrip, Timeframe timeframe) {
-		final BarSeries series = barService.findByCodeAndTimeframe(scrip.getCode(), timeframe);
+		final BarSeries series = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), timeframe, Integer.MAX_VALUE);
 		final LongSuccessClassificationRule buyTradeule = new LongSuccessClassificationRule(series, timeStopBarCount, targetPercentage, stopLossPercentage);
 		final FeatureExtracter featureExtracter = createFeatureExtracter();
 		final Instances instances = createInstances(featureExtracter.getAttributeNames());
@@ -164,7 +164,7 @@ public class FixedBullishPredictionProvider extends AbstractPredictionProvider {
 		
 		final FeatureExtracter featureExtracter = createFeatureExtracter();
 		final int minBarCount = featureExtracter.getMinBarCount();
-		final BarSeries series = barService.findLatestByCodeAndTimeframe(scrip.getCode(), timeframe, minBarCount);
+		final BarSeries series = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), timeframe, minBarCount);
 		if(minBarCount > series.getBarCount()) return Collections.emptySet();
 		final BarSeries normalSeries = barSeriesNormalizer.normalise(series);
 		final Instances instances = createInstances(featureExtracter.getAttributeNames());

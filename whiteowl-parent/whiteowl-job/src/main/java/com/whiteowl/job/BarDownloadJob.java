@@ -4,12 +4,14 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
+import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.bar.BarDataProvider;
 import com.whiteowl.core.bar.BarService;
@@ -81,7 +83,9 @@ public class BarDownloadJob {
 	}
 	
 	private ZonedDateTime getLastDownloadTimestamp(Scrip scrip, Timeframe timeframe) {
-		return barService.findMaxBeginTimeByCodeAndTimeframe(scrip.getCode(), timeframe)
+		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), timeframe, 1);
+		return Optional.ofNullable(barSeries.getLastBar())
+				.map(Bar::getBeginTime)
 				.orElse(ZonedDateTime.now().minusYears(100));
 	}
 	

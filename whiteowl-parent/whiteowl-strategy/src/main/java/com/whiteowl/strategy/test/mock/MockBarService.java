@@ -1,8 +1,6 @@
 package com.whiteowl.strategy.test.mock;
 
-import java.time.ZonedDateTime;
 import java.util.Collection;
-import java.util.Optional;
 
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
@@ -30,25 +28,7 @@ public class MockBarService implements BarService {
 	}
 	
 	@Override
-	public BarSeries findByCodeAndTimeframe(@NonNull final String code, @NonNull final Timeframe timeframe) {
-		return barSeries;
-	}
-
-	@Override
-	public Optional<ZonedDateTime> findMaxBeginTimeByCodeAndTimeframe(
-			@NonNull final String code, @NonNull final Timeframe timeframe) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Optional<Bar> findTopByCodeAndTimeframeOrderByTimeframeDesc(
-			@NonNull final String code, @NonNull final Timeframe timeframe) {
-		return barSeries.isEmpty() ? Optional.empty() : Optional.of(barSeries.getLastBar());
-	}
-
-	@Override
-	public BarSeries findLatestByCodeAndTimeframe(
-			@NonNull final String code, @NonNull final Timeframe timeframe, final long count) {
+	public BarSeries findLatestByCodeAndTimeframeOrderByBeginTimeAsc(String code, Timeframe timeframe, int count) {
 		return barSeries;
 	}
 
@@ -56,11 +36,6 @@ public class MockBarService implements BarService {
 	public void saveAll(
 			@NonNull final String code, @NonNull final Timeframe timeframe, @NonNull final Collection<Bar> bars) {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Optional<Bar> findLatestBar(@NonNull final String code, @NonNull final Timeframe timeframe) {
-		return barSeries.isEmpty() ? Optional.empty() : Optional.of(barSeries.getLastBar());
 	}
 	
 }

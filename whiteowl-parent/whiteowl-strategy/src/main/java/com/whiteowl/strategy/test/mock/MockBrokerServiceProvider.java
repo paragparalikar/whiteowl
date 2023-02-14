@@ -59,7 +59,8 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		if(!TradeStatus.PENDING.equals(trade.getStatus())) throw new IllegalStateException();
 		if(null == trade.getId()) trade.setId(idGenerator.incrementAndGet());
 		trades.add(trade);
-		final Bar bar = barService.findLatestBar(trade.getScrip().getCode(), timeframe).orElseThrow();
+		final Bar bar = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
+				trade.getScrip().getCode(), timeframe, 1).getLastBar();
 		trade.setTimestamp(bar.getEndTime().toLocalDateTime());
 		final double executionPrice = resolveExecutionPrice(trade, bar);
 		if(hasRequiredMargin(trade, executionPrice)) {
@@ -94,7 +95,8 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	}
 	
 	private void execute(Trade trade) {
-		final Bar bar = barService.findLatestBar(trade.getScrip().getCode(), timeframe).orElseThrow();
+		final Bar bar = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
+				trade.getScrip().getCode(), timeframe, 1).getLastBar();
 		final double executionPrice = resolveExecutionPrice(trade, bar);
 		if(TradeLimitType.MARKET.equals(trade.getLimitType())) {
 			trigger(trade, bar, executionPrice);

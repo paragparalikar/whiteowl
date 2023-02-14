@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Repository;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BaseBar;
 import org.ta4j.core.num.DoubleNum;
@@ -29,14 +28,18 @@ import com.whiteowl.core.util.Constant;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
-@Repository
+//@Repository
+/**
+ * Use JdbcBarRepository instead
+ */
+@Deprecated(forRemoval = true)
 public class FileSystemBarRepository implements BarRepository {
 	private static final String NAME = "bars.dat";
 	private static final int BYTES = Long.BYTES + 5 * Double.BYTES;
 	
 	public static void main(String[] args) {
 		final FileSystemBarRepository repo = new FileSystemBarRepository();
-		repo.findByCodeAndTimeframe("TITAN", Timeframe.H1)
+		repo.findByCodeAndTimeframeOrderByBeginTime("TITAN", Timeframe.H1)
 			.forEach(System.out::println);
 	}
 	
@@ -68,9 +71,8 @@ public class FileSystemBarRepository implements BarRepository {
 				.build();
 	}
 
-	@Override
 	@SneakyThrows
-	public Optional<Bar> findTopByCodeAndTimeframeOrderByTimeframeDesc(String code, Timeframe timeframe) {
+	public Optional<Bar> findTopByCodeAndTimeframeOrderByBeginTimeDesc(String code, Timeframe timeframe) {
 		final Path path = getPath(code, timeframe);
 		synchronized(path) {
 			if(Files.exists(path)) {
@@ -85,9 +87,8 @@ public class FileSystemBarRepository implements BarRepository {
 		return Optional.empty();
 	}
 
-	@Override
 	@SneakyThrows
-	public List<Bar> findByCodeAndTimeframe(String code, Timeframe timeframe) {
+	public List<Bar> findByCodeAndTimeframeOrderByBeginTime(String code, Timeframe timeframe) {
 		final Path path = getPath(code, timeframe);
 		synchronized(path) {
 			if(Files.exists(path)) {
@@ -109,7 +110,7 @@ public class FileSystemBarRepository implements BarRepository {
 
 	@Override
 	@SneakyThrows
-	public List<Bar> findLatestByCodeAndTimeframe(String code, Timeframe timeframe, long count) {
+	public List<Bar> findLatestByCodeAndTimeframeOrderByBeginTimeAsc(String code, Timeframe timeframe, int count) {
 		final Path path = getPath(code, timeframe);
 		synchronized(path) {
 			if(Files.exists(path)) {
@@ -131,7 +132,6 @@ public class FileSystemBarRepository implements BarRepository {
 		return Collections.emptyList();
 	}
 
-	@Override
 	@SneakyThrows
 	public Optional<ZonedDateTime> findMaxBeginTimeByCodeAndTimeframe(String code, Timeframe timeframe) {
 		final Path path = getPath(code, timeframe);

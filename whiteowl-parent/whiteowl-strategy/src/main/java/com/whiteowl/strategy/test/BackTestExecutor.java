@@ -32,7 +32,8 @@ public class BackTestExecutor {
 	
 	public void execute() {
 		while(barService.next()) {
-			final Bar bar = barService.findLatestBar(scrip.getCode(), timeframe).orElseThrow();
+			final Bar bar = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
+					scrip.getCode(), timeframe, 1).getLastBar();
 			quoteService.publish(bar, scrip, TradeType.BUY);
 			tradingStrategyExecutor.onScripBarDownloaded(scrip, timeframe);
 			brokerServiceProvider.execute();
