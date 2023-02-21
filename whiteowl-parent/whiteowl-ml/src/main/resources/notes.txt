@@ -1,4 +1,28 @@
+Mean reversion strategy : Risk:Reward = 1:2 : Take the trades only in-line with market outlook
+Candlestick pattern
+Overbought/Oversold Region - Use standard deviation and RSI
+High volatility
+
+Trend following strategy : Ashish Kayal method : Take the trades only in-line with market outlook
+Bullish entry : current close > previous close & current low > previous low
+Bearish entry : current close < previous low & current high < previous high
+
+Trend following strategy : Volatility crunch breakout
+Low volatility
+Falling volatility
+Breakout
+
+
+Traditional strategies: 
+1. SMA breakout
+2. RSI crossing a certain value
+3. MACD crossover
+
+
+
+
 Features to predict NIFTY50 
+1. Number of previous consecutive bars with low higher than current low / high lower than current high -> Important
 1. Previous High - Previous Low
 2. Previous High - Previous Close
 3. Previous Close - Previous Low
@@ -27,7 +51,7 @@ Features to predict NIFTY50
 26. VIX - SMA[VIX, INT_ARRAY[8,13,21,34,55]]
 27. Percentage STDDEV[VIX, INT_ARRAY[3,5,8,13,21,34,55]]
 26. Dollar - Rupee value
-27. Advance/Decline ratio for timeframe
+27. X Advance/Decline ratio for timeframe
 28. Future to spot percentage difference ie contango/backwardation
 28. FII/FPI/DII PCR
 29. PCR

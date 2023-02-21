@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
 import com.whiteowl.core.position.event.PositionSynchronizedEvent;
-import com.whiteowl.strategy.TradingStrategyExecutor;
+import com.whiteowl.core.strategy.TradingStrategyExecutor;
 
 import lombok.RequiredArgsConstructor;
 

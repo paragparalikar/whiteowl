@@ -13,10 +13,10 @@ import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.user.User;
 import com.whiteowl.core.user.UserService;
-import com.whiteowl.strategy.TradingStrategyTemplate;
-import com.whiteowl.strategy.config.TradingStrategyConfig;
-import com.whiteowl.strategy.config.TradingStrategyConfigService;
-import com.whiteowl.strategy.impl.shortstrangle.ShortStraddleConfig;
+import com.whiteowl.core.strategy.TradingStrategyTemplate;
+import com.whiteowl.core.strategy.config.TradingStrategyConfig;
+import com.whiteowl.core.strategy.config.TradingStrategyConfigService;
+import com.whiteowl.core.strategy.impl.shortstrangle.ShortStraddleConfig;
 
 @Profile("dev")
 @Configuration
@@ -34,15 +34,6 @@ public class DevConfiguration {
 						.build();
 				userService.save(user);
 			}
-		};
-	}
-	
-	@Bean
-	public CommandLineRunner configureTradingStrategyConfigs(TradingStrategyConfigService configService) {
-		return args -> { 
-			final List<TradingStrategyConfig> configs = configService
-					.findByTemplate(TradingStrategyTemplate.SHORT_STRADDLE);
-			if(configs.isEmpty()) configService.save(new ShortStraddleConfig()); 
 		};
 	}
 	

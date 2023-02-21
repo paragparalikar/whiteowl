@@ -92,7 +92,6 @@
 		<module>whiteowl-job</module>
 		<module>whiteowl-web</module>
 		<module>whiteowl-ui</module>
-		<module>whiteowl-strategy</module>
 		<module>whiteowl-ml</module>
 	</modules>
 </project>
