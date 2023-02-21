@@ -19,6 +19,25 @@ Traditional strategies:
 3. MACD crossover
 
 
+TradingStrategy should use TradingStrategyContext to issue orders to broker, remove aspect on position service
+WalkForward optimizer
+Allow downloading 1 min data
+Option chain historical data download
+Option chain real time download
+
+
+
+
+
+
+
+How to handle funds allocation to each strategy ?
+How to handle limit type trade execution ?
+How to handle trade signal expiry ? 
+
+
+https://github.com/paragparalikar Personal Access Token (PAT)
+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
 
 
 Features to predict NIFTY50 
