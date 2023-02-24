@@ -19,7 +19,6 @@ import org.ta4j.core.BaseBarSeries;
 import org.ta4j.core.num.DoubleNum;
 import org.ta4j.core.num.Num;
 
-import com.whiteowl.client.kite.model.Instrument;
 import com.whiteowl.client.kite.model.KiteTick;
 import com.whiteowl.core.util.Dates;
 import com.whiteowl.core.util.Tuple3;
@@ -44,8 +43,8 @@ public class KiteBarCache {
 		barCompletionListeners.forEach(listener -> listener.accept(tuple));
 	}
 	
-	public BarSeries getBarSeries(@NonNull final Instrument instrument, @NonNull final Duration duration) {
-		final BarSeries barSeries = cache.getBarSeries(instrument.getInstrumentToken(), duration);
+	public BarSeries getBarSeries(@NonNull final Long instrumentToken, @NonNull final Duration duration) {
+		final BarSeries barSeries = cache.getBarSeries(instrumentToken, duration);
 		synchronized(barSeries) { // Get the lock on barSeries to make sure it is not currently being modified before returning
 			return barSeries;
 		}
