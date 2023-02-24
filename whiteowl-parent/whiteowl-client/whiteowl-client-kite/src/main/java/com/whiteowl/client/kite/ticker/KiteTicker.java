@@ -76,7 +76,7 @@ public class KiteTicker {
     private final int pongCheckInterval = 2500;
     private int nextReconnectInterval = 0;
     private int maxRetryInterval = 30000;
-    private Map<Long, String> modeMap;
+    private final Map<Long, String> modeMap = new HashMap<>();
     private Timer canReconnectTimer = null;
     /** Used to reconnect after the specified delay.*/
     private boolean canReconnect = true;
@@ -99,7 +99,6 @@ public class KiteTicker {
             return;
         }
         ws.addListener(getWebsocketAdapter());
-        modeMap = new HashMap<>();
     }
 
     /** Returns task which performs check every second for reconnection.
@@ -433,14 +432,12 @@ public class KiteTicker {
 
     /** Unsubscribes ticks for list of tokens.
      * @param tokens is the list of tokens that needs to be unsubscribed. */
-    public void unsubscribe(List<Long> tokens){
+    public void unsubscribe(Collection<Long> tokens){
         if(ws != null) {
             if (ws.isOpen()) {
                 ws.sendText(createTickerJsonObject(tokens, mUnSubscribe).toString());
                 subscribedTokens.removeAll(tokens);
-                for(int i = 0; i < tokens.size(); i++){
-                    modeMap.remove(tokens.get(i));
-                }
+                tokens.forEach(modeMap::remove);
             }
         }
     }
