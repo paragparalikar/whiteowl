@@ -14,10 +14,12 @@ public enum Timeframe {
 	M30(13, Duration.ofMinutes(30)), 
 	M15(25, Duration.ofMinutes(15)), 
 	M10(38, Duration.ofMinutes(10)), 
-	M5(75, Duration.ofMinutes(5));
+	M5(75, Duration.ofMinutes(5)),
+	M1(375, Duration.ofMinutes(1));
 	
 	public static Timeframe findByDuration(Duration duration) {
 		final long minutes = duration.toMinutes();
+		if(1 ==  minutes) return M1;
 		if(5 == minutes) return M5;
 		if(10 == minutes) return M10;
 		if(15 == minutes) return M15;
@@ -27,6 +29,6 @@ public enum Timeframe {
 		else throw new IllegalArgumentException("Invalid duration value, minutes :  " + minutes);
 	}
 	
-	private final int dayMultiple;
+	private final int dayMultiple;	// TODO Day multiple should be calculated using Exchange start and end time
 	private final Duration duration;
 }

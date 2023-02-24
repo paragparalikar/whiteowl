@@ -15,6 +15,7 @@ public class TimeframeMapper {
 		case M15:return "15minute";
 		case M30:return "30minute";
 		case M5:return "5minute";
+		case M1: return "minute";
 		default:return null;
 		}
 	}
@@ -28,6 +29,7 @@ public class TimeframeMapper {
 		case M15:return Duration.ofDays(180);
 		case M10:return Duration.ofDays(90);
 		case M5:return Duration.ofDays(90);
+		case M1: return Duration.ofDays(60);
 		default: return Duration.ofDays(90);
 		}
 	}

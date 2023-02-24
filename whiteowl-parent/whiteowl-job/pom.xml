@@ -33,11 +33,6 @@
 		</dependency>
 		<dependency>
 			<groupId>com.whiteowl</groupId>
-			<artifactId>whiteowl-strategy</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.whiteowl</groupId>
 			<artifactId>whiteowl-ml</artifactId>
 			<version>${project.version}</version>
 		</dependency>
