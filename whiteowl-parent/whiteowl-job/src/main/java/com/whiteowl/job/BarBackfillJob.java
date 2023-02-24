@@ -45,7 +45,7 @@ public class BarBackfillJob {
 	}
 	
 	private void download(Timeframe timeframe) {
-		scripService.findAll().stream()
+		scripService.findAll().stream().parallel()
 			.filter(getScripCriteria())
 			.forEach(scrip -> download(scrip, timeframe, barDataProvider));
 		eventPublisher.publishEvent(new TimeframeBarDownloadedEvent(timeframe));
