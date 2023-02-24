@@ -42,6 +42,10 @@ public class DoubleNum implements Num {
     public DoubleNum(double val) {
         delegate = val;
     }
+    
+    public static DoubleNum valueOf(double i) {
+    	return new DoubleNum(i);
+    }
 
     public static DoubleNum valueOf(int i) {
         return new DoubleNum((double) i);

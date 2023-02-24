@@ -6,11 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
-import javax.annotation.PostConstruct;
-
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
@@ -33,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BarDownloadJob {
+public class BarBackfillJob {
 
 	private final BarService barService;
 	private final ScripService scripService;
@@ -41,20 +39,9 @@ public class BarDownloadJob {
 	private final BarQueryTransformer barQueryTransformer;
 	private final ApplicationEventPublisher eventPublisher;
 	
-	@Async @Scheduled(cron = "1 15 9 * * MON-FRI") public void downloadD() { download(Timeframe.D); }
-	@Async @Scheduled(cron = "1 15 10-17 * * MON-FRI") public void downloadH1() { download(Timeframe.H1); }
-	@Async @Scheduled(cron = "1 15,45 9-17 * * MON-FRI") public void downloadM30() { download(Timeframe.M30); }
-	@Async @Scheduled(cron = "1 0/15 9-16 * * MON-FRI") public void downloadM15() { download(Timeframe.M15); }
-	@Async @Scheduled(cron = "1 5-59/10 9-16 * * MON-FRI") public void downloadM10() { download(Timeframe.M10); }
-	@Async @Scheduled(cron = "1 0/5 9-16 * * MON-FRI") public void downloadM5() { download(Timeframe.M5); }
-	@Async @Scheduled(cron = "1 30 15 * * MON-FRI") public void downloadAll() { Arrays.asList(Timeframe.values()).forEach(this::download); }
-	
-	@Async
-	@PostConstruct
-	public void download() {
-		for(Timeframe timeframe : Timeframe.values()) {
-			download(timeframe);
-		}
+	@EventListener(ApplicationReadyEvent.class)
+	public void execute() {
+		Arrays.stream(Timeframe.values()).forEach(this::download);
 	}
 	
 	private void download(Timeframe timeframe) {
