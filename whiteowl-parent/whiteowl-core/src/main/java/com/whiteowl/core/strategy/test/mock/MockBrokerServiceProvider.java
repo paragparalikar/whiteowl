@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 import org.ta4j.core.Bar;
 import org.ta4j.core.Trade.TradeType;
@@ -220,6 +221,16 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		final double effectOnMargin = multiple * executionPrice * trade.getQuantity();
 		final double availableMargin = portfolio.getAvailableMargin();
 		portfolio.setAvailableMargin(availableMargin + effectOnMargin);
+	}
+	
+	@Override
+	public void subscribeTradeStatusListener(Consumer<Trade> tradeStatusListener, Portfolio portfolio) {
+		
+	}
+	
+	@Override
+	public void unsubscribeTradeStatusListener(Consumer<Trade> tradeStatusListener, Portfolio portfolio) {
+		
 	}
 	
 }

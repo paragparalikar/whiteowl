@@ -67,8 +67,12 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 	
 	@Override
 	public void close() throws Exception {
-		scheduledFuture.cancel(true);
+		if(null != scheduledFuture) {
+			scheduledFuture.cancel(true);
+		}
 		disconnect();
+		tickConsumers.clear();
+		orderConsumers.clear();
 	}
 	
 	@SneakyThrows
@@ -97,7 +101,11 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 	}
 	
 	private void reconnect() {
-		if(!isConnected()) connect();
+		try {
+			if(!isConnected()) connect();
+		} catch(Exception e) {
+			log.error("Error while reconnecting", e);		
+		}
 	}
 	
 	private String createUri() {

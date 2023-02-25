@@ -1,6 +1,7 @@
 package com.whiteowl.core.broker;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.scrip.Exchange;
@@ -23,5 +24,9 @@ public interface BrokerServiceProvider {
 	void cancel(Trade trade, Portfolio portfolio);
 	
 	int getAvailableQuantity(Scrip scrip, Exchange exchange, TradeProduct product, Portfolio portfolio);
+	
+	void subscribeTradeStatusListener(Consumer<Trade> tradeStatusListener, Portfolio portfolio);
+	
+	void unsubscribeTradeStatusListener(Consumer<Trade> tradeStatusListener, Portfolio portfolio);
 	
 }

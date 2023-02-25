@@ -5,8 +5,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
-import com.whiteowl.core.position.event.PositionSynchronizedEvent;
 import com.whiteowl.core.strategy.TradingStrategyExecutor;
+import com.whiteowl.core.trade.TradeSynchronizedEvent;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,8 +27,11 @@ public class TradingStrategyExecutionJob {
 	}
 	
 	@EventListener
-	public void handle(final PositionSynchronizedEvent event) {
-		tradingStrategyExecutor.onPositionSynchronized(event.getPosition());
+	public void handle(final TradeSynchronizedEvent event) {
+		tradingStrategyExecutor.onTradeSynchronized(
+				event.getTrade(),
+				event.getPosition(),
+				event.getPortfolio());
 	}
 	
 }

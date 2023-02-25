@@ -90,7 +90,7 @@ public class TradingStrategyExecutor implements AutoCloseable {
 		}
 	}
 	
-	public void onPositionSynchronized(@NonNull final Position position) {
+	public void onTradeSynchronized(Trade trade, Position position, Portfolio portfolio) {
 		final String configId = position.getTradingStrategyConfigId();
 		final TradingStrategyConfig config = tradingStrategyConfigService.findById(configId).orElseThrow();
 		final TradingStrategy tradingStrategy = tradingStrategyFactory.getTradingStrategy(config);

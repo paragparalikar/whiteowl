@@ -21,7 +21,7 @@ import com.whiteowl.core.quote.QuoteMode;
 import com.whiteowl.core.scrip.Scrip;
 
 @Component
-public class KiteQuoteDataProvider implements QuoteDataProvider {
+public class KiteQuoteDataProvider implements QuoteDataProvider, AutoCloseable {
 
 	private final KiteMapper kiteMapper;
 	private final KiteConnectApi kiteClient;
@@ -68,6 +68,12 @@ public class KiteQuoteDataProvider implements QuoteDataProvider {
 	public void unsubscribe(Consumer<Quote> quoteListener) {
 		kiteClient.unsubscribeTickListener(quoteListeners.get(quoteListener));
 		quoteListeners.remove(quoteListener);
+	}
+	
+	@Override
+	public void close() throws Exception {
+		kiteClient.close();
+		quoteListeners.clear();
 	}
 
 }

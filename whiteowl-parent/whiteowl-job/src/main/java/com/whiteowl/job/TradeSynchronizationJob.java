@@ -1,10 +1,11 @@
 package com.whiteowl.job;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -17,51 +18,74 @@ import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
-import com.whiteowl.core.position.PositionStatus;
-import com.whiteowl.core.position.event.AllPositionsSynchronizedEvent;
-import com.whiteowl.core.position.event.PositionSynchronizedEvent;
 import com.whiteowl.core.trade.Trade;
+import com.whiteowl.core.trade.TradeNotFoundException;
+import com.whiteowl.core.trade.TradeSynchronizedEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-// TODO use websockets to receive trade updates
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TradeSynchronizationJob {
+public class TradeSynchronizationJob implements AutoCloseable {
 	
 	private final PositionService positionService;
 	private final PortfolioService portfolioService;
 	private final ApplicationEventPublisher eventPublisher;
 	private final BrokerServiceProvider brokerServiceProvider;
-
-	@Scheduled(cron = "0/15 * 9-16 * * MON-FRI")
+	private final Map<Portfolio, Consumer<Trade>> tradeListeners = new HashMap<>();
+	
+	@Scheduled(cron = "0 * 9-16 * * MON-FRI")
 	@EventListener(ApplicationReadyEvent.class)
 	public void tryDownload() {
 		try {
 			for(Portfolio portfolio : portfolioService.findAll()) {
-				final Map<String, Trade> trades = brokerServiceProvider.findAllTrades(portfolio).stream()
-						.collect(Collectors.toMap(Trade::getBrokerTradeId, Function.identity()));
-				final List<Position> positions = positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED);
-				for(Position position : positions) {
-					synchronize(position.getExitTrades(), trades);
-					synchronize(position.getEntryTrades(), trades);
-					position = positionService.save(position);
-					eventPublisher.publishEvent(new PositionSynchronizedEvent(position));
-				}
+				brokerServiceProvider.findAllTrades(portfolio).forEach(trade -> synchronize(trade, portfolio));
 			}
-			eventPublisher.publishEvent(new AllPositionsSynchronizedEvent());
 		} catch(Exception e) {
 			log.error("", e);
 		}
 	}
 	
-	private void synchronize(Iterable<Trade> localTrades, Map<String, Trade> brokerTrades) {
-		localTrades.forEach(localTrade -> 
-			Optional.ofNullable(brokerTrades.get(localTrade.getBrokerTradeId()))
-				.ifPresent(localTrade::copy));
+	@EventListener(ApplicationReadyEvent.class)
+	public void subscribe() {
+		for(Portfolio portfolio : portfolioService.findAll()) {
+			final Consumer<Trade> tradeListener = trade -> synchronize(trade, portfolio);
+			brokerServiceProvider.subscribeTradeStatusListener(tradeListener, portfolio);
+			tradeListeners.put(portfolio, tradeListener);
+		}
+	}
+	
+	private void synchronize(Trade trade, Portfolio portfolio) {
+		final String brokerTradeId = trade.getBrokerTradeId();
+		Optional<Position> optionalPosition = positionService.findByEntryTradesBrokerTradeId(brokerTradeId);
+		if(optionalPosition.isEmpty()) optionalPosition = positionService.findByExitTradesBrokerTradeId(brokerTradeId);
+		optionalPosition.ifPresent(position -> {
+			final Trade localTrade = Stream.concat(position.getEntryTrades().stream(), position.getExitTrades().stream())
+				.filter(lt -> Objects.equals(lt.getId(), trade.getId())).findFirst()
+				.orElseThrow(() -> new TradeNotFoundException("No trade found for id " + trade.getId()));
+			localTrade.copy(trade);
+			positionService.save(position);
+			publish(localTrade, position, portfolio);
+		});
+	}
+	
+	private void publish(Trade trade, Position position, Portfolio portfolio) {
+		eventPublisher.publishEvent(TradeSynchronizedEvent.builder()
+				.portfolio(null)
+				.position(position)
+				.trade(trade)
+				.build());
+	}
+	
+	@Override
+	public void close() throws Exception {
+		for(Portfolio portfolio : tradeListeners.keySet()) {
+			final Consumer<Trade> tradeListener = tradeListeners.get(portfolio);
+			brokerServiceProvider.unsubscribeTradeStatusListener(tradeListener, portfolio);
+		}
+		tradeListeners.clear();
 	}
 	
 }

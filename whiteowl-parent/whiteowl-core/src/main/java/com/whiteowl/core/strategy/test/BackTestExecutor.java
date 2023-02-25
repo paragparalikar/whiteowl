@@ -5,6 +5,7 @@ import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.portfolio.Portfolio;
+import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
 import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.scrip.Scrip;
@@ -39,9 +40,14 @@ public class BackTestExecutor {
 			brokerServiceProvider.execute();
 			positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream()
 				.map(positionService::save) // The position might have been modified by broker outside position service
-				.forEach(tradingStrategyExecutor::onPositionSynchronized);
+				.forEach(this::synchronize);
 			equityCurveObserver.next(bar.getClosePrice().doubleValue());
 		}
+	}
+	
+	private void synchronize(Position position) {
+		position.getExitTrades().forEach(trade -> tradingStrategyExecutor.onTradeSynchronized(trade, position, portfolio));
+		position.getEntryTrades().forEach(trade -> tradingStrategyExecutor.onTradeSynchronized(trade, position, portfolio));
 	}
 
 }

@@ -1,9 +1,12 @@
 package com.whiteowl.client.kite.adapter;
 
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Primary;
@@ -35,6 +38,7 @@ public class KiteBrokerServiceProvider implements BrokerServiceProvider {
 	
 	private final KiteMapper kiteMapper;
 	private final KiteClientProvider kiteClientProvider;
+	private final Map<Consumer<Trade>, Consumer<Order>> cache = new IdentityHashMap<>();
 	
 	@Override
 	public Broker getBrokerType() {
@@ -114,4 +118,23 @@ public class KiteBrokerServiceProvider implements BrokerServiceProvider {
 				.collect(Collectors.summingInt(Position::getQuantity));
 	}
 
+	@Override
+	public void subscribeTradeStatusListener(Consumer<Trade> tradeStatusListener, Portfolio portfolio) {
+		final KiteConnectApi api = getKiteConnectApi(portfolio);
+		final Consumer<Order> orderListener = cache.computeIfAbsent(tradeStatusListener, this::toOrderListener);
+		api.subscribeOrderListener(orderListener);
+	}
+	
+	private Consumer<Order> toOrderListener(Consumer<Trade> tradeListener){
+		return order -> tradeListener.accept(kiteMapper.toTrade(order));
+	}
+	
+	@Override
+	public void unsubscribeTradeStatusListener(Consumer<Trade> tradeStatusListener, Portfolio portfolio) {
+		final KiteConnectApi api = getKiteConnectApi(portfolio);
+		final Consumer<Order> orderListener = cache.get(tradeStatusListener);
+		api.unsubscribeOrderListener(orderListener);
+		cache.remove(tradeStatusListener);
+	}
+	
 }

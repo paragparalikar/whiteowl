@@ -20,7 +20,7 @@ import com.whiteowl.client.kite.model.OrderVariety;
 import com.whiteowl.client.kite.model.Position;
 import com.whiteowl.client.kite.model.Profile;
 
-public interface KiteConnectApi {
+public interface KiteConnectApi extends AutoCloseable {
 
 	CandleSeries getData(long instrumentToken, String interval, ZonedDateTime from, ZonedDateTime to);
 

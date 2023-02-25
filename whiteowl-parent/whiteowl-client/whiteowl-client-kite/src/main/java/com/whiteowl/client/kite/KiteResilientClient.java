@@ -144,4 +144,9 @@ public class KiteResilientClient implements KiteConnectApi {
 		delegate.unsubscribeTickListener(tickListener);
 	}
 	
+	@Override
+	public void close() throws Exception {
+		delegate.close();
+	}
+	
 }

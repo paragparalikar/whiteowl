@@ -1,6 +1,7 @@
 package com.whiteowl.core.position;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,6 +13,10 @@ import com.whiteowl.core.scrip.Scrip;
 public interface PositionRepository extends JpaRepository<Position, Long> {
 	
 	boolean existsByScripAndStatusNot(Scrip scrip, PositionStatus status);
+	
+	Optional<Position> findByExitTradesBrokerTradeId(String brokerTradeId);
+	
+	Optional<Position> findByEntryTradesBrokerTradeId(String brokerTradeId);
 	
 	List<Position> findByPortfolioAndStatusNot(Portfolio portfolio, PositionStatus status);
 	

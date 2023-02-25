@@ -3,6 +3,7 @@ package com.whiteowl.core.strategy.test.mock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -76,6 +77,16 @@ public class MockPositionService implements PositionService {
 			@NonNull final Scrip scripIgnored, 
 			@NonNull final PositionStatus status) {
 		return status.isTerminal() ? !nonTerminalPositions.isEmpty() : !terminalPositions.isEmpty();
+	}
+	
+	@Override
+	public Optional<Position> findByEntryTradesBrokerTradeId(String brokerTradeId) {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public Optional<Position> findByExitTradesBrokerTradeId(String brokerTradeId) {
+		throw new UnsupportedOperationException();
 	}
 
 }

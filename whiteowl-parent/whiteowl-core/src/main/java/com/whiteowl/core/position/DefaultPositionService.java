@@ -1,6 +1,7 @@
 package com.whiteowl.core.position;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -55,4 +56,13 @@ public class DefaultPositionService implements PositionService {
 		return positionRepository.findByScripAndTradingStrategyConfigIdAndStatus(scrip, configId, status);
 	}
 	
+	@Override
+	public Optional<Position> findByEntryTradesBrokerTradeId(String brokerTradeId) {
+		return positionRepository.findByEntryTradesBrokerTradeId(brokerTradeId);
+	}
+	
+	@Override
+	public Optional<Position> findByExitTradesBrokerTradeId(String brokerTradeId) {
+		return positionRepository.findByExitTradesBrokerTradeId(brokerTradeId);
+	}
 }

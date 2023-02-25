@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.springframework.stereotype.Component;
 
@@ -66,4 +67,14 @@ public class TestBrokerServiceProvider implements BrokerServiceProvider {
 		return 0;
 	}
 
+	@Override
+	public void subscribeTradeStatusListener(Consumer<Trade> tradeStatusListener, Portfolio portfolio) {
+		
+	}
+	
+	@Override
+	public void unsubscribeTradeStatusListener(Consumer<Trade> tradeStatusListener, Portfolio portfolio) {
+		
+	}
+	
 }
