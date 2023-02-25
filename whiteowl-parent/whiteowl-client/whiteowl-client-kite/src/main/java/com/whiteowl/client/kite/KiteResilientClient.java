@@ -4,12 +4,14 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.whiteowl.client.kite.model.CandleSeries;
 import com.whiteowl.client.kite.model.Holding;
 import com.whiteowl.client.kite.model.Instrument;
 import com.whiteowl.client.kite.model.KiteQuote;
 import com.whiteowl.client.kite.model.KiteQuoteMode;
+import com.whiteowl.client.kite.model.KiteTick;
 import com.whiteowl.client.kite.model.Margin;
 import com.whiteowl.client.kite.model.Order;
 import com.whiteowl.client.kite.model.OrderId;
@@ -26,7 +28,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class ResilientKiteClient implements KiteConnectApi {
+public class KiteResilientClient implements KiteConnectApi {
 	private static final String KITE = "kite";
 
 	@NonNull private final KiteConnectApi delegate;
@@ -119,6 +121,27 @@ public class ResilientKiteClient implements KiteConnectApi {
 		return Decorators.ofSupplier(() -> delegate.getQuotes(instruments, mode))
 				.withRateLimiter(rateLimiterRegistry.rateLimiter(KITE))
 				.get();
+	}
+	
+	@Override
+	public void subscribeOrderListener(Consumer<Order> orderListener) {
+		delegate.subscribeOrderListener(orderListener);
+	}
+	
+	@Override
+	public void subscribeTickListener(Collection<Instrument> instruments, KiteQuoteMode mode,
+			Consumer<KiteTick> tickListener) {
+		delegate.subscribeTickListener(instruments, mode, tickListener);
+	}
+	
+	@Override
+	public void unsubscribeOrderListener(Consumer<Order> orderListener) {
+		delegate.unsubscribeOrderListener(orderListener);
+	}
+	
+	@Override
+	public void unsubscribeTickListener(Consumer<KiteTick> tickListener) {
+		delegate.unsubscribeTickListener(tickListener);
 	}
 	
 }

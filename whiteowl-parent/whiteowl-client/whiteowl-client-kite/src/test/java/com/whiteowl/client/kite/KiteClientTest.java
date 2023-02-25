@@ -12,7 +12,7 @@ public class KiteClientTest {
 		dataProviderCredentials.setEncrypted(false);
 		final KiteCredentials credentials = dataProviderCredentials.toKiteCredentials();
 		final KiteSession session = new KiteSession(credentials);
-		final KiteConnectApi api = new ResilientKiteClient(new KiteClient(session));
+		final KiteConnectApi api = new KiteResilientClient(new KiteClient(session));
 		api.getOrders().forEach(System.out::println);
 	}
 }

@@ -32,7 +32,6 @@ import com.whiteowl.client.kite.model.Twofa;
 import com.whiteowl.client.kite.request.LoginRequest;
 import com.whiteowl.client.kite.request.RootRequest;
 import com.whiteowl.client.kite.request.TwofaRequest;
-import com.whiteowl.client.kite.ticker.KiteTicker;
 import com.whiteowl.core.util.Strings;
 
 import lombok.Data;
@@ -88,11 +87,6 @@ public class KiteSession {
 		setCookies(twofaRequest);
 	}
 	
-	public KiteTicker createTicker() {
-		if(!Strings.hasText(getCookieValue(ENCTOKEN))) login();
-		return new KiteTicker(credentials.getUsername(), getCookieValue(ENCTOKEN));
-	}
-	
 	@SneakyThrows
 	private InputStream resolveInputStream(Request<?> request) {
 		final String contentEncoding = getHeaderValue(CONTENT_ENCODING, request);
@@ -137,13 +131,17 @@ public class KiteSession {
 	}
 	
 	private void addHeaders(final Request<?> request){
+		final String enctoken = getEncToken();
+		request.header(COOKIE, getCookies());
+		request.header(AUTHORIZATION, ENCTOKEN + " " + enctoken);
+	}
+	
+	String getEncToken() {
 		String enctoken = getCookieValue(ENCTOKEN);
 		if(!Strings.hasText(enctoken)) {
 			login();
 			enctoken = getCookieValue(ENCTOKEN);
 		}
-		request.header(COOKIE, getCookies());
-		request.header(AUTHORIZATION, ENCTOKEN + " " + enctoken);
+		return enctoken;
 	}
-	
 }
