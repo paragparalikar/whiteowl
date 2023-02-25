@@ -37,4 +37,4 @@ spring:
     driver-class-name: org.h2.Driver
     hikari:
       minimum-idle: 1
-      maximum-pool-size: 20
+      maximum-pool-size: 1
