@@ -67,6 +67,7 @@ public class KiteQuoteDataProvider implements QuoteDataProvider {
 	@Override
 	public void unsubscribe(Consumer<Quote> quoteListener) {
 		kiteClient.unsubscribeTickListener(quoteListeners.get(quoteListener));
+		quoteListeners.remove(quoteListener);
 	}
 
 }
