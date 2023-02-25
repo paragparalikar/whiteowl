@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
@@ -16,8 +15,6 @@ import org.ta4j.core.BarSeries;
 import com.whiteowl.core.bar.BarDataProvider;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
-import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
-import com.whiteowl.core.bar.event.TimeframeBarDownloadedEvent;
 import com.whiteowl.core.bar.query.BarQuery;
 import com.whiteowl.core.bar.query.BarQueryTransformer;
 import com.whiteowl.core.scrip.Index;
@@ -37,7 +34,6 @@ public class BarBackfillJob {
 	private final ScripService scripService;
 	private final BarDataProvider barDataProvider;
 	private final BarQueryTransformer barQueryTransformer;
-	private final ApplicationEventPublisher eventPublisher;
 	
 	@EventListener(ApplicationReadyEvent.class)
 	public void execute() {
@@ -48,7 +44,6 @@ public class BarBackfillJob {
 		scripService.findAll().stream().parallel()
 			.filter(getScripCriteria())
 			.forEach(scrip -> download(scrip, timeframe, barDataProvider));
-		eventPublisher.publishEvent(new TimeframeBarDownloadedEvent(timeframe));
 	}
 	
 	private Predicate<Scrip> getScripCriteria() {
@@ -74,13 +69,7 @@ public class BarBackfillJob {
 		final List<Bar> bars = barQueryTransformer.transform(barQuery)
 				.map(barDataProvider::getBars)
 				.orElse(Collections.emptyList());
-		if(!bars.isEmpty()) {
-			barService.saveAll(scrip.getCode(), timeframe, bars);
-			eventPublisher.publishEvent(ScripBarDownloadedEvent.builder()
-					.scrip(scrip)
-					.timeframe(timeframe)
-					.build());
-		}
+		barService.saveAll(scrip.getCode(), timeframe, bars);
 	}
 	
 	private ZonedDateTime getLastDownloadTimestamp(Scrip scrip, Timeframe timeframe) {

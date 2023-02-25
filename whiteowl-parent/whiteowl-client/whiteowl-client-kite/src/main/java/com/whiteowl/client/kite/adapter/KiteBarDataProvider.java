@@ -3,10 +3,7 @@ package com.whiteowl.client.kite.adapter;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
@@ -16,14 +13,9 @@ import com.whiteowl.client.kite.adapter.mapper.KiteMapper;
 import com.whiteowl.client.kite.model.Candle;
 import com.whiteowl.client.kite.model.CandleSeries;
 import com.whiteowl.client.kite.model.Instrument;
-import com.whiteowl.client.kite.model.KiteQuote;
-import com.whiteowl.client.kite.model.KiteQuoteMode;
 import com.whiteowl.core.bar.BarDataProvider;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.bar.query.BarQuery;
-import com.whiteowl.core.quote.Quote;
-import com.whiteowl.core.quote.QuoteDataProvider;
-import com.whiteowl.core.quote.QuoteMode;
 import com.whiteowl.core.scrip.Scrip;
 
 import lombok.NonNull;
@@ -31,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class KiteBarDataProvider implements BarDataProvider, QuoteDataProvider {
+public class KiteBarDataProvider implements BarDataProvider {
 	
 	private final KiteMapper kiteMapper;
 	private final KiteConnectApi kiteClient;
@@ -76,19 +68,6 @@ public class KiteBarDataProvider implements BarDataProvider, QuoteDataProvider {
 			return candles.get(0).getTimestamp().minus(timeframe.getDuration());
 		}
 		return null;
-	}
-
-	@Override
-	public Collection<Quote> getQuotes(Collection<Scrip> scrips, QuoteMode mode) {
-		final KiteQuoteMode kiteQuoteMode = kiteMapper.toKiteQuoteMode(mode);
-		final Set<Instrument> instruments = scrips.stream()
-			.map(Scrip::getCode)
-			.map(kiteInstrumentService::findByTradingSymbol)
-			.collect(Collectors.toSet());
-		final Collection<KiteQuote> kiteQuotes = kiteClient.getQuotes(instruments, kiteQuoteMode);
-		return kiteQuotes.stream()
-				.map(kiteMapper::toQuote)
-				.collect(Collectors.toSet());
 	}
 
 }

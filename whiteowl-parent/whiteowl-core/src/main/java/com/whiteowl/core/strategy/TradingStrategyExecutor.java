@@ -1,12 +1,14 @@
 package com.whiteowl.core.strategy;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.springframework.scheduling.TaskScheduler;
@@ -20,8 +22,8 @@ import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
 import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.quote.Quote;
+import com.whiteowl.core.quote.QuoteMode;
 import com.whiteowl.core.quote.QuoteService;
-import com.whiteowl.core.quote.QuoteSubscription;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.strategy.config.TradingStrategyConfigService;
@@ -46,7 +48,7 @@ public class TradingStrategyExecutor implements AutoCloseable {
 	private final PositionSizingStrategy positionSizingStrategy;
 	private final TradingStrategyConfigService tradingStrategyConfigService;
 	private final Collection<ScheduledFuture<?>> futures = new LinkedList<>();
-	private final Map<Tuple2<Scrip, TradingStrategyConfig>, QuoteSubscription> subscriptions = new ConcurrentHashMap<>();
+	private final Map<Tuple2<Scrip, TradingStrategyConfig>, Consumer<Quote>> subscriptions = new ConcurrentHashMap<>();
 	
 	public void onApplicationReady() {
 		for(TradingStrategyConfig config : tradingStrategyConfigService.findAll()){
@@ -120,9 +122,9 @@ public class TradingStrategyExecutor implements AutoCloseable {
 			final Scrip scrip = entryTrade.getScrip();
 			final Tuple2<Scrip, TradingStrategyConfig> key = Tuple2.of(scrip, config);
 			if(!subscriptions.containsKey(key)) {
-				final QuoteSubscription subscription = quoteService.subscribe(scrip);
-				subscription.addListener(quote -> execute(config, quote));
-				subscriptions.put(key, subscription);
+				final Consumer<Quote> quoteListener = quote -> execute(config, quote);
+				quoteService.subscribe(Collections.singleton(scrip), QuoteMode.FULL, quoteListener);
+				subscriptions.put(key, quoteListener);
 			}
 		}
 	}
@@ -138,7 +140,7 @@ public class TradingStrategyExecutor implements AutoCloseable {
 	public void close() throws Exception {
 		futures.forEach(future -> future.cancel(false));
 		futures.clear();
-		subscriptions.values().forEach(QuoteSubscription::unsubscribe);
+		subscriptions.values().forEach(quoteService::unsubscribe);
 		subscriptions.clear();
 	}
 	

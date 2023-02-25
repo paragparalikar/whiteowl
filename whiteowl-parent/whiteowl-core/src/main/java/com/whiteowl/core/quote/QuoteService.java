@@ -1,19 +1,16 @@
 package com.whiteowl.core.quote;
 
+import java.util.Collection;
+import java.util.function.Consumer;
+
 import com.whiteowl.core.scrip.Scrip;
 
 public interface QuoteService {
 	
-	QuoteSubscription subscribe(Scrip scrip);
+	Collection<Quote> getQuotes(Collection<Scrip> scrips, QuoteMode mode);
 	
-	QuoteSubscription subscribe(Scrip scrip, QuoteMode mode);
+	void subscribe(Collection<Scrip> scrips, QuoteMode mode, Consumer<Quote> quoteListener);
 	
-	Quote getQuote(Scrip scrip, QuoteMode mode);
-
-	Quote getFullQuote(Scrip scrip);
-
-	Quote getOhlcQuote(Scrip scrip);
-
-	Quote getLtpQuote(Scrip scrip);
+	void unsubscribe(Consumer<Quote> quoteListener);
 
 }
