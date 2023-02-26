@@ -3,11 +3,9 @@ package com.whiteowl.core.util;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-
-import lombok.NonNull;
 
 public final class Dates {
 
@@ -19,12 +17,10 @@ public final class Dates {
 		return LocalDateTime.ofInstant(instant, zoneId);
 	}
 	
-	public static ZonedDateTime truncateToDuration(
-			@NonNull final ZonedDateTime zonedDateTime, 
-			@NonNull final Duration duration) {
-	    final ZonedDateTime startOfDay = zonedDateTime.truncatedTo(ChronoUnit.DAYS);
-	    return startOfDay.plus(duration.multipliedBy(
-	            Duration.between(startOfDay, zonedDateTime).dividedBy(duration)));
+	public static ZonedDateTime truncate(LocalDateTime timestamp, LocalTime startTime, Duration duration) {
+		final Duration timestampDuration = Duration.between(startTime, timestamp.toLocalTime()).abs();
+		final LocalTime localTime = startTime.plus(duration.multipliedBy(timestampDuration.dividedBy(duration)));
+		return ZonedDateTime.of(timestamp.toLocalDate(), localTime, ZoneId.systemDefault());
 	}
 
 }

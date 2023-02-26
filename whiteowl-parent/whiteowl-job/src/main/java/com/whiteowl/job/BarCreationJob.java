@@ -1,0 +1,100 @@
+package com.whiteowl.job;
+
+import static com.whiteowl.core.util.Constant.NSE_START_TIME;
+
+import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.ta4j.core.Bar;
+import org.ta4j.core.BaseBar;
+import org.ta4j.core.num.DoubleNum;
+
+import com.whiteowl.core.bar.BarService;
+import com.whiteowl.core.bar.Timeframe;
+import com.whiteowl.core.quote.Quote;
+import com.whiteowl.core.quote.QuoteMode;
+import com.whiteowl.core.quote.QuoteService;
+import com.whiteowl.core.scrip.Index;
+import com.whiteowl.core.scrip.Scrip;
+import com.whiteowl.core.scrip.ScripCriteria;
+import com.whiteowl.core.scrip.ScripService;
+import com.whiteowl.core.util.Dates;
+import com.whiteowl.core.util.Tuple2;
+
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
+public class BarCreationJob implements Consumer<Quote>, AutoCloseable {
+
+	private final BarService barService;
+	private final ScripService scripService;
+	private final QuoteService quoteService;
+	private final Map<String, Quote> lastQuotes = new ConcurrentHashMap<>();
+	private final Map<Tuple2<String, Timeframe>, Bar> cache = new ConcurrentHashMap<>();
+
+	@EventListener(ApplicationReadyEvent.class)
+	public void subscribe() {
+		final Set<Scrip> scrips = scripService.findAll().stream()
+			.filter(getScripCriteria())
+			.collect(Collectors.toSet());
+		quoteService.subscribe(scrips, QuoteMode.FULL, this);
+	}
+	
+	private Predicate<Scrip> getScripCriteria() {
+		return new ScripCriteria().withIndex(Index.NIFTY50)
+				.or(new ScripCriteria()
+						.withCode(Index.NIFTY50.getCode())
+						.withCode(Index.NIFTYBANK.getCode())
+						.withCode(Index.VIX.getCode()));
+	}
+	
+	@Override
+	public void accept(final Quote quote) {
+		final String scripCode = quote.getCode();
+		synchronized(scripCode) {
+			final Quote lastQuote = lastQuotes.get(scripCode);
+			lastQuotes.put(scripCode, quote);
+			for(Timeframe timeframe : Timeframe.values()) {
+				final Duration duration = timeframe.getDuration();
+				final Tuple2<String, Timeframe> tuple2 = Tuple2.of(scripCode, timeframe);
+				final ZonedDateTime endTime = Dates.truncate(quote.getTimestamp(), NSE_START_TIME, duration).plus(duration);
+				final Bar bar = cache.compute(tuple2, (key, value) -> {
+					if(null == value) {
+						return new BaseBar(duration, endTime, DoubleNum::valueOf);
+					} else if(Objects.equals(endTime, value.getEndTime())) {
+						return value;
+					} else {
+						barService.saveAll(scripCode, timeframe, Collections.singleton(value));
+						return new BaseBar(duration, endTime, DoubleNum::valueOf);
+					}
+				});
+				final long volume = quote.getVolume() - Optional.ofNullable(lastQuote).map(Quote::getVolume).orElse(0L);
+				bar.addTrade(DoubleNum.valueOf(volume), DoubleNum.valueOf(quote.getLastPrice()));
+			}
+		}
+	}
+	
+	private void flush() {
+		
+	}
+	
+	@Override
+	public void close() throws Exception {
+		quoteService.unsubscribe(this);
+		flush();
+	}
+
+}

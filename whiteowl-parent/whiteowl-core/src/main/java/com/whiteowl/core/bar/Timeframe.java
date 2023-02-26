@@ -1,6 +1,8 @@
 package com.whiteowl.core.bar;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,10 @@ public enum Timeframe {
 	M10(38, Duration.ofMinutes(10)), 
 	M5(75, Duration.ofMinutes(5)),
 	M1(375, Duration.ofMinutes(1));
+	
+	public static Stream<Timeframe> stream(){
+		return Arrays.stream(Timeframe.values());
+	}
 	
 	public static Timeframe findByDuration(Duration duration) {
 		final long minutes = duration.toMinutes();
