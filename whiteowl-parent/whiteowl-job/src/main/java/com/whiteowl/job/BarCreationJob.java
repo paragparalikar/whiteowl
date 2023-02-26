@@ -3,6 +3,7 @@ package com.whiteowl.job;
 import static com.whiteowl.core.util.Constant.NSE_START_TIME;
 
 import java.time.Duration;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.Map;
@@ -88,13 +89,25 @@ public class BarCreationJob implements Consumer<Quote>, AutoCloseable {
 	}
 	
 	private void flush() {
-		
+		for(String scripCode : lastQuotes.keySet()) {
+			final Quote lastQuote = lastQuotes.get(scripCode);
+			for(Timeframe timeframe : Timeframe.values()) {
+				Optional.ofNullable(cache.get(Tuple2.of(scripCode, timeframe))).ifPresent(bar -> {
+					final ZonedDateTime quoteTime = ZonedDateTime.of(lastQuote.getTimestamp(), ZoneId.systemDefault());
+					if(quoteTime.isAfter(bar.getEndTime().minusSeconds(3))) {
+						barService.saveAll(scripCode, timeframe, Collections.singleton(bar));
+					}
+				});
+			}
+		}
 	}
 	
 	@Override
 	public void close() throws Exception {
 		quoteService.unsubscribe(this);
 		flush();
+		cache.clear();
+		lastQuotes.clear();
 	}
 
 }
