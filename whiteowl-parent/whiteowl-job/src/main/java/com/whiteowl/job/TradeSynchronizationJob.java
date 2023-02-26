@@ -41,7 +41,9 @@ public class TradeSynchronizationJob implements AutoCloseable {
 	public void tryDownload() {
 		try {
 			for(Portfolio portfolio : portfolioService.findAll()) {
-				brokerServiceProvider.findAllTrades(portfolio).forEach(trade -> synchronize(trade, portfolio));
+				brokerServiceProvider
+					.findAllTrades(portfolio)
+					.forEach(this::synchronize);
 			}
 		} catch(Exception e) {
 			log.error("", e);
@@ -51,13 +53,13 @@ public class TradeSynchronizationJob implements AutoCloseable {
 	@EventListener(ApplicationReadyEvent.class)
 	public void subscribe() {
 		for(Portfolio portfolio : portfolioService.findAll()) {
-			final Consumer<Trade> tradeListener = trade -> synchronize(trade, portfolio);
+			final Consumer<Trade> tradeListener = this::synchronize;
 			brokerServiceProvider.subscribeTradeStatusListener(tradeListener, portfolio);
 			tradeListeners.put(portfolio, tradeListener);
 		}
 	}
 	
-	private void synchronize(Trade trade, Portfolio portfolio) {
+	private void synchronize(Trade trade) {
 		final String brokerTradeId = trade.getBrokerTradeId();
 		Optional<Position> optionalPosition = positionService.findByEntryTradesBrokerTradeId(brokerTradeId);
 		if(optionalPosition.isEmpty()) optionalPosition = positionService.findByExitTradesBrokerTradeId(brokerTradeId);
@@ -67,16 +69,8 @@ public class TradeSynchronizationJob implements AutoCloseable {
 				.orElseThrow(() -> new TradeNotFoundException("No trade found for id " + trade.getId()));
 			localTrade.copy(trade);
 			positionService.save(position);
-			publish(localTrade, position, portfolio);
+			eventPublisher.publishEvent(new TradeSynchronizedEvent(localTrade, position));
 		});
-	}
-	
-	private void publish(Trade trade, Position position, Portfolio portfolio) {
-		eventPublisher.publishEvent(TradeSynchronizedEvent.builder()
-				.portfolio(null)
-				.position(position)
-				.trade(trade)
-				.build());
 	}
 	
 	@Override

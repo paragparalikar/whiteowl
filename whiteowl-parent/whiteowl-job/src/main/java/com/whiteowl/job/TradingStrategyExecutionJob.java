@@ -30,8 +30,7 @@ public class TradingStrategyExecutionJob {
 	public void handle(final TradeSynchronizedEvent event) {
 		tradingStrategyExecutor.onTradeSynchronized(
 				event.getTrade(),
-				event.getPosition(),
-				event.getPortfolio());
+				event.getPosition());
 	}
 	
 }

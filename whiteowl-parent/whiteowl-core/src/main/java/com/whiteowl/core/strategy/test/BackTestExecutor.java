@@ -46,8 +46,8 @@ public class BackTestExecutor {
 	}
 	
 	private void synchronize(Position position) {
-		position.getExitTrades().forEach(trade -> tradingStrategyExecutor.onTradeSynchronized(trade, position, portfolio));
-		position.getEntryTrades().forEach(trade -> tradingStrategyExecutor.onTradeSynchronized(trade, position, portfolio));
+		position.getExitTrades().forEach(trade -> tradingStrategyExecutor.onTradeSynchronized(trade, position));
+		position.getEntryTrades().forEach(trade -> tradingStrategyExecutor.onTradeSynchronized(trade, position));
 	}
 
 }
