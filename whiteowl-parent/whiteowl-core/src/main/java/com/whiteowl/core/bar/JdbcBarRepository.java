@@ -18,6 +18,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Repository;
 import org.ta4j.core.Bar;
@@ -54,13 +55,14 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 		createTableIfNotExists();
 	}
 
+	@Autowired
 	public JdbcBarRepository(final DataSourceProperties properties) {
 		this(JdbcBarRepository.createDataSource(properties));
 	}
 	
 	@Override
 	public void close() throws Exception {
-		dataSource.unwrap(HikariDataSource.class).close();
+		if(dataSource instanceof HikariDataSource) dataSource.unwrap(HikariDataSource.class).close();
 	}
 	
 	@SneakyThrows
@@ -75,7 +77,7 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 					+ "LOW DOUBLE PRECISION DEFAULT 0, "
 					+ "CLOSE DOUBLE PRECISION DEFAULT 0, "
 					+ "VOLUME DOUBLE PRECISION DEFAULT 0, "
-					+ "PRIMARY KEY (CODE, TIMEFRAME, BEGIN_TIME))");
+					+ "PRIMARY KEY (CODE ASC, TIMEFRAME ASC, BEGIN_TIME DESC))");
 		}
 	}
 	
@@ -101,7 +103,7 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 			@NonNull final String code, 
 			@NonNull final Timeframe timeframe, 
 			final int count) {
-		final String sql = "SELECT * FROM BAR WHERE CODE = ? AND TIMEFRAME = ? ORDER BY CODE, TIMEFRAME, BEGIN_TIME DESC LIMIT ?";
+		final String sql = "SELECT * FROM BAR WHERE CODE = ? AND TIMEFRAME = ? ORDER BY CODE ASC, TIMEFRAME ASC, BEGIN_TIME DESC LIMIT ?";
 		try(final Connection connection = dataSource.getConnection();
 			final PreparedStatement ps = connection.prepareStatement(sql)){
 			ps.setString(1, code);
@@ -149,7 +151,7 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 		properties.setUrl("jdbc:h2:~/.whiteowl/database/entities;DB_CLOSE_ON_EXIT=FALSE;AUTO_SERVER=TRUE");
 		try(final JdbcBarRepository jdbcBarRepository = new JdbcBarRepository(properties)){
 			final BarRepository fileSystemBarRepository = new FileSystemBarRepository();
-			Files.list(Constant.HOME)
+			Files.list(Constant.HOME.resolve("backup"))
 				.map(Path::getFileName)
 				.map(Path::toString)
 				.forEach(code -> {

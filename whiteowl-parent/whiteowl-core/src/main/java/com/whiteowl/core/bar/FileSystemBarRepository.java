@@ -44,7 +44,7 @@ public class FileSystemBarRepository implements BarRepository {
 	}
 	
 	private Path getPath(String code, Timeframe timeframe) {
-		return Constant.HOME.resolve(Paths.get(code, timeframe.name(), NAME));
+		return Constant.HOME.resolve("backup").resolve(Paths.get(code, timeframe.name(), NAME));
 	}
 	
 	private void write(Bar bar, DataOutput output) throws IOException {
