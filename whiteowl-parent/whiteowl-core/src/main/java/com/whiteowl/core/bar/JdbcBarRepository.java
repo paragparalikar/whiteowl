@@ -1,6 +1,5 @@
 package com.whiteowl.core.bar;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -17,7 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.PreDestroy;
+import javax.sql.DataSource;
 
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Repository;
@@ -33,21 +32,9 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 
 @Repository
-public class JdbcBarRepository implements BarRepository {
+public class JdbcBarRepository implements BarRepository, AutoCloseable {
 	
-	private final HikariDataSource dataSource;
-
-	public JdbcBarRepository(final DataSourceProperties properties) {
-		this.dataSource = createDataSource(properties);
-		createTableIfNotExists();
-	}
-	
-	@PreDestroy
-	public void destroy() throws Exception {
-		dataSource.close();
-	}
-	
-	private HikariDataSource createDataSource(final DataSourceProperties properties) {
+	private static HikariDataSource createDataSource(final DataSourceProperties properties) {
 		final HikariConfig config = new HikariConfig();
 		config.setDriverClassName(properties.getDriverClassName());
 		config.setJdbcUrl(properties.getUrl().replace("entities", "bars"));
@@ -57,6 +44,23 @@ public class JdbcBarRepository implements BarRepository {
 		config.setMinimumIdle(1);
 		config.setMaximumPoolSize(1);
 		return new HikariDataSource(config);
+	}
+
+	
+	private final DataSource dataSource;
+	
+	public JdbcBarRepository(final DataSource dataSource) {
+		this.dataSource = dataSource;
+		createTableIfNotExists();
+	}
+
+	public JdbcBarRepository(final DataSourceProperties properties) {
+		this(JdbcBarRepository.createDataSource(properties));
+	}
+	
+	@Override
+	public void close() throws Exception {
+		dataSource.unwrap(HikariDataSource.class).close();
 	}
 	
 	@SneakyThrows
@@ -136,26 +140,28 @@ public class JdbcBarRepository implements BarRepository {
 		}
 	}
 	
-	@SuppressWarnings("removal")
-	public static void main(String[] args) throws IOException {
+	@SuppressWarnings("deprecation")
+	public static void main(String[] args) throws Exception {
 		final DataSourceProperties properties = new DataSourceProperties();
 		properties.setUsername("sa");
 		properties.setPassword("");
 		properties.setDriverClassName("org.h2.Driver");
 		properties.setUrl("jdbc:h2:~/.whiteowl/database/entities;DB_CLOSE_ON_EXIT=FALSE;AUTO_SERVER=TRUE");
-		final BarRepository jdbcBarRepository = new JdbcBarRepository(properties);
-		final BarRepository fileSystemBarRepository = new FileSystemBarRepository();
-		Files.list(Constant.HOME)
-			.map(Path::getFileName)
-			.map(Path::toString)
-			.forEach(code -> {
-				for(Timeframe timeframe : Timeframe.values()) {
-					final List<Bar> bars = fileSystemBarRepository.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
-							code, timeframe, Integer.MAX_VALUE);
-					System.out.printf("%-25s %-5s %6d\n", code, timeframe.name(), bars.size());
-					jdbcBarRepository.saveAll(code, timeframe, bars);
-				}
-			});
+		try(final JdbcBarRepository jdbcBarRepository = new JdbcBarRepository(properties)){
+			final BarRepository fileSystemBarRepository = new FileSystemBarRepository();
+			Files.list(Constant.HOME)
+				.map(Path::getFileName)
+				.map(Path::toString)
+				.forEach(code -> {
+					for(Timeframe timeframe : Timeframe.values()) {
+						final List<Bar> bars = fileSystemBarRepository.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
+								code, timeframe, Integer.MAX_VALUE);
+						System.out.printf("%-25s %-5s %6d\n", code, timeframe.name(), bars.size());
+						jdbcBarRepository.saveAll(code, timeframe, bars);
+					}
+				});
+		}
+		
 	}
 
 }

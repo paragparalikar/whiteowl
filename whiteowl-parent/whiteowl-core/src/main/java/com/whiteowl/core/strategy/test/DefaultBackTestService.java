@@ -8,7 +8,6 @@ import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeries;
 import org.ta4j.core.num.DoubleNum;
 
-import com.whiteowl.core.bar.BarRepository;
 import com.whiteowl.core.bar.JdbcBarRepository;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.position.Position;
@@ -50,7 +49,7 @@ public class DefaultBackTestService implements BackTestService {
 				.build();
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		final Timeframe timeframe = Timeframe.M15;
 		final Scrip scrip = Scrip.builder()
 				.code("RELIANCE")
@@ -62,14 +61,15 @@ public class DefaultBackTestService implements BackTestService {
 		properties.setPassword("");
 		properties.setDriverClassName("org.h2.Driver");
 		properties.setUrl("jdbc:h2:~/.whiteowl/database/entities;DB_CLOSE_ON_EXIT=FALSE;AUTO_SERVER=TRUE");
-		final BarRepository barRepository = new JdbcBarRepository(properties);
-		final List<Bar> bars = barRepository.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), timeframe, Integer.MAX_VALUE);
-		final BarSeries barSeries = new BaseBarSeries("", bars, DoubleNum::valueOf);
-		final TradingStrategyConfig config = new TrendFollowingTradingStrategyConfig(scrip.getCode());
-		final TradingStrategyPerformanceService performanceService = new DefaultTradingStrategyPerformanceService(null);
-		final BackTestService backTestService = new DefaultBackTestService(performanceService);
-		final BackTestResult result = backTestService.test(scrip, barSeries, config);
-		System.out.println(result);
+		try(final JdbcBarRepository barRepository = new JdbcBarRepository(properties)){
+			final List<Bar> bars = barRepository.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), timeframe, Integer.MAX_VALUE);
+			final BarSeries barSeries = new BaseBarSeries("", bars, DoubleNum::valueOf);
+			final TradingStrategyConfig config = new TrendFollowingTradingStrategyConfig(scrip.getCode());
+			final TradingStrategyPerformanceService performanceService = new DefaultTradingStrategyPerformanceService(null);
+			final BackTestService backTestService = new DefaultBackTestService(performanceService);
+			final BackTestResult result = backTestService.test(scrip, barSeries, config);
+			System.out.println(result);
+		}
 	}
 	
 }

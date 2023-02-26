@@ -32,7 +32,7 @@ import lombok.SneakyThrows;
 /**
  * Use JdbcBarRepository instead
  */
-@Deprecated(forRemoval = true)
+@Deprecated
 public class FileSystemBarRepository implements BarRepository {
 	private static final String NAME = "bars.dat";
 	private static final int BYTES = Long.BYTES + 5 * Double.BYTES;
