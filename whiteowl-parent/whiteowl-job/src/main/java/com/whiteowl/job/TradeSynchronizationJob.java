@@ -20,6 +20,7 @@ import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
 import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.TradeNotFoundException;
+import com.whiteowl.core.trade.TradeStatus;
 import com.whiteowl.core.trade.TradeSynchronizedEvent;
 
 import lombok.RequiredArgsConstructor;
@@ -68,9 +69,12 @@ public class TradeSynchronizationJob implements CommandLineRunner, AutoCloseable
 			final Trade localTrade = Stream.concat(position.getEntryTrades().stream(), position.getExitTrades().stream())
 				.filter(lt -> Objects.equals(lt.getId(), trade.getId())).findFirst()
 				.orElseThrow(() -> new TradeNotFoundException("No trade found for id " + trade.getId()));
+			final TradeStatus oldTradeStatus = localTrade.getStatus();
 			localTrade.copy(trade);
 			positionService.save(position);
-			eventPublisher.publishEvent(new TradeSynchronizedEvent(localTrade, position));
+			if(!Objects.equals(oldTradeStatus, trade.getStatus())) {
+				eventPublisher.publishEvent(new TradeSynchronizedEvent(localTrade, position));
+			}
 		});
 	}
 	

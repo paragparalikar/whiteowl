@@ -16,6 +16,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
@@ -24,6 +25,7 @@ import org.ta4j.core.num.DoubleNum;
 
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
+import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.quote.QuoteMode;
 import com.whiteowl.core.quote.QuoteService;
@@ -44,6 +46,7 @@ public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoC
 	private final BarService barService;
 	private final ScripService scripService;
 	private final QuoteService quoteService;
+	private final ApplicationEventPublisher eventPublisher;
 	private final Map<String, Quote> lastQuotes = new ConcurrentHashMap<>();
 	private final Map<Tuple2<String, Timeframe>, Bar> cache = new ConcurrentHashMap<>();
 
@@ -80,6 +83,8 @@ public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoC
 						return value;
 					} else {
 						barService.saveAll(scripCode, timeframe, Collections.singleton(value));
+						final Scrip scrip = scripService.findByCode(scripCode);
+						eventPublisher.publishEvent(new ScripBarDownloadedEvent(scrip, timeframe));
 						return new BaseBar(duration, endTime, DoubleNum::valueOf);
 					}
 				});

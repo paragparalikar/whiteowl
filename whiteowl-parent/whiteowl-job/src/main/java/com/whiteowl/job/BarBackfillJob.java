@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import org.ta4j.core.BarSeries;
 import com.whiteowl.core.bar.BarDataProvider;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
+import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
 import com.whiteowl.core.bar.query.BarQuery;
 import com.whiteowl.core.bar.query.BarQueryTransformer;
 import com.whiteowl.core.scrip.Index;
@@ -37,6 +39,7 @@ public class BarBackfillJob implements CommandLineRunner {
 	private final ScripService scripService;
 	private final BarDataProvider barDataProvider;
 	private final BarQueryTransformer barQueryTransformer;
+	private final ApplicationEventPublisher eventPublisher;
 	
 	@Override
 	public void run(String... args) throws Exception {
@@ -72,7 +75,10 @@ public class BarBackfillJob implements CommandLineRunner {
 		final List<Bar> bars = barQueryTransformer.transform(barQuery)
 				.map(barDataProvider::getBars)
 				.orElse(Collections.emptyList());
-		barService.saveAll(scrip.getCode(), timeframe, bars);
+		if(!bars.isEmpty()) {
+			barService.saveAll(scrip.getCode(), timeframe, bars);
+			eventPublisher.publishEvent(new ScripBarDownloadedEvent(scrip, timeframe));
+		}
 	}
 	
 	private ZonedDateTime getLastDownloadTimestamp(Scrip scrip, Timeframe timeframe) {

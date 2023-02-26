@@ -99,41 +99,38 @@ public class TradingStrategyExecutor implements AutoCloseable {
 	
 	private void handle(Position position, TradingStrategy tradingStrategy, TradingStrategyConfig config) {
 		if(null == position.getPortfolio()) {
-			multicast(position, tradingStrategy, config);
+			for(Portfolio portfolio : portfolioService.findAll()) {
+				final Position clonePosition = position.withPortfolio(portfolio);
+				final double amount = positionSizingStrategy.size(clonePosition, portfolio, config);
+				if(tradingStrategy.quantify(clonePosition, amount)) {
+					handle(clonePosition, tradingStrategy, config);
+				}
+			}
 		} else {
 			position = positionService.save(position);
-			if(position.getStatus().isTerminal()) unsubscribe(position, config);
-			else subscribe(position, config);
-		}
-	}
-	
-	private void multicast(Position position, TradingStrategy tradingStrategy, TradingStrategyConfig config) {
-		for(Portfolio portfolio : portfolioService.findAll()) {
-			final Position clonePosition = position.withPortfolio(portfolio);
-			final double amount = positionSizingStrategy.size(clonePosition, portfolio, config);
-			if(tradingStrategy.quantify(clonePosition, amount)) {
-				handle(clonePosition, tradingStrategy, config);
+			if(position.getStatus().isTerminal()) {
+				position.trades()
+					.map(Trade::getScrip)
+					.forEach(scrip -> unsubscribe(scrip, config));
+			} else {
+				position.trades()
+					.map(Trade::getScrip)
+					.forEach(scrip -> subscribe(scrip, config));
 			}
 		}
 	}
 	
-	private void subscribe(Position position, TradingStrategyConfig config) {
-		for(Trade entryTrade : position.getEntryTrades()) {
-			final Scrip scrip = entryTrade.getScrip();
-			final Tuple2<Scrip, TradingStrategyConfig> key = Tuple2.of(scrip, config);
-			if(!subscriptions.containsKey(key)) {
-				final Consumer<Quote> quoteListener = quote -> execute(config, quote);
-				quoteService.subscribe(Collections.singleton(scrip), QuoteMode.FULL, quoteListener);
-				subscriptions.put(key, quoteListener);
-			}
+	private void subscribe(Scrip scrip, TradingStrategyConfig config) {
+		final Tuple2<Scrip, TradingStrategyConfig> key = Tuple2.of(scrip, config);
+		if(!subscriptions.containsKey(key)) {
+			final Consumer<Quote> quoteListener = quote -> execute(config, quote);
+			quoteService.subscribe(Collections.singleton(scrip), QuoteMode.FULL, quoteListener);
+			subscriptions.put(key, quoteListener);
 		}
 	}
 	
-	private void unsubscribe(Position position, TradingStrategyConfig config) {
-		position.getEntryTrades().stream()
-			.map(Trade::getScrip)
-			.map(scrip -> Tuple2.of(scrip, config))
-			.forEach(subscriptions::remove);
+	private void unsubscribe(Scrip scrip, TradingStrategyConfig config) {
+		subscriptions.remove(Tuple2.of(scrip, config));
 	}
 	
 	@Override

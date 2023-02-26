@@ -92,6 +92,10 @@ public class Position {
 	@LastModifiedDate
 	private LocalDateTime lastModifiedDate;
 	
+	public Stream<Trade> trades(){
+		return Stream.concat(entryTrades.stream(), exitTrades.stream());
+	}
+	
 	public Position withPortfolio(Portfolio portfolio) {
 		final Position position = new Position();
 		position.setPortfolio(portfolio);
