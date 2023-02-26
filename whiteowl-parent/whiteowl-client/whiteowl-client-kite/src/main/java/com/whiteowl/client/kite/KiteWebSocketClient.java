@@ -1,5 +1,7 @@
 package com.whiteowl.client.kite;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -45,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseable {
 	private static final long PING_INTERVAL = 2500;
 	private static final long RECONNECT_CHECK_DELAY = 500;
-	private static final long RECONNECT_CHECK_INTERVAL = 2500;
+	private static final long RECONNECT_CHECK_INTERVAL = 5000;
 	private static final String MODE_FULL = "full", MODE_QUOTE = "quote", MODE_LTP = "ltp"; 
 	private static final String MESSAGE_SUBSCRIBE = "subscribe", MESSAGE_UNSUBSCRIBE = "unsubscribe", MESSAGE_SET_MODE = "mode";
 
@@ -79,8 +81,10 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 	private void connect() {
 		disconnect();
 		final String uri = createUri();
+		pongTimestamp.set(System.currentTimeMillis());
 		webSocket = new WebSocketFactory().createSocket(uri);
 		webSocket.setPingInterval(PING_INTERVAL);
+		webSocket.setPongInterval(PING_INTERVAL);
 		webSocket.addListener(this);
 		webSocket.connect();
 	}
@@ -96,20 +100,24 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 	
 	private boolean isConnected() {
 		return null != webSocket 
-				&& webSocket.isOpen() 
+				&& webSocket.isOpen()
 				&& System.currentTimeMillis() - pongTimestamp.get() < 2 * PING_INTERVAL;
 	}
 	
-	private void reconnect() {
+	private synchronized void reconnect() {
 		try {
-			if(!isConnected()) connect();
+			if(!isConnected()) {
+				log.info("Kite websocket is not connected, trying to connect");
+				connect();
+				log.info("Kite websocket connected");
+			}
 		} catch(Exception e) {
 			log.error("Error while reconnecting", e);		
 		}
 	}
 	
-	private String createUri() {
-		final String enctoken = kiteSession.getEncToken();
+	private String createUri() throws UnsupportedEncodingException {
+		final String enctoken = URLEncoder.encode(kiteSession.getEncToken(), "UTF-8");
 		final String username = kiteSession.getCredentials().getUsername();
 		return KiteConstant.URL_WS + "/?api_key=" + KiteConstant.APIKEY + 
     			"&user_id=" + username + "&enctoken=" + enctoken +
@@ -213,8 +221,10 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
         	orderConsumers.forEach(orderConsumer -> orderConsumer.accept(order));
         } else if(type.equals("error")) {
         	log.error(data.getString("data"));
+        } else if(type.equals("instruments_meta")) { 
+        	// noop
         } else {
-        	log.error("Unknown \"type\" recevied from kite : {}", type);
+        	log.error("Unknown \"type\" recevied from kite : {}, data : {}", type, data.getString("data"));
         }
 	}
 	

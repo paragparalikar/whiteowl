@@ -18,7 +18,7 @@ public class KiteConstant {
 	public static final String USER_AGENT = "user-agent";
 	public static final String USER_AGENT_CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36";
 	public static final String USER_AGENT_KITE = "kite3-web";
-	public static final String WS_VERSION = "2.9.11";
+	public static final String WS_VERSION = "3.0.13";
 	
 	public static final String URL_WS = "wss://ws.zerodha.com";
 	public static final String URL_INSTRUMENTS = System.getProperty("com.whiteowl.client.kite.url.positions","https://api.kite.trade/instruments");
