@@ -101,7 +101,7 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 			@NonNull final String code, 
 			@NonNull final Timeframe timeframe, 
 			final int count) {
-		final String sql = "SELECT * FROM BAR WHERE CODE = ? AND TIMEFRAME = ? ORDER BY BEGIN_TIME DESC LIMIT ?";
+		final String sql = "SELECT * FROM BAR WHERE CODE = ? AND TIMEFRAME = ? ORDER BY CODE, TIMEFRAME, BEGIN_TIME DESC LIMIT ?";
 		try(final Connection connection = dataSource.getConnection();
 			final PreparedStatement ps = connection.prepareStatement(sql)){
 			ps.setString(1, code);
