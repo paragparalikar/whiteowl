@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
@@ -33,7 +35,7 @@ public class BarBackfillJob {
 	private final BarDataProvider barDataProvider;
 	private final BarQueryTransformer barQueryTransformer;
 	
-	//@EventListener(ApplicationReadyEvent.class)
+	@EventListener(ApplicationReadyEvent.class)
 	public void execute() {
 		Arrays.stream(Timeframe.values()).forEach(this::download);
 	}
