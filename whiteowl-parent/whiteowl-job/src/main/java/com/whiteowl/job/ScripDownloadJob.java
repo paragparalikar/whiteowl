@@ -4,8 +4,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,14 +20,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ScripDownloadJob {
+@Order(JobConstant.ORDER_SCRIP_DOWNLOAD)
+public class ScripDownloadJob implements CommandLineRunner{
 	private static final String KEY = "whiteowl.data.download.scrips.nse.date";
 	private final ScripService scripService;
 	private final AttributeService attributeService;
 	private final ScripDataProvider scripDataProvider;
 	
+	@Override
+	public void run(String... args) throws Exception {
+		tryDownload();
+	}
+	
 	@Scheduled(cron = "0 0 9 * * MON-FRI")
-	@EventListener(ApplicationReadyEvent.class)
 	public void tryDownload() {
 		if(shouldDownload()) {
 			log.info("Initiating scrip download");

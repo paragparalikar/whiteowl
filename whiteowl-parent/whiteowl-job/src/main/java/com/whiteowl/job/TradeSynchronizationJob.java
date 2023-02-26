@@ -7,9 +7,9 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TradeSynchronizationJob implements AutoCloseable {
+@Order(JobConstant.ORDER_TRADE_SYNCHRONIZATION)
+public class TradeSynchronizationJob implements CommandLineRunner, AutoCloseable {
 	
 	private final PositionService positionService;
 	private final PortfolioService portfolioService;
@@ -36,8 +37,17 @@ public class TradeSynchronizationJob implements AutoCloseable {
 	private final BrokerServiceProvider brokerServiceProvider;
 	private final Map<Portfolio, Consumer<Trade>> tradeListeners = new HashMap<>();
 	
+	@Override
+	public void run(String... args) throws Exception {
+		tryDownload();
+		for(Portfolio portfolio : portfolioService.findAll()) {
+			final Consumer<Trade> tradeListener = this::synchronize;
+			brokerServiceProvider.subscribeTradeStatusListener(tradeListener, portfolio);
+			tradeListeners.put(portfolio, tradeListener);
+		}
+	}
+	
 	@Scheduled(cron = "0 * 9-16 * * MON-FRI")
-	@EventListener(ApplicationReadyEvent.class)
 	public void tryDownload() {
 		try {
 			for(Portfolio portfolio : portfolioService.findAll()) {
@@ -47,15 +57,6 @@ public class TradeSynchronizationJob implements AutoCloseable {
 			}
 		} catch(Exception e) {
 			log.error("", e);
-		}
-	}
-	
-	@EventListener(ApplicationReadyEvent.class)
-	public void subscribe() {
-		for(Portfolio portfolio : portfolioService.findAll()) {
-			final Consumer<Trade> tradeListener = this::synchronize;
-			brokerServiceProvider.subscribeTradeStatusListener(tradeListener, portfolio);
-			tradeListeners.put(portfolio, tradeListener);
 		}
 	}
 	

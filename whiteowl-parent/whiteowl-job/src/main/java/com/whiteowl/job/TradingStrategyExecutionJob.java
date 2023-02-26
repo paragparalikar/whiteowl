@@ -1,7 +1,8 @@
 package com.whiteowl.job;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
@@ -12,12 +13,13 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class TradingStrategyExecutionJob {
+@Order(JobConstant.ORDER_TRADING_STRATEGY_EXECUTION)
+public class TradingStrategyExecutionJob implements CommandLineRunner {
 
 	private final TradingStrategyExecutor tradingStrategyExecutor;
 	
-	@EventListener
-	public void handle(final ApplicationReadyEvent event) {
+	@Override
+	public void run(String... args) throws Exception {
 		tradingStrategyExecutor.onApplicationReady();
 	}
 	

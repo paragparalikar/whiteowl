@@ -1,0 +1,13 @@
+package com.whiteowl.job;
+
+import org.springframework.core.Ordered;
+
+public interface JobConstant {
+
+	int ORDER_SCRIP_DOWNLOAD = Ordered.HIGHEST_PRECEDENCE;
+	int ORDER_TRADE_SYNCHRONIZATION = ORDER_SCRIP_DOWNLOAD + 1;
+	int ORDER_BAR_BACKFILL = ORDER_TRADE_SYNCHRONIZATION + 1;
+	int ORDER_BAR_CREATION = ORDER_BAR_BACKFILL + 1;
+	int ORDER_TRADING_STRATEGY_EXECUTION = Ordered.LOWEST_PRECEDENCE;
+	
+}

@@ -15,8 +15,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BaseBar;
@@ -38,7 +38,8 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class BarCreationJob implements Consumer<Quote>, AutoCloseable {
+@Order(JobConstant.ORDER_BAR_CREATION)
+public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoCloseable {
 
 	private final BarService barService;
 	private final ScripService scripService;
@@ -46,8 +47,8 @@ public class BarCreationJob implements Consumer<Quote>, AutoCloseable {
 	private final Map<String, Quote> lastQuotes = new ConcurrentHashMap<>();
 	private final Map<Tuple2<String, Timeframe>, Bar> cache = new ConcurrentHashMap<>();
 
-	@EventListener(ApplicationReadyEvent.class)
-	public void subscribe() {
+	@Override
+	public void run(String... args) throws Exception {
 		final Set<Scrip> scrips = scripService.findAll().stream()
 			.filter(getScripCriteria())
 			.collect(Collectors.toSet());

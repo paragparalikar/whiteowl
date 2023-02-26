@@ -6,8 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Scope;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
@@ -28,15 +29,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BarBackfillJob {
+@Scope(value = "prototype")
+@Order(JobConstant.ORDER_BAR_BACKFILL)
+public class BarBackfillJob implements CommandLineRunner {
 
 	private final BarService barService;
 	private final ScripService scripService;
 	private final BarDataProvider barDataProvider;
 	private final BarQueryTransformer barQueryTransformer;
 	
-	@EventListener(ApplicationReadyEvent.class)
-	public void execute() {
+	@Override
+	public void run(String... args) throws Exception {
 		Arrays.stream(Timeframe.values()).forEach(this::download);
 	}
 	

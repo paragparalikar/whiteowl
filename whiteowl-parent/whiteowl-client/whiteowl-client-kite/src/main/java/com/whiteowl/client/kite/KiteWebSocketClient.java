@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseable {
 	private static final long PING_INTERVAL = 2500;
+	private static final long PONG_INTERVAL = 2500;
 	private static final long RECONNECT_CHECK_DELAY = 500;
 	private static final long RECONNECT_CHECK_INTERVAL = 5000;
 	private static final String MODE_FULL = "full", MODE_QUOTE = "quote", MODE_LTP = "ltp"; 
@@ -84,7 +85,7 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 		pongTimestamp.set(System.currentTimeMillis());
 		webSocket = new WebSocketFactory().createSocket(uri);
 		webSocket.setPingInterval(PING_INTERVAL);
-		webSocket.setPongInterval(PING_INTERVAL);
+		webSocket.setPongInterval(PONG_INTERVAL);
 		webSocket.addListener(this);
 		webSocket.connect();
 	}
