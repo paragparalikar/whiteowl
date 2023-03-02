@@ -7,6 +7,13 @@ import java.util.function.Predicate;
 
 public class ScripCriteria implements Predicate<Scrip> {
 	
+	public static final ScripCriteria INSTANCE = (ScripCriteria) new ScripCriteria()
+			.withIndex(Index.NIFTY50)
+			.or(new ScripCriteria()
+					.withCode(Index.NIFTY50.getCode())
+					.withCode(Index.NIFTYBANK.getCode())
+					.withCode(Index.VIX.getCode()));
+	
 	private final Set<String> codes = new HashSet<>();
 	private final Set<Index> indices = new HashSet<>();
 	private final Set<Segment> segments = new HashSet<>();

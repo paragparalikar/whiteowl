@@ -4,7 +4,6 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Predicate;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.ApplicationEventPublisher;
@@ -20,7 +19,6 @@ import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
 import com.whiteowl.core.bar.query.BarQuery;
 import com.whiteowl.core.bar.query.BarQueryTransformer;
-import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripCriteria;
 import com.whiteowl.core.scrip.ScripService;
@@ -48,16 +46,8 @@ public class BarBackfillJob implements CommandLineRunner {
 	
 	private void download(Timeframe timeframe) {
 		scripService.findAll().stream()
-			.filter(getScripCriteria())
+			.filter(ScripCriteria.INSTANCE)
 			.forEach(scrip -> download(scrip, timeframe, barDataProvider));
-	}
-	
-	private Predicate<Scrip> getScripCriteria() {
-		return new ScripCriteria().withIndex(Index.NIFTY50)
-				.or(new ScripCriteria()
-						.withCode(Index.NIFTY50.getCode())
-						.withCode(Index.NIFTYBANK.getCode())
-						.withCode(Index.VIX.getCode()));
 	}
 	
 	private void download(Scrip scrip, Timeframe timeframe, BarDataProvider barDataProvider) {
@@ -77,7 +67,7 @@ public class BarBackfillJob implements CommandLineRunner {
 				.orElse(Collections.emptyList());
 		if(!bars.isEmpty()) {
 			barService.saveAll(scrip.getCode(), timeframe, bars);
-			eventPublisher.publishEvent(new ScripBarDownloadedEvent(scrip, timeframe));
+			eventPublisher.publishEvent(new ScripBarDownloadedEvent(scrip, bars, timeframe));
 		}
 	}
 	

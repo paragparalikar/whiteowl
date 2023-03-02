@@ -79,6 +79,10 @@ public class Position {
 	@Column(nullable = false)
 	private PositionStatus status = PositionStatus.NEW;
 	
+	private Double targetPrice;
+	
+	private Double stopLossPrice;
+	
 	@NotEmpty
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private Set<@Valid Trade> entryTrades = new HashSet<>();

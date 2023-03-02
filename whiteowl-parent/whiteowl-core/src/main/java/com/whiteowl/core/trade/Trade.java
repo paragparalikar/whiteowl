@@ -94,6 +94,10 @@ public class Trade {
 	@Column(nullable = false, updatable = false)
 	private TradeValidity validity;
 	
+	private Double targetPrice;
+	
+	private Double stopLossPrice;
+	
 	@NonNull @NotNull
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)

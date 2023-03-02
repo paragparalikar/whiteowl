@@ -6,13 +6,13 @@ import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.CommandLineRunner;
@@ -29,7 +29,6 @@ import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.quote.QuoteMode;
 import com.whiteowl.core.quote.QuoteService;
-import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripCriteria;
 import com.whiteowl.core.scrip.ScripService;
@@ -53,17 +52,9 @@ public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoC
 	@Override
 	public void run(String... args) throws Exception {
 		final Set<Scrip> scrips = scripService.findAll().stream()
-			.filter(getScripCriteria())
+			.filter(ScripCriteria.INSTANCE)
 			.collect(Collectors.toSet());
 		quoteService.subscribe(scrips, QuoteMode.FULL, this);
-	}
-	
-	private Predicate<Scrip> getScripCriteria() {
-		return new ScripCriteria().withIndex(Index.NIFTY50)
-				.or(new ScripCriteria()
-						.withCode(Index.NIFTY50.getCode())
-						.withCode(Index.NIFTYBANK.getCode())
-						.withCode(Index.VIX.getCode()));
 	}
 	
 	@Override
@@ -82,9 +73,10 @@ public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoC
 					} else if(Objects.equals(endTime, value.getEndTime())) {
 						return value;
 					} else {
-						barService.saveAll(scripCode, timeframe, Collections.singleton(value));
+						final List<Bar> bars = Collections.singletonList(value);
+						barService.saveAll(scripCode, timeframe, bars);
 						final Scrip scrip = scripService.findByCode(scripCode);
-						eventPublisher.publishEvent(new ScripBarDownloadedEvent(scrip, timeframe));
+						eventPublisher.publishEvent(new ScripBarDownloadedEvent(scrip, bars, timeframe));
 						return new BaseBar(duration, endTime, DoubleNum::valueOf);
 					}
 				});
