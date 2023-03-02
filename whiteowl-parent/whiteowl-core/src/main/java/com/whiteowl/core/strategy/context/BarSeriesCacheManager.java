@@ -8,7 +8,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -31,25 +30,25 @@ public class BarSeriesCacheManager {
 	
 	private final BarService barService;
 	private final Map<String, BarSeries> cache = new ConcurrentHashMap<>();
-	private final Map<String, Set<Consumer<BarSeries>>> barListeners = new ConcurrentHashMap<>();
+	private final Map<String, Set<Runnable>> barListeners = new ConcurrentHashMap<>();
 
 	private String toCacheKey(String scripCode, Timeframe timeframe) {
 		return scripCode + timeframe.name();
 	}
 	
-	public void subscribeBarListener(Scrip scrip, Timeframe timeframe, Consumer<BarSeries> barListener) {
+	public void subscribeBarListener(Scrip scrip, Timeframe timeframe, Runnable barListener) {
 		final String key = toCacheKey(scrip.getCode(), timeframe);
 		barListeners.computeIfAbsent(key, 
 				k -> Collections.newSetFromMap(new IdentityHashMap<>()))
 				.add(barListener);
-		barListener.accept(getBarSeries(scrip.getCode(), timeframe));
+		getBarSeries(scrip.getCode(), timeframe); // hydrate cache immediately
 	}
 	
-	public void unsubscribeBarListener(Consumer<BarSeries> barListener) {
+	public void unsubscribeBarListener(Runnable barListener) {
 		barListeners.values().forEach(listeners -> listeners.remove(barListener));
-		final Iterator<Entry<String, Set<Consumer<BarSeries>>>> iterator = barListeners.entrySet().iterator();
+		final Iterator<Entry<String, Set<Runnable>>> iterator = barListeners.entrySet().iterator();
 		while(iterator.hasNext()) {
-			final Entry<String, Set<Consumer<BarSeries>>> entry = iterator.next();
+			final Entry<String, Set<Runnable>> entry = iterator.next();
 			if(entry.getValue().isEmpty()) {
 				iterator.remove();
 			}
@@ -64,16 +63,16 @@ public class BarSeriesCacheManager {
 		final String key = toCacheKey(scripCode, timeframe);
 		Optional.ofNullable(cache.get(key)).ifPresent(barSeries -> {
 			event.getBars().forEach(barSeries::addBar);
-			notifyBarListener(scripCode, timeframe, barSeries);
+			notifyBarListener(scripCode, timeframe);
 		});
 	}
 	
-	private void notifyBarListener(String scripCode, Timeframe timeframe, BarSeries barSeries) {
+	private void notifyBarListener(String scripCode, Timeframe timeframe) {
 		final String key = toCacheKey(scripCode, timeframe);
 		barListeners.getOrDefault(key, Collections.emptySet())
 			.forEach(barListener -> {
 				try {
-					barListener.accept(barSeries);
+					barListener.run();
 				}catch(Exception e) {
 					log.error("Error while notifying bar listeners", e);
 				}
