@@ -1,6 +1,7 @@
 package com.whiteowl.core.strategy.context;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -18,25 +19,33 @@ import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
 import com.whiteowl.core.scrip.Scrip;
-import com.whiteowl.core.util.Constant;
+import com.whiteowl.core.strategy.config.TradingStrategyConfig;
+import com.whiteowl.core.strategy.config.TradingStrategyConfigService;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class BarSeriesCacheManager {
 	
+	private final int maxBarCount;
 	private final BarService barService;
 	private final Map<String, BarSeries> cache = new ConcurrentHashMap<>();
 	private final Map<String, Set<Runnable>> barListeners = new ConcurrentHashMap<>();
+	
+	public BarSeriesCacheManager(BarService barService, TradingStrategyConfigService configService){
+		this.barService = barService;
+		this.maxBarCount = configService.findAll().stream()
+			.map(TradingStrategyConfig::getMinBarCount)
+			.max(Comparator.naturalOrder())
+			.orElse(200);
+	}
 
 	private String toCacheKey(String scripCode, Timeframe timeframe) {
 		return scripCode + timeframe.name();
 	}
 	
-	public void subscribeBarListener(Scrip scrip, Timeframe timeframe, Runnable barListener) {
+	public void subscribe(Scrip scrip, Timeframe timeframe, Runnable barListener) {
 		final String key = toCacheKey(scrip.getCode(), timeframe);
 		barListeners.computeIfAbsent(key, 
 				k -> Collections.newSetFromMap(new IdentityHashMap<>()))
@@ -44,7 +53,7 @@ public class BarSeriesCacheManager {
 		getBarSeries(scrip.getCode(), timeframe); // hydrate cache immediately
 	}
 	
-	public void unsubscribeBarListener(Runnable barListener) {
+	public void unsubscribe(Runnable barListener) {
 		barListeners.values().forEach(listeners -> listeners.remove(barListener));
 		final Iterator<Entry<String, Set<Runnable>>> iterator = barListeners.entrySet().iterator();
 		while(iterator.hasNext()) {
@@ -82,7 +91,7 @@ public class BarSeriesCacheManager {
 	public BarSeries getBarSeries(String scripCode, Timeframe timeframe) {
 		return cache.computeIfAbsent(scripCode + timeframe.name(), key -> 
 			barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
-				scripCode, timeframe, Constant.BAR_COUNT_CACHED));
+				scripCode, timeframe, maxBarCount));
 	}
 
 }

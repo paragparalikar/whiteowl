@@ -10,8 +10,6 @@ import org.ta4j.core.num.Num;
 public interface Constant {
 	Num ZERO = DoubleNum.valueOf(0);
 	
-	int BAR_COUNT_CACHED = 201;
-	
 	LocalTime NSE_START_TIME = LocalTime.of(9, 15);
 	LocalTime NSE_END_TIME = LocalTime.of(15, 30);
 	LocalTime ZERODHA_SQUARE_OFF_TIME = LocalTime.of(15, 20);

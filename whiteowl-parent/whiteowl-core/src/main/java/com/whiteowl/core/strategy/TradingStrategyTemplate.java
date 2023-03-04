@@ -8,7 +8,8 @@ import lombok.RequiredArgsConstructor;
 public enum TradingStrategyTemplate {
 
 	SHORT_STRADDLE("short-straddle", "Short Straddle, Intraday"),
-	TREND_FOLLOWING("trend-following", "Trend Following");
+	TREND_FOLLOWING("trend-following", "Trend Following"),
+	SMA("sma", "SMA");
 	
 	
 	private final String id;
