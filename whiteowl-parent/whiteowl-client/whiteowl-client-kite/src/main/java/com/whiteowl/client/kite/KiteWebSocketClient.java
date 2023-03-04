@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -219,7 +220,7 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
         final String type = data.getString("type");
         if(type.equals("order")) {
         	final Order order = KiteConstant.JSON.readValue(data.getJSONObject("data").toString(), Order.class);
-        	orderConsumers.forEach(orderConsumer -> orderConsumer.accept(order));
+        	orderConsumers.forEach(orderConsumer -> ForkJoinPool.commonPool().execute(() -> orderConsumer.accept(order)));
         } else if(type.equals("error")) {
         	log.error(data.getString("data"));
         } else if(type.equals("instruments_meta")) { 
@@ -234,7 +235,7 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 		final Collection<KiteTick> ticks = kiteBinaryMessageParser.parseBinary(binary);
 		for(KiteTick tick : ticks) {
 			for(Consumer<KiteTick> consumer : tickConsumers.getOrDefault(tick.getToken(), Collections.emptySet())) {
-				consumer.accept(tick);
+				ForkJoinPool.commonPool().execute(() -> consumer.accept(tick));
 			}
 		}
 	}

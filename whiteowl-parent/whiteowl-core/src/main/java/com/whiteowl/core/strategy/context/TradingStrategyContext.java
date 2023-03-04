@@ -32,6 +32,6 @@ public interface TradingStrategyContext {
 	
 	Position save(Position position);
 	
-	List<Position> getOpenPositions(String tradingStrategyConfigId, PositionStatus status);
+	List<Position> getOpenPositions(String tradingStrategyConfigId);
 	
 }

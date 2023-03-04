@@ -100,6 +100,14 @@ public class Position {
 		return Stream.concat(entryTrades.stream(), exitTrades.stream());
 	}
 	
+	public boolean isLong() {
+		return entryTrades.stream().map(Trade::getType).allMatch(Predicate.isEqual(TradeType.BUY));
+	}
+	
+	public boolean isShort() {
+		return entryTrades.stream().map(Trade::getType).allMatch(Predicate.isEqual(TradeType.SELL));
+	}
+	
 	public Position withPortfolio(Portfolio portfolio) {
 		final Position position = new Position();
 		position.setPortfolio(portfolio);
@@ -116,6 +124,7 @@ public class Position {
 				- getQuantity(Stream.concat(entryTrades.stream(), exitTrades.stream()), scrip, TradeType.SELL);
 	}
 	
+	// TODO this is wrong. 
 	public double getProfitLossAmount() {
 		return getAmount(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.SELL)
 				- getAmount(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.BUY);

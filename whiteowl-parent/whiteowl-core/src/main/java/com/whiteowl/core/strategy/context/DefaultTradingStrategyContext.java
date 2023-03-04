@@ -58,8 +58,8 @@ public class DefaultTradingStrategyContext implements TradingStrategyContext {
 	}
 
 	@Override
-	public List<Position> getOpenPositions(String configId, PositionStatus status) {
-		return positionService.findByTradingStrategyConfigIdAndStatusNot(configId, status);
+	public List<Position> getOpenPositions(String configId) {
+		return positionService.findByTradingStrategyConfigIdAndStatusNot(configId, PositionStatus.CLOSED);
 	}
 	
 }
