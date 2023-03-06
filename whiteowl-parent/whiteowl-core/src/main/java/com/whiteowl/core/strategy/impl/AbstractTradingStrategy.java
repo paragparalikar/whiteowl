@@ -1,10 +1,10 @@
 package com.whiteowl.core.strategy.impl;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.ta4j.core.BarSeries;
-import org.ta4j.core.Rule;
 
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.position.Position;
@@ -38,21 +38,31 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> {
 		context.subscribe(Arrays.asList(scrip), QuoteMode.FULL, this::onQuote);
 	}
 	
-	protected abstract Rule createEntryRule(BarSeries barSeries, T config);
-	
-	protected void onBar() {
+	private void onBar() {
 		final List<Position> positions = context.getOpenPositions(config.getId());
-		if(positions.isEmpty()) enter();
+		if(positions.isEmpty() && shouldEnter()) {
+			final Collection<Trade> entryTrades = createEntryTrades();
+			final Position position = createNewPosition();
+			position.getEntryTrades().addAll(entryTrades);
+			context.save(position);
+		}
 	}
 	
-	protected void onQuote(Quote quote) {
+	private void onQuote(Quote quote) {
 		final List<Position> positions = context.getOpenPositions(config.getId());
-		positions.forEach(position -> manage(quote, position));
+		positions.stream().parallel()
+			.filter(position -> shouldExit(quote, position))
+			.forEach(position -> {
+				position.getEntryTrades().stream()
+					.map(entryTrade -> createExitTrade(quote, position, entryTrade))
+					.forEach(position.getExitTrades()::add);
+				context.save(position);
+			});
 	}
 	
 	protected abstract boolean shouldEnter();
 	
-	protected abstract Trade createEntryTrade();
+	protected abstract Collection<Trade> createEntryTrades();
 	
 	protected Position createNewPosition() {
 		final Position position = new Position();
@@ -61,37 +71,17 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> {
 		return position;
 	}
 	
-	protected void enter() {
-		if(shouldEnter()) {
-			final Trade entryTrade = createEntryTrade();
-			final Position position = createNewPosition();
-			position.getEntryTrades().add(entryTrade);
-			context.save(position);
-		}
-	}
-	
-	protected void exit(Quote quote, Position position) {
-		position.getEntryTrades().stream()
-			.map(entryTrade -> createExitTrade(quote, position, entryTrade))
-			.forEach(position.getExitTrades()::add);
-		context.save(position);
-	}
-	
-	protected Trade createExitTrade(Quote quote, Position position, Trade entryTrade) {
-		return entryTrade.complement();
-	}
-	
-	protected void manage(Quote quote, Position position) {
+	protected boolean shouldExit(Quote quote, Position position) {
 		final Double lastPrice = quote.getLastPrice();
 		final Double targetPrice = position.getTargetPrice();
 		if(null != targetPrice) {
 			if(Positions.isLong(position)) {
 				if(lastPrice >= targetPrice) {
-					exit(quote, position);
+					return true;
 				}
 			} else if(Positions.isShort(position)) {
 				if(lastPrice <= targetPrice) {
-					exit(quote, position);
+					return true;
 				}
 			}
 		}
@@ -99,14 +89,19 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> {
 		if(null != stopLossPrice) {
 			if(Positions.isLong(position)) {
 				if(lastPrice <= stopLossPrice) {
-					exit(quote, position);
+					return true;
 				}
 			} else if(Positions.isShort(position)) {
 				if(lastPrice >= stopLossPrice) {
-					exit(quote, position);
+					return true;
 				}
 			}
 		}
+		return false;
+	}
+	
+	protected Trade createExitTrade(Quote quote, Position position, Trade entryTrade) {
+		return entryTrade.complement();
 	}
 	
 }
