@@ -1,6 +1,5 @@
 package com.whiteowl.core.strategy.impl;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,6 +8,7 @@ import org.ta4j.core.Rule;
 
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.position.Position;
+import com.whiteowl.core.position.Positions;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.quote.QuoteMode;
 import com.whiteowl.core.scrip.Scrip;
@@ -18,9 +18,7 @@ import com.whiteowl.core.trade.Trade;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Getter(AccessLevel.PROTECTED)
 public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> {
 
@@ -60,7 +58,6 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> {
 		final Position position = new Position();
 		position.setScrip(scrip);
 		position.setTradingStrategyConfigId(config.getId());
-		
 		return position;
 	}
 	
@@ -77,6 +74,7 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> {
 		position.getEntryTrades().stream()
 			.map(entryTrade -> createExitTrade(quote, position, entryTrade))
 			.forEach(position.getExitTrades()::add);
+		context.save(position);
 	}
 	
 	protected Trade createExitTrade(Quote quote, Position position, Trade entryTrade) {
@@ -86,16 +84,28 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> {
 	protected void manage(Quote quote, Position position) {
 		final Double lastPrice = quote.getLastPrice();
 		final Double targetPrice = position.getTargetPrice();
+		if(null != targetPrice) {
+			if(Positions.isLong(position)) {
+				if(lastPrice >= targetPrice) {
+					exit(quote, position);
+				}
+			} else if(Positions.isShort(position)) {
+				if(lastPrice <= targetPrice) {
+					exit(quote, position);
+				}
+			}
+		}
 		final Double stopLossPrice = position.getStopLossPrice();
-		if(position.isLong() && (lastPrice >= targetPrice || lastPrice <= stopLossPrice)) {
-			exit(quote, position);
-			context.save(position);
-		} else if(position.isShort() && (lastPrice <= targetPrice || lastPrice >= stopLossPrice)) {
-			exit(quote, position);
-			context.save(position);
-		} else {
-			log.error("Position with long & short trades not yet supported : {}", position);
-			throw new IllegalStateException("Position with long & short trades not yet supported");
+		if(null != stopLossPrice) {
+			if(Positions.isLong(position)) {
+				if(lastPrice <= stopLossPrice) {
+					exit(quote, position);
+				}
+			} else if(Positions.isShort(position)) {
+				if(lastPrice >= stopLossPrice) {
+					exit(quote, position);
+				}
+			}
 		}
 	}
 	

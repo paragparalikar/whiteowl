@@ -16,9 +16,6 @@ import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripType;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.strategy.impl.trendfollowing.TrendFollowingTradingStrategyConfig;
-import com.whiteowl.core.strategy.performance.DefaultTradingStrategyPerformanceService;
-import com.whiteowl.core.strategy.performance.TradingStrategyPerformance;
-import com.whiteowl.core.strategy.performance.TradingStrategyPerformanceService;
 import com.whiteowl.core.strategy.test.mock.MockContext;
 
 import lombok.NonNull;
@@ -27,8 +24,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultBackTestService implements BackTestService {
 
-	@NonNull private final TradingStrategyPerformanceService tradingStrategyPerformaceService;
-	
 	@Override
 	public BackTestResult test(
 			@NonNull final Scrip scrip,
@@ -37,15 +32,12 @@ public class DefaultBackTestService implements BackTestService {
 		final MockContext context = new MockContext(scrip, barSeries, config);
 		context.getBackTestExecutor().execute();
 		final List<Position> positions = context.getPositionService().findAll();
-		final List<Double> equityCurve = context.getEquityCurveObserver().getEquityCurve();
-		final TradingStrategyPerformance performance = tradingStrategyPerformaceService
-				.calculate(barSeries.getBarData(), positions, equityCurve, config);
 		return BackTestResult.builder()
 				.scrip(scrip)
 				.config(config)
 				.timeframe(config.getTimeframe())
 				.positions(positions)
-				.performance(performance)
+				.returns(0d)
 				.build();
 	}
 	
@@ -65,8 +57,7 @@ public class DefaultBackTestService implements BackTestService {
 			final List<Bar> bars = barRepository.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), timeframe, Integer.MAX_VALUE);
 			final BarSeries barSeries = new BaseBarSeries("", bars, DoubleNum::valueOf);
 			final TradingStrategyConfig config = new TrendFollowingTradingStrategyConfig(scrip.getCode());
-			final TradingStrategyPerformanceService performanceService = new DefaultTradingStrategyPerformanceService(null);
-			final BackTestService backTestService = new DefaultBackTestService(performanceService);
+			final BackTestService backTestService = new DefaultBackTestService();
 			final BackTestResult result = backTestService.test(scrip, barSeries, config);
 			System.out.println(result);
 		}

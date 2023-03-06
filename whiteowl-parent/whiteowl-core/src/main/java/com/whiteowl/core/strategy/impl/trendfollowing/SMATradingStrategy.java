@@ -40,8 +40,7 @@ public class SMATradingStrategy {
 	}
 	
 	private void onQuote(Quote quote) {
-		final List<Position> positions = context.getOpenPositions(
-						config.getId(), PositionStatus.CLOSED);
+		final List<Position> positions = context.getOpenPositions(config.getId());
 		
 	}
 	

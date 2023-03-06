@@ -2,12 +2,7 @@ package com.whiteowl.core.position;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -32,13 +27,11 @@ import javax.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.position.stateMachine.PositionEntityListener;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.trade.Trade;
-import com.whiteowl.core.trade.TradeStatus;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -96,18 +89,6 @@ public class Position {
 	@LastModifiedDate
 	private LocalDateTime lastModifiedDate;
 	
-	public Stream<Trade> trades(){
-		return Stream.concat(entryTrades.stream(), exitTrades.stream());
-	}
-	
-	public boolean isLong() {
-		return entryTrades.stream().map(Trade::getType).allMatch(Predicate.isEqual(TradeType.BUY));
-	}
-	
-	public boolean isShort() {
-		return entryTrades.stream().map(Trade::getType).allMatch(Predicate.isEqual(TradeType.SELL));
-	}
-	
 	public Position withPortfolio(Portfolio portfolio) {
 		final Position position = new Position();
 		position.setPortfolio(portfolio);
@@ -119,88 +100,10 @@ public class Position {
 		return position;
 	}
 	
-	public int getOnBalanceQuantity(Scrip scrip) {
-		return getQuantity(Stream.concat(entryTrades.stream(), exitTrades.stream()), scrip, TradeType.BUY)
-				- getQuantity(Stream.concat(entryTrades.stream(), exitTrades.stream()), scrip, TradeType.SELL);
-	}
-	
-	// TODO this is wrong. 
-	public double getProfitLossAmount() {
-		return getAmount(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.SELL)
-				- getAmount(Stream.concat(entryTrades.stream(), exitTrades.stream()), TradeType.BUY);
-	}
-	
-	private int getQuantity(Stream<Trade> trades, Scrip scrip, TradeType tradeType) {
-		return trades
-				.filter(trade -> Objects.equals(trade.getScrip(), scrip))
-				.filter(trade -> tradeType.equals(trade.getType()))
-				.map(Trade::getQuantity)
-				.collect(Collectors.summingInt(Integer::intValue));
-	}
-	
-	private double getAmount(Stream<Trade> trades, TradeType tradeType) {
-		return trades
-				.filter(trade -> tradeType.equals(trade.getType()))
-				.filter(trade -> !TradeStatus.REJECTED.equals(trade.getStatus()))
-				.filter(trade -> !TradeStatus.CANCELLED.equals(trade.getStatus()))
-				.map(Trade::getAmount)
-				.collect(Collectors.summingDouble(Double::doubleValue));
-	}
-	
-	public double getEntryAmount() {
-		return entryTrades.stream()
-				.map(Trade::getAmount)
-				.collect(Collectors.summingDouble(Double::doubleValue));
-	}
-	
-	public double getAverageEntryPrice() {
-		return getEntryAmount() / entryTrades.stream().map(Trade::getFilledQuantity)
-				.collect(Collectors.summingInt(Integer::intValue));
-	}
-	
 	@PreUpdate
 	@PrePersist
 	public void updateStatus() {
-		if(entryTrades.isEmpty()) {
-			setStatus(PositionStatus.NEW);
-			return;
-		} else if(entryTrades.stream().map(Trade::getStatus).allMatch(Predicate.isEqual(TradeStatus.NEW))) {
-			setStatus(PositionStatus.NEW);
-			return;
-		} else if(entryTrades.stream().map(Trade::getStatus).allMatch(Predicate.isEqual(TradeStatus.CANCELLED))) {
-			setStatus(PositionStatus.CLOSED);
-			return;
-		} else if(entryTrades.stream().map(Trade::getStatus).allMatch(Predicate.isEqual(TradeStatus.REJECTED))) {
-			setStatus(PositionStatus.CLOSED);
-			return;
-		} else if(entryTrades.stream().map(Trade::getStatus).allMatch(TradeStatus::isTerminal)) {
-			if(exitTrades.isEmpty()) {
-				setStatus(PositionStatus.OPEN);
-				return;
-			} else if(exitTrades.stream().map(Trade::getStatus).allMatch(TradeStatus::isTerminal)) {
-				final Map<Scrip, Integer> buyQuantities = Stream.concat(entryTrades.stream(), exitTrades.stream())
-						.filter(trade -> TradeType.BUY.equals(trade.getType()))
-						.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
-						.collect(Collectors.groupingBy(Trade::getScrip, Collectors.summingInt(Trade::getFilledQuantity)));
-				final Map<Scrip, Integer> sellQuantities = Stream.concat(entryTrades.stream(), exitTrades.stream())
-						.filter(trade -> TradeType.SELL.equals(trade.getType()))
-						.filter(trade -> TradeStatus.COMPLETE.equals(trade.getStatus()))
-						.collect(Collectors.groupingBy(Trade::getScrip, Collectors.summingInt(Trade::getFilledQuantity)));
-				if(buyQuantities.equals(sellQuantities)) {
-					setStatus(PositionStatus.CLOSED);
-					return;
-				} else {
-					setStatus(PositionStatus.OPEN);
-					return;
-				}
-			} else {
-				setStatus(PositionStatus.OPEN);
-				return;
-			}
-		} else {
-			setStatus(PositionStatus.OPEN);
-			return;
-		}
+		PositionStatus.update(this);
 	}
 
 }

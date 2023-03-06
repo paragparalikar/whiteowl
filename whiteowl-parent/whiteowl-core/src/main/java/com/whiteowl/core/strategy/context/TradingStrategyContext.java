@@ -9,7 +9,6 @@ import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.position.Position;
-import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.quote.QuoteMode;
 import com.whiteowl.core.scrip.Scrip;

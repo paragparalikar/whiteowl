@@ -27,7 +27,6 @@ import com.whiteowl.core.strategy.config.TradingStrategyConfigService;
 import com.whiteowl.core.strategy.size.FixedPercentagePositionSizingStrategy;
 import com.whiteowl.core.strategy.size.PositionSizingStrategy;
 import com.whiteowl.core.strategy.test.BackTestExecutor;
-import com.whiteowl.core.strategy.test.EquityCurveObserver;
 import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.TradeStatus;
 import com.whiteowl.core.trade.stateMachine.TradeStateMachine;
@@ -58,7 +57,6 @@ public class MockContext {
 	private final BackTestExecutor backTestExecutor;
 	private final TradeStateMachine tradeStateMachine;
 	private final OptionChainService optionChainService;
-	private final EquityCurveObserver equityCurveObserver;
 	private final PositionStateMachine positionStateMachine;
 	private final TradingStrategyFactory tradingStrategyFactory;
 	private final PositionSizingStrategy positionSizingStrategy;
@@ -86,11 +84,6 @@ public class MockContext {
 		this.optionChainService = new MockOptionChainService();
 		this.positionService = new MockPositionService(this::onPositionSaved);
 		this.barService = new MockBarService(barSeries);
-		this.equityCurveObserver = EquityCurveObserver.builder()
-				.scrip(scrip)
-				.portfolio(portfolio)
-				.positionService(positionService)
-				.build();
 		this.positionSizingStrategy = new FixedPercentagePositionSizingStrategy(100);
 		this.brokerServiceProvider = new MockBrokerServiceProvider(timeframe, portfolio, barService);
 		this.tradingStrategyFactory = new TradingStrategyFactory(barService, scripService, optionChainService);
@@ -121,7 +114,6 @@ public class MockContext {
 				.barService(barService)
 				.quoteService(quoteService)
 				.positionService(positionService)
-				.equityCurveObserver(equityCurveObserver)
 				.brokerServiceProvider(brokerServiceProvider)
 				.tradingStrategyExecutor(tradingStrategyExecutor)
 				.build();

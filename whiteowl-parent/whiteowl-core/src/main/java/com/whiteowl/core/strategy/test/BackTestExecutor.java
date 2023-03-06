@@ -27,7 +27,6 @@ public class BackTestExecutor {
 	private final MockBarService barService;
 	private final MockQuoteService quoteService;
 	private final PositionService positionService;
-	private final EquityCurveObserver equityCurveObserver;
 	private final MockBrokerServiceProvider brokerServiceProvider;
 	private final TradingStrategyExecutor tradingStrategyExecutor;
 	
@@ -41,7 +40,6 @@ public class BackTestExecutor {
 			positionService.findByPortfolioAndStatusNot(portfolio, PositionStatus.CLOSED).stream()
 				.map(positionService::save) // The position might have been modified by broker outside position service
 				.forEach(this::synchronize);
-			equityCurveObserver.next(bar.getClosePrice().doubleValue());
 		}
 	}
 	

@@ -21,6 +21,7 @@ import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
 import com.whiteowl.core.position.PositionStatus;
+import com.whiteowl.core.position.Positions;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.quote.QuoteMode;
 import com.whiteowl.core.quote.QuoteService;
@@ -109,11 +110,11 @@ public class TradingStrategyExecutor implements AutoCloseable {
 		} else {
 			position = positionService.save(position);
 			if(position.getStatus().isTerminal()) {
-				position.trades()
+				Positions.trades(position)
 					.map(Trade::getScrip)
 					.forEach(scrip -> unsubscribe(scrip, config));
 			} else {
-				position.trades()
+				Positions.trades(position)
 					.map(Trade::getScrip)
 					.forEach(scrip -> subscribe(scrip, config));
 			}
