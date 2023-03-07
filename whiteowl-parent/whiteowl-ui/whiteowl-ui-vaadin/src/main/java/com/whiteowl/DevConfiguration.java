@@ -1,7 +1,5 @@
 package com.whiteowl;
 
-import java.util.List;
-
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,10 +11,6 @@ import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.user.User;
 import com.whiteowl.core.user.UserService;
-import com.whiteowl.core.strategy.TradingStrategyTemplate;
-import com.whiteowl.core.strategy.config.TradingStrategyConfig;
-import com.whiteowl.core.strategy.config.TradingStrategyConfigService;
-import com.whiteowl.core.strategy.impl.shortstrangle.ShortStraddleConfig;
 
 @Profile("dev")
 @Configuration

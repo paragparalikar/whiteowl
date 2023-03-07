@@ -1,53 +1,55 @@
 package com.whiteowl.core.strategy.impl.trendfollowing;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Indicator;
+import org.ta4j.core.Rule;
+import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.indicators.SMAIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.Num;
+import org.ta4j.core.rules.CrossedUpIndicatorRule;
 
-import com.whiteowl.core.bar.Timeframe;
-import com.whiteowl.core.position.Position;
-import com.whiteowl.core.position.PositionStatus;
-import com.whiteowl.core.quote.Quote;
-import com.whiteowl.core.quote.QuoteMode;
-import com.whiteowl.core.scrip.Scrip;
+import com.whiteowl.core.strategy.AbstractTradingStrategy;
 import com.whiteowl.core.strategy.context.TradingStrategyContext;
+import com.whiteowl.core.trade.Trade;
+import com.whiteowl.core.trade.TradeLimitType;
+import com.whiteowl.core.trade.TradeProduct;
+import com.whiteowl.core.trade.TradeStatus;
+import com.whiteowl.core.trade.TradeValidity;
+import com.whiteowl.core.trade.TradeVariety;
 
-public class SMATradingStrategy {
+public class SMATradingStrategy extends AbstractTradingStrategy<SMATradingStrategyConfig> {
 
-	private final Scrip scrip;
-	private final Timeframe timeframe;
-	private final BarSeries barSeries;
-	private final Indicator<Num> smaIndicator;
-	private final TradingStrategyContext context;
-	private final SMATradingStrategyConfig config;
-	
+	private final Rule entryRule;
 	
 	public SMATradingStrategy(SMATradingStrategyConfig config, TradingStrategyContext context) {
-		this.config = config;
-		this.context = context;
-		this.timeframe = config.getTimeframe();
-		this.scrip = context.getScrip(config.getScripCode());
-		this.barSeries = context.getBarSeries(config.getScripCode(), timeframe);
+		super(config, context);
+		final BarSeries barSeries = getBarSeries();
 		final Indicator<Num> closePriceIndicator = new ClosePriceIndicator(barSeries);
-		this.smaIndicator = new SMAIndicator(closePriceIndicator, config.getBarCount());
-		context.subscribe(scrip, timeframe, this::onBar);
-		context.subscribe(Collections.singletonList(scrip), QuoteMode.FULL, this::onQuote);
+		final Indicator<Num> smaIndicator = new SMAIndicator(closePriceIndicator, config.getBarCount());
+		this.entryRule = new CrossedUpIndicatorRule(closePriceIndicator, smaIndicator);
 	}
-	
-	private void onQuote(Quote quote) {
-		final List<Position> positions = context.getOpenPositions(config.getId());
-		
-	}
-	
-	private void onBar() {
-		
-	}
-	
-	
 
+	@Override
+	protected boolean shouldEnter() {
+		return entryRule.isSatisfied(getBarSeries().getEndIndex());
+	}
+
+	@Override
+	protected Collection<Trade> createEntryTrades() {
+		final Trade entryTrade = new Trade();
+		entryTrade.setScrip(getScrip());
+		entryTrade.setQuantity(1); 
+		entryTrade.setType(TradeType.BUY);
+		entryTrade.setProduct(TradeProduct.MIS);
+		entryTrade.setStatus(TradeStatus.NEW);
+		entryTrade.setLimitType(TradeLimitType.MARKET);
+		entryTrade.setValidity(TradeValidity.DAY);
+		entryTrade.setVariety(TradeVariety.REGULAR);
+		return Collections.singleton(entryTrade);
+	}
+	
 }

@@ -16,8 +16,6 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -29,7 +27,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.whiteowl.core.portfolio.Portfolio;
-import com.whiteowl.core.position.stateMachine.PositionEntityListener;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.trade.Trade;
 
@@ -45,7 +42,7 @@ import lombok.NonNull;
 		@Index(columnList = "status"),
 		@Index(columnList = "tradingStrategyConfigId")
 	})
-@EntityListeners({AuditingEntityListener.class, PositionEntityListener.class})
+@EntityListeners({AuditingEntityListener.class})
 @EqualsAndHashCode(of = {"id", "scrip", "portfolio", "tradingStrategyConfigId"})
 public class Position {
 
@@ -100,10 +97,4 @@ public class Position {
 		return position;
 	}
 	
-	@PreUpdate
-	@PrePersist
-	public void updateStatus() {
-		PositionStatus.update(this);
-	}
-
 }

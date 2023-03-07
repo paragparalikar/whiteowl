@@ -3,9 +3,17 @@ whiteowl:
     kite:
       credentials: 
         encrypted: false
-        username: RP3497
-        password: Dark@Horse5
-        pin: TFGKP2YOIGOLEFBHHLJ7QQ6PBOKXARFL
+        username: YS9709
+        password: Dark@Horse1
+        pin: TQPJ4KHNMX6KV5GQENASONLJJRTPWMOS
+        
+        #username: RP3497
+        #password: Dark@Horse5
+        #pin: TFGKP2YOIGOLEFBHHLJ7QQ6PBOKXARFL
+        
+        #username: YS9709
+        #password: Dark@Horse1
+        #pin: TQPJ4KHNMX6KV5GQENASONLJJRTPWMOS
       
 spring:
   h2:

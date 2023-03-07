@@ -29,7 +29,7 @@ public interface TradingStrategyContext {
 	
 	Scrip getScrip(String scripCode);
 	
-	Position save(Position position);
+	void save(Position position);
 	
 	List<Position> getOpenPositions(String tradingStrategyConfigId);
 	

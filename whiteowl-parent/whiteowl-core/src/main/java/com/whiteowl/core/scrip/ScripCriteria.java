@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 
 public class ScripCriteria implements Predicate<Scrip> {
 	
-	public static final ScripCriteria INSTANCE = (ScripCriteria) new ScripCriteria()
+	public static final Predicate<Scrip> INSTANCE = new ScripCriteria()
 			.withIndex(Index.NIFTY50)
 			.or(new ScripCriteria()
 					.withCode(Index.NIFTY50.getCode())

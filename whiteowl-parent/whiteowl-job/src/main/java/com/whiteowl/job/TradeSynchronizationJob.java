@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.whiteowl.core.broker.BrokerServiceProvider;
+import com.whiteowl.core.broker.BrokerServiceProviderFactory;
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.portfolio.PortfolioService;
 import com.whiteowl.core.position.Position;
@@ -35,7 +36,7 @@ public class TradeSynchronizationJob implements CommandLineRunner, AutoCloseable
 	private final PositionService positionService;
 	private final PortfolioService portfolioService;
 	private final ApplicationEventPublisher eventPublisher;
-	private final BrokerServiceProvider brokerServiceProvider;
+	private final BrokerServiceProviderFactory brokerServiceProviderFactory;
 	private final Map<Portfolio, Consumer<Trade>> tradeListeners = new HashMap<>();
 	
 	@Override
@@ -43,6 +44,8 @@ public class TradeSynchronizationJob implements CommandLineRunner, AutoCloseable
 		tryDownload();
 		for(Portfolio portfolio : portfolioService.findAll()) {
 			final Consumer<Trade> tradeListener = this::synchronize;
+			final BrokerServiceProvider brokerServiceProvider = brokerServiceProviderFactory
+					.getBrokerServiceProvider(portfolio.getBroker());
 			brokerServiceProvider.subscribeTradeStatusListener(tradeListener, portfolio);
 			tradeListeners.put(portfolio, tradeListener);
 		}
@@ -52,6 +55,8 @@ public class TradeSynchronizationJob implements CommandLineRunner, AutoCloseable
 	public void tryDownload() {
 		try {
 			for(Portfolio portfolio : portfolioService.findAll()) {
+				final BrokerServiceProvider brokerServiceProvider = brokerServiceProviderFactory
+						.getBrokerServiceProvider(portfolio.getBroker());
 				brokerServiceProvider
 					.findAllTrades(portfolio)
 					.forEach(this::synchronize);
@@ -82,6 +87,8 @@ public class TradeSynchronizationJob implements CommandLineRunner, AutoCloseable
 	public void close() throws Exception {
 		for(Portfolio portfolio : tradeListeners.keySet()) {
 			final Consumer<Trade> tradeListener = tradeListeners.get(portfolio);
+			final BrokerServiceProvider brokerServiceProvider = brokerServiceProviderFactory
+					.getBrokerServiceProvider(portfolio.getBroker());
 			brokerServiceProvider.unsubscribeTradeStatusListener(tradeListener, portfolio);
 		}
 		tradeListeners.clear();

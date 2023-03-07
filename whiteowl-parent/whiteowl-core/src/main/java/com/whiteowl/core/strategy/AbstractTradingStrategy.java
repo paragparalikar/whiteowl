@@ -1,8 +1,9 @@
-package com.whiteowl.core.strategy.impl;
+package com.whiteowl.core.strategy;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.ta4j.core.BarSeries;
 
@@ -20,13 +21,15 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 @Getter(AccessLevel.PROTECTED)
-public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> {
+public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> implements TradingStrategy {
 
 	private final T config;
 	private final Scrip scrip;
 	private final Timeframe timeframe;
 	private final BarSeries barSeries;
 	private final TradingStrategyContext context;
+	private final Runnable barListener = this::onBar;
+	private final Consumer<Quote> quoteListener = this::onQuote;
 	
 	public AbstractTradingStrategy(T config, TradingStrategyContext context) {
 		this.config= config;
@@ -34,8 +37,8 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> {
 		this.timeframe = config.getTimeframe();
 		this.scrip = context.getScrip(config.getScripCode());
 		this.barSeries = context.getBarSeries(config.getScripCode(), timeframe);
-		context.subscribe(scrip, timeframe, this::onBar);
-		context.subscribe(Arrays.asList(scrip), QuoteMode.FULL, this::onQuote);
+		context.subscribe(scrip, timeframe, barListener);
+		context.subscribe(Arrays.asList(scrip), QuoteMode.FULL, quoteListener);
 	}
 	
 	private void onBar() {
@@ -102,6 +105,12 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> {
 	
 	protected Trade createExitTrade(Quote quote, Position position, Trade entryTrade) {
 		return entryTrade.complement();
+	}
+	
+	@Override
+	public void close() throws Exception {
+		context.unsubscribe(barListener);
+		context.unsubscribe(quoteListener);
 	}
 	
 }

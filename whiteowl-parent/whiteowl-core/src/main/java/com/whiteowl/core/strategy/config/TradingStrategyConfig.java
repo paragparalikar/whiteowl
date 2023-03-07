@@ -1,7 +1,8 @@
 package com.whiteowl.core.strategy.config;
 
 import com.whiteowl.core.bar.Timeframe;
-import com.whiteowl.core.strategy.TradingStrategyTemplate;
+import com.whiteowl.core.strategy.TradingStrategy;
+import com.whiteowl.core.strategy.context.TradingStrategyContext;
 
 public interface TradingStrategyConfig {
 	
@@ -11,14 +12,12 @@ public interface TradingStrategyConfig {
 	
 	Timeframe getTimeframe();
 	
-	TradingStrategyTemplate getTradingStrategyTemplate();
+	TradingStrategy createTradingStrategy(TradingStrategyContext context);
 	
-	default String getExitCronExpression() { return null; }
-	
-	default String getEntryCronExpression() { return null; }
-	
-	default String getId() {
-		return String.join("-", getScripCode(), getTimeframe().name(), getTradingStrategyTemplate().name());
+	public default String getId() {
+		return String.join(java.io.File.separator, 
+				getScripCode(), 
+				getTimeframe().name(),
+				getClass().getCanonicalName());
 	}
-	
 }
