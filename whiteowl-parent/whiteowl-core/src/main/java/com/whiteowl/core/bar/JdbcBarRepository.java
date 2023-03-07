@@ -84,7 +84,7 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 	private Bar map(ResultSet rs) throws SQLException {
 		final Timestamp beginTimestamp = rs.getTimestamp("BEGIN_TIME");
 		final ZonedDateTime beginTime = beginTimestamp != null ? ZonedDateTime.ofInstant(
-		        Instant.ofEpochMilli(beginTimestamp.getTime()), ZoneOffset.UTC) : null;
+		        Instant.ofEpochMilli(beginTimestamp.getTime()), ZoneOffset.systemDefault()) : null;
 		final Duration timePeriod = Timeframe.valueOf(rs.getString("TIMEFRAME")).getDuration();
 		return BaseBar.builder()
 				.openPrice(DoubleNum.valueOf(rs.getDouble("OPEN")))
