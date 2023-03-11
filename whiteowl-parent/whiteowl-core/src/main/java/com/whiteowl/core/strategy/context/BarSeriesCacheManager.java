@@ -17,7 +17,7 @@ import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
-import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
+import com.whiteowl.core.bar.event.BarCreatedEvent;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.strategy.config.TradingStrategyConfigService;
@@ -66,12 +66,12 @@ public class BarSeriesCacheManager {
 	
 	@Async
 	@EventListener
-	public void onScripBarDownloaded(ScripBarDownloadedEvent event) {
+	public void onBarCreated(BarCreatedEvent event) {
 		final Timeframe timeframe = event.getTimeframe();
 		final String scripCode = event.getScrip().getCode();
 		final String key = toCacheKey(scripCode, timeframe);
 		Optional.ofNullable(cache.get(key)).ifPresent(barSeries -> {
-			event.getBars().forEach(barSeries::addBar);
+			barSeries.addBar(event.getBar());
 			notifyBarListener(scripCode, timeframe);
 		});
 	}

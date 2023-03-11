@@ -3,6 +3,7 @@ package com.whiteowl;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -12,6 +13,7 @@ import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -81,13 +83,13 @@ public class BarsToCSVFormatUtil {
 			final List<String> codes = getCodes(connection);
 			System.out.printf("Fetched %d codes\n", codes.size());
 			for(String code : codes) {
-				for(Timeframe timeframe : Timeframe.values()) {
+				for(Timeframe timeframe : Arrays.asList(Timeframe.M5)) {
 					if(Timeframe.M1.equals(timeframe)) continue;
 					final List<Bar> bars = getBars(code, timeframe, preparedStatement);
 					final List<String> lines = bars.stream().map(BarsToCSVFormatUtil::toCSV).collect(Collectors.toList());
-					final Path path = root.resolve(code + "-" + timeframe.name() + ".csv");
+					final Path path = root.resolve(timeframe.name() + ".csv");
 					System.out.printf("Writing %s\n", path.toAbsolutePath());
-					Files.write(path, lines);
+					Files.write(path, lines, StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
 				}
 			}
 		}

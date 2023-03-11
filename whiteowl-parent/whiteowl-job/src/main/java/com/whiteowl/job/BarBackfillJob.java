@@ -1,7 +1,6 @@
 package com.whiteowl.job;
 
 import java.time.ZonedDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,14 +15,15 @@ import org.ta4j.core.BarSeries;
 import com.whiteowl.core.bar.BarDataProvider;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
-import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
 import com.whiteowl.core.bar.query.BarQuery;
 import com.whiteowl.core.bar.query.BarQueryTransformer;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripCriteria;
 import com.whiteowl.core.scrip.ScripService;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -32,6 +32,18 @@ import lombok.extern.slf4j.Slf4j;
 @Scope(value = "prototype")
 @Order(JobConstant.ORDER_BAR_BACKFILL)
 public class BarBackfillJob implements CommandLineRunner {
+	
+	@Value
+	public static class BarsBackfilledEvent {
+		@NonNull private final Scrip scrip;
+		@NonNull private final List<Bar> bars;
+		@NonNull private final Timeframe timeframe;
+	}
+	
+	@Value
+	public static class ScripBarsBackfilledEvent {
+		@NonNull private final Scrip scrip;
+	}
 
 	private final BarService barService;
 	private final ScripService scripService;
@@ -41,16 +53,23 @@ public class BarBackfillJob implements CommandLineRunner {
 	
 	@Override
 	public void run(String... args) throws Exception {
-		Arrays.stream(Timeframe.values()).forEach(this::download);
-	}
-	
-	private void download(Timeframe timeframe) {
 		scripService.findAll().stream()
 			.filter(ScripCriteria.INSTANCE)
-			.forEach(scrip -> download(scrip, timeframe, barDataProvider));
+			.forEach(scrip -> download(scrip, barDataProvider));
 	}
 	
-	private void download(Scrip scrip, Timeframe timeframe, BarDataProvider barDataProvider) {
+	private void download(Scrip scrip, BarDataProvider barDataProvider) {
+		for(Timeframe timeframe : Timeframe.values()) {
+			final List<Bar> bars = download(scrip, timeframe, barDataProvider);
+			if(!bars.isEmpty()) {
+				barService.saveAll(scrip.getCode(), timeframe, bars);
+				eventPublisher.publishEvent(new BarsBackfilledEvent(scrip, bars, timeframe));
+			}
+		}
+		eventPublisher.publishEvent(new ScripBarsBackfilledEvent(scrip));
+	}
+	
+	private List<Bar> download(Scrip scrip, Timeframe timeframe, BarDataProvider barDataProvider) {
 		final ZonedDateTime now = ZonedDateTime.now();
 		final ZonedDateTime lastDownloadedTime = getLastDownloadTimestamp(scrip, timeframe);
 		final ZonedDateTime nextDownloadTime = lastDownloadedTime.plus(timeframe.getDuration());
@@ -62,13 +81,9 @@ public class BarBackfillJob implements CommandLineRunner {
 				.scrip(scrip)
 				.timeframe(timeframe)
 				.build();
-		final List<Bar> bars = barQueryTransformer.transform(barQuery)
+		return barQueryTransformer.transform(barQuery)
 				.map(barDataProvider::getBars)
 				.orElse(Collections.emptyList());
-		if(!bars.isEmpty()) {
-			barService.saveAll(scrip.getCode(), timeframe, bars);
-			eventPublisher.publishEvent(new ScripBarDownloadedEvent(scrip, bars, timeframe));
-		}
 	}
 	
 	private ZonedDateTime getLastDownloadTimestamp(Scrip scrip, Timeframe timeframe) {

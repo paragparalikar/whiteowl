@@ -1,7 +1,5 @@
 package com.whiteowl.core.bar.event;
 
-import java.util.List;
-
 import org.ta4j.core.Bar;
 
 import com.whiteowl.core.bar.Timeframe;
@@ -11,10 +9,8 @@ import lombok.NonNull;
 import lombok.Value;
 
 @Value
-public class ScripBarDownloadedEvent {
-
+public class BarCreatedEvent {
+	@NonNull private Bar bar;
 	@NonNull private Scrip scrip;
-	@NonNull private List<Bar> bars;
 	@NonNull private Timeframe timeframe;
-
 }

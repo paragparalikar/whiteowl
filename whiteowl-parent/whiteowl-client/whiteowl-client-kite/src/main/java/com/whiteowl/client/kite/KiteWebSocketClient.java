@@ -234,6 +234,7 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 	public void onBinaryMessage(WebSocket websocket, byte[] binary) throws Exception {
 		final Collection<KiteTick> ticks = kiteBinaryMessageParser.parseBinary(binary);
 		for(KiteTick tick : ticks) {
+			if(log.isTraceEnabled()) log.trace("Received tick from kite : {}", tick);
 			for(Consumer<KiteTick> consumer : tickConsumers.getOrDefault(tick.getToken(), Collections.emptySet())) {
 				ForkJoinPool.commonPool().execute(() -> consumer.accept(tick));
 			}

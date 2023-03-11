@@ -25,7 +25,7 @@ import org.ta4j.core.num.DoubleNum;
 
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
-import com.whiteowl.core.bar.event.ScripBarDownloadedEvent;
+import com.whiteowl.core.bar.event.BarCreatedEvent;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.quote.QuoteMode;
 import com.whiteowl.core.quote.QuoteService;
@@ -36,12 +36,14 @@ import com.whiteowl.core.util.Dates;
 import com.whiteowl.core.util.Tuple2;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @Order(JobConstant.ORDER_BAR_CREATION)
 public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoCloseable {
-
+	
 	private final BarService barService;
 	private final ScripService scripService;
 	private final QuoteService quoteService;
@@ -55,10 +57,12 @@ public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoC
 			.filter(ScripCriteria.INSTANCE)
 			.collect(Collectors.toSet());
 		quoteService.subscribe(scrips, QuoteMode.FULL, this);
+		log.info("Subscribed to {} scrip quotes", scrips.size());
 	}
 	
 	@Override
 	public void accept(final Quote quote) {
+		if(log.isTraceEnabled()) log.trace("Received quote : {}", quote);
 		final String scripCode = quote.getCode();
 		synchronized(scripCode) {
 			final Quote lastQuote = lastQuotes.get(scripCode);
@@ -73,10 +77,11 @@ public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoC
 					} else if(Objects.equals(endTime, value.getEndTime())) {
 						return value;
 					} else {
+						if(log.isTraceEnabled()) log.trace("Created new bar for {} - {} - {}", scripCode, timeframe, value);
 						final List<Bar> bars = Collections.singletonList(value);
 						barService.saveAll(scripCode, timeframe, bars);
 						final Scrip scrip = scripService.findByCode(scripCode);
-						eventPublisher.publishEvent(new ScripBarDownloadedEvent(scrip, bars, timeframe));
+						eventPublisher.publishEvent(new BarCreatedEvent(value, scrip, timeframe));
 						return new BaseBar(duration, endTime, DoubleNum::valueOf);
 					}
 				});
