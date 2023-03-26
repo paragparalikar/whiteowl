@@ -12,5 +12,6 @@ public class Twofa {
 	private String twofaStatus;
 	private boolean captcha;
 	private boolean locked;
+	private Profile profile;
 	
 }
