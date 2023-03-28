@@ -68,7 +68,7 @@ public class KiteSession {
 	}
 	
 	@SneakyThrows
-	private void login() {
+	private synchronized void login() {
 		setCookies(new RootRequest());
 		final LoginRequest loginRequest = new LoginRequest(this);
 		setCookies(loginRequest);
@@ -136,7 +136,7 @@ public class KiteSession {
 		request.header(AUTHORIZATION, ENCTOKEN + " " + enctoken);
 	}
 	
-	String getEncToken() {
+	synchronized String getEncToken() {
 		String enctoken = getCookieValue(ENCTOKEN);
 		if(!Strings.hasText(enctoken)) {
 			login();
