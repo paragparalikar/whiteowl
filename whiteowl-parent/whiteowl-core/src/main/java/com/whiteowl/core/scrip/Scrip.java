@@ -54,4 +54,8 @@ public class Scrip implements Comparable<Scrip> {
 	public int compareTo(Scrip other) {
 		return Objects.compare(getName(), other.getName(), Comparator.naturalOrder());
 	}
+	
+	public boolean isDerivative() {
+		return null != type && type.isDerivative();
+	}
 }

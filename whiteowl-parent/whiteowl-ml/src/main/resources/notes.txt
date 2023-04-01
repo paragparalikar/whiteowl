@@ -1,3 +1,5 @@
+connect/disconnect websocket as per market timing
+
 Mean reversion strategy : Risk:Reward = 1:2 : Take the trades only in-line with market outlook
 Candlestick pattern
 Overbought/Oversold Region - Use standard deviation and RSI

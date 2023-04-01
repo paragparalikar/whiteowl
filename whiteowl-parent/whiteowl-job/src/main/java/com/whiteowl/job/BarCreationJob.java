@@ -39,7 +39,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Component
+//@Component
 @RequiredArgsConstructor
 @Order(JobConstant.ORDER_BAR_CREATION)
 public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoCloseable {
@@ -54,7 +54,7 @@ public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoC
 	@Override
 	public void run(String... args) throws Exception {
 		final Set<Scrip> scrips = scripService.findAll().stream()
-			.filter(ScripCriteria.INSTANCE)
+			.filter(ScripCriteria.UNDERLYINGS)
 			.collect(Collectors.toSet());
 		quoteService.subscribe(scrips, QuoteMode.FULL, this);
 		log.info("Subscribed to {} scrip quotes", scrips.size());

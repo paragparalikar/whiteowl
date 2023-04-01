@@ -17,6 +17,7 @@ public enum Timeframe {
 	M15(25, Duration.ofMinutes(15)), 
 	M10(38, Duration.ofMinutes(10)), 
 	M5(75, Duration.ofMinutes(5)),
+	M3(125, Duration.ofMinutes(3)),
 	M1(375, Duration.ofMinutes(1));
 	
 	public static Stream<Timeframe> stream(){

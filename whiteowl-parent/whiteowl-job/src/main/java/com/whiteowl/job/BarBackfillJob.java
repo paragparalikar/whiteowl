@@ -1,6 +1,11 @@
 package com.whiteowl.job;
 
+import static com.whiteowl.core.bar.Timeframe.M1;
+import static com.whiteowl.core.scrip.ScripCriteria.INDEX_OPTIONS;
+import static com.whiteowl.core.scrip.ScripCriteria.INDICES;
+
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,7 +23,6 @@ import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.bar.query.BarQuery;
 import com.whiteowl.core.bar.query.BarQueryTransformer;
 import com.whiteowl.core.scrip.Scrip;
-import com.whiteowl.core.scrip.ScripCriteria;
 import com.whiteowl.core.scrip.ScripService;
 
 import lombok.NonNull;
@@ -54,15 +58,16 @@ public class BarBackfillJob implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		scripService.findAll().stream()
-			.filter(ScripCriteria.INSTANCE)
+			.filter(INDICES.or(INDEX_OPTIONS))
 			.forEach(scrip -> download(scrip, barDataProvider));
 	}
 	
 	private void download(Scrip scrip, BarDataProvider barDataProvider) {
-		for(Timeframe timeframe : Timeframe.values()) {
+		for(Timeframe timeframe : Arrays.asList(M1)) {
 			final List<Bar> bars = download(scrip, timeframe, barDataProvider);
 			if(!bars.isEmpty()) {
 				barService.saveAll(scrip.getCode(), timeframe, bars);
+				log.info("Downloaded {} bars for {} at {} timeframe", bars.size(), scrip.getCode(), timeframe);
 				eventPublisher.publishEvent(new BarsBackfilledEvent(scrip, bars, timeframe));
 			}
 		}
@@ -73,7 +78,7 @@ public class BarBackfillJob implements CommandLineRunner {
 		final ZonedDateTime now = ZonedDateTime.now();
 		final ZonedDateTime lastDownloadedTime = getLastDownloadTimestamp(scrip, timeframe);
 		final ZonedDateTime nextDownloadTime = lastDownloadedTime.plus(timeframe.getDuration());
-		if(log.isDebugEnabled()) log.debug("Bars were last downloaded on {} for scrip {} and timeframe {}, next is {}", 
+		log.info("Bars were last downloaded on {} for scrip {} and timeframe {}, next is {}", 
 				lastDownloadedTime, scrip.getCode(), timeframe, nextDownloadTime);
 		final BarQuery barQuery = BarQuery.builder()
 				.to(now)

@@ -65,8 +65,9 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 	
 	public KiteWebSocketClient(@NonNull final KiteSession kiteSession) {
 		this.kiteSession = kiteSession;
-		scheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(this::reconnect, 
-				RECONNECT_CHECK_DELAY, RECONNECT_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
+		scheduledFuture = null;
+		//scheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(this::reconnect, 
+		//		RECONNECT_CHECK_DELAY, RECONNECT_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
 	}
 	
 	@Override
