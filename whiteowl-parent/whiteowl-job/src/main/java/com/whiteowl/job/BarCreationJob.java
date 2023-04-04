@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
@@ -39,7 +40,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-//@Component
+@Component
+@Profile("data-live")
 @RequiredArgsConstructor
 @Order(JobConstant.ORDER_BAR_CREATION)
 public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoCloseable {
@@ -85,8 +87,9 @@ public class BarCreationJob implements CommandLineRunner, Consumer<Quote>, AutoC
 						return new BaseBar(duration, endTime, DoubleNum::valueOf);
 					}
 				});
+				final double openInterest = quote.getOi();
 				final long volume = quote.getVolume() - Optional.ofNullable(lastQuote).map(Quote::getVolume).orElse(0L);
-				bar.addTrade(DoubleNum.valueOf(volume), DoubleNum.valueOf(quote.getLastPrice()));
+				bar.addTrade(DoubleNum.valueOf(openInterest), DoubleNum.valueOf(volume), DoubleNum.valueOf(quote.getLastPrice()));
 			}
 		}
 	}

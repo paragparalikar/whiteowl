@@ -27,8 +27,6 @@ public class NseIndexPopulator implements IndexPopulator {
 
 	@Override
 	public void populate(Collection<Scrip> scrips) {
-		// Below urls have been decomissioned by NSE. Need to move to new urls.
-		if(true) return; 
 		final Map<String, Scrip> scripsByCode = scrips.stream()
 				.filter(scrip -> Exchange.NSE.equals(scrip.getExchange()))
 				.collect(Collectors.toMap(Scrip::getCode, Function.identity()));
@@ -51,15 +49,15 @@ public class NseIndexPopulator implements IndexPopulator {
 	private String resolveUrl(Index index) {
 		switch (index) {
 		case NIFTY50:
-			return "https://www1.nseindia.com/content/indices/ind_nifty50list.csv";
+			return "https://archives.nseindia.com/content/indices/ind_nifty50list.csv";
 		case NIFTYNEXT50:
-			return "https://www1.nseindia.com/content/indices/ind_niftynext50list.csv";
+			return "https://archives.nseindia.com/content/indices/ind_niftynext50list.csv";
 		case NIFTY100:
-			return "https://www1.nseindia.com/content/indices/ind_nifty100list.csv";
+			return "https://archives.nseindia.com/content/indices/ind_nifty100list.csv";
 		case NIFTY200:
-			return "https://www1.nseindia.com/content/indices/ind_nifty200list.csv";
+			return "https://archives.nseindia.com/content/indices/ind_nifty200list.csv";
 		case NIFTY500:
-			return "https://www1.nseindia.com/content/indices/ind_nifty500list.csv";
+			return "https://archives.nseindia.com/content/indices/ind_nifty500list.csv";
 		default:
 			return null;
 		}

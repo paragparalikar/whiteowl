@@ -77,6 +77,7 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 					+ "LOW DOUBLE PRECISION DEFAULT 0, "
 					+ "CLOSE DOUBLE PRECISION DEFAULT 0, "
 					+ "VOLUME DOUBLE PRECISION DEFAULT 0, "
+					+ "OI DOUBLE PRECISION DEFAULT 0, "
 					+ "PRIMARY KEY (CODE ASC, TIMEFRAME ASC, BEGIN_TIME DESC))");
 		}
 	}
@@ -92,6 +93,7 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 				.lowPrice(DoubleNum.valueOf(rs.getDouble("LOW")))
 				.closePrice(DoubleNum.valueOf(rs.getDouble("CLOSE")))
 				.volume(DoubleNum.valueOf(rs.getDouble("VOLUME")))
+				.openInterest(DoubleNum.valueOf(rs.getDouble("OI")))
 				.endTime(beginTime.plus(timePeriod))
 				.timePeriod(timePeriod)
 				.build();
@@ -124,7 +126,7 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 			@NonNull final String code, 
 			@NonNull final Timeframe timeframe, 
 			@NonNull final Collection<Bar> bars) {
-		final String sql = "MERGE INTO BAR VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+		final String sql = "MERGE INTO BAR VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try(final Connection connection = dataSource.getConnection();
 				final PreparedStatement ps = connection.prepareStatement(sql)){
 			for(Bar bar : bars) {
@@ -136,6 +138,7 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 				ps.setDouble(6, bar.getLowPrice().doubleValue());
 				ps.setDouble(7, bar.getClosePrice().doubleValue());
 				ps.setDouble(8, bar.getVolume().doubleValue());
+				ps.setDouble(9, bar.getOpenInterest().doubleValue());
 				ps.addBatch();
 			}
 			ps.executeBatch();

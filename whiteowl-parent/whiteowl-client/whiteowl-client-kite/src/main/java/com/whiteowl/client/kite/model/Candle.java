@@ -9,8 +9,8 @@ import lombok.Value;
 @Builder
 public class Candle {
 
-	private final int volume;
 	private final ZonedDateTime timestamp;
+	private final long volume, openInterest;
 	private final double open, high, low, close;
 	
 }

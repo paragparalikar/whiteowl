@@ -16,6 +16,7 @@ public class BarMapper {
 				.lowPrice(DoubleNum.valueOf(candle.getLow()))
 				.closePrice(DoubleNum.valueOf(candle.getClose()))
 				.volume(DoubleNum.valueOf(candle.getVolume()))
+				.openInterest(DoubleNum.valueOf(candle.getOpenInterest()))
 				.timePeriod(timeframe.getDuration())
 				.endTime(candle.getTimestamp().plus(timeframe.getDuration()))
 				.build();

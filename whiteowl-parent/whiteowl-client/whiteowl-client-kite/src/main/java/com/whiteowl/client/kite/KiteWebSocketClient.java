@@ -55,7 +55,7 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 
 	private volatile WebSocket webSocket;
 	private final KiteSession kiteSession;
-	private final ScheduledFuture<?> scheduledFuture;
+	private volatile ScheduledFuture<?> scheduledFuture;
 	private final AtomicLong pongTimestamp = new AtomicLong();
 	private final Set<Consumer<Order>> orderConsumers = new HashSet<>();
 	private final Map<Long, KiteQuoteMode> quoteModes = new HashMap<>();
@@ -65,13 +65,10 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 	
 	public KiteWebSocketClient(@NonNull final KiteSession kiteSession) {
 		this.kiteSession = kiteSession;
-		scheduledFuture = null;
-		//scheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(this::reconnect, 
-		//		RECONNECT_CHECK_DELAY, RECONNECT_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
 	}
 	
 	@Override
-	public void close() throws Exception {
+	public synchronized void close() throws Exception {
 		if(null != scheduledFuture) {
 			scheduledFuture.cancel(true);
 		}
@@ -81,7 +78,7 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 	}
 	
 	@SneakyThrows
-	private void connect() {
+	private synchronized void connect() {
 		disconnect();
 		final String uri = createUri();
 		pongTimestamp.set(System.currentTimeMillis());
@@ -90,9 +87,13 @@ public class KiteWebSocketClient extends WebSocketAdapter implements AutoCloseab
 		webSocket.setPongInterval(PONG_INTERVAL);
 		webSocket.addListener(this);
 		webSocket.connect();
+		if(null == scheduledFuture) {
+			scheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(this::reconnect, 
+					RECONNECT_CHECK_DELAY, RECONNECT_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
+		}
 	}
 	
-	private void disconnect() {
+	private synchronized void disconnect() {
 		if(webSocket != null) {
 			if(webSocket.isOpen()) {
 				webSocket.disconnect();

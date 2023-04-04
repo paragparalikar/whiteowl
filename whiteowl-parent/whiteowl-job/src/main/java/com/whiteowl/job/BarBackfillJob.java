@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -25,35 +25,21 @@ import com.whiteowl.core.bar.query.BarQueryTransformer;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@Profile("data-backfill")
 @RequiredArgsConstructor
 @Scope(value = "prototype")
 @Order(JobConstant.ORDER_BAR_BACKFILL)
 public class BarBackfillJob implements CommandLineRunner {
-	
-	@Value
-	public static class BarsBackfilledEvent {
-		@NonNull private final Scrip scrip;
-		@NonNull private final List<Bar> bars;
-		@NonNull private final Timeframe timeframe;
-	}
-	
-	@Value
-	public static class ScripBarsBackfilledEvent {
-		@NonNull private final Scrip scrip;
-	}
 
 	private final BarService barService;
 	private final ScripService scripService;
 	private final BarDataProvider barDataProvider;
 	private final BarQueryTransformer barQueryTransformer;
-	private final ApplicationEventPublisher eventPublisher;
 	
 	@Override
 	public void run(String... args) throws Exception {
@@ -68,10 +54,8 @@ public class BarBackfillJob implements CommandLineRunner {
 			if(!bars.isEmpty()) {
 				barService.saveAll(scrip.getCode(), timeframe, bars);
 				log.info("Downloaded {} bars for {} at {} timeframe", bars.size(), scrip.getCode(), timeframe);
-				eventPublisher.publishEvent(new BarsBackfilledEvent(scrip, bars, timeframe));
 			}
 		}
-		eventPublisher.publishEvent(new ScripBarsBackfilledEvent(scrip));
 	}
 	
 	private List<Bar> download(Scrip scrip, Timeframe timeframe, BarDataProvider barDataProvider) {

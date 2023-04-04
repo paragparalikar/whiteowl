@@ -22,13 +22,15 @@ public class CandleSeries {
 	}
 	
 	private Candle parse(List<Object> objects) {
+		final long oi = objects.size() >= 7 ? ((Number)toDouble(objects.get(6))).longValue() : 0; 
 		return Candle.builder()
 				.timestamp(ZonedDateTime.parse((String)objects.get(0), formatter))
 				.open(toDouble(objects.get(1)))
 				.high(toDouble(objects.get(2)))
 				.low(toDouble(objects.get(3)))
 				.close(toDouble(objects.get(4)))
-				.volume(((Number) objects.get(5)).intValue())
+				.volume(((Number) objects.get(5)).longValue())
+				.openInterest(oi)
 				.build();
 	}
 	
