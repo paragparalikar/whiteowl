@@ -36,6 +36,7 @@ public class Scrip implements Comparable<Scrip> {
 	private double tickSize;
 	private int lotSize;
 	private Segment segment;
+	private boolean underlying;
 	
 	@NonNull @NotNull
 	@Enumerated(EnumType.STRING)
@@ -57,5 +58,9 @@ public class Scrip implements Comparable<Scrip> {
 	
 	public boolean isDerivative() {
 		return null != type && type.isDerivative();
+	}
+	
+	public boolean isOption() {
+		return null != type && type.isOption();
 	}
 }

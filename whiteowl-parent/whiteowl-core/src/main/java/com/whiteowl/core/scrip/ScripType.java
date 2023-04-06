@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ScripType {
 
-	EQ(false), FUT(true), CE(true), PE(true);
+	EQ(false, false), FUT(true, false), CE(true, true), PE(true, true);
 	
-	private final boolean derivative;
+	private final boolean derivative, option;
 }

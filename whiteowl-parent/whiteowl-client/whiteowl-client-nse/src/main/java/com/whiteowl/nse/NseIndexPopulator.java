@@ -4,15 +4,18 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import com.whiteowl.core.scrip.Exchange;
@@ -24,15 +27,36 @@ import lombok.SneakyThrows;
 
 @Component
 public class NseIndexPopulator implements IndexPopulator {
+	
+	private List<String> underlyingCodes;
 
 	@Override
 	public void populate(Collection<Scrip> scrips) {
 		final Map<String, Scrip> scripsByCode = scrips.stream()
 				.filter(scrip -> Exchange.NSE.equals(scrip.getExchange()))
+				.map(this::populate)
 				.collect(Collectors.toMap(Scrip::getCode, Function.identity()));
-		Arrays.stream(Index.values())
-				.forEach(index -> resolveComponents(index).stream().map(code -> scripsByCode.get(code))
-						.filter(Objects::nonNull).forEach(scrip -> scrip.getIndices().add(index)));
+		Arrays.stream(Index.values()).forEach(index -> populate(index, scripsByCode));
+	}
+	
+	private void populate(Index index, Map<String, Scrip> scripsByCode) {
+		resolveComponents(index).stream()
+			.map(code -> scripsByCode.get(code))
+			.filter(Objects::nonNull)
+			.forEach(scrip -> scrip.getIndices().add(index));
+	}
+	
+	private Scrip populate(Scrip scrip) {
+		scrip.setUnderlying(getUnderlyingCodes().contains(scrip.getCode().toUpperCase()));
+		return scrip;
+	}
+	
+	@SneakyThrows
+	private synchronized List<String> getUnderlyingCodes(){
+		return null != underlyingCodes ? underlyingCodes :
+				(underlyingCodes = Files
+					.readAllLines(new ClassPathResource("underlying-nse.csv")
+					.getFile().toPath()));
 	}
 
 	@SneakyThrows
