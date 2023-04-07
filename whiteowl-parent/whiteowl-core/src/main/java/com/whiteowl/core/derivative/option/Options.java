@@ -7,7 +7,7 @@ import com.whiteowl.core.scrip.Scrip;
 
 public interface Options {
 
-	public static final DateTimeFormatter EXPIRY_DATE_FORMATTER = DateTimeFormatter.ofPattern("YYMMM");
+	public static final DateTimeFormatter EXPIRY_DATE_FORMATTER = DateTimeFormatter.ofPattern("YY");
 	
 	public static String resolveUnderlyingCode(Scrip scrip) {
 		if(!scrip.isDerivative()) return null;

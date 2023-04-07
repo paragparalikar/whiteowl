@@ -1,5 +1,6 @@
 package com.whiteowl.core.bar;
 
+import java.time.ZonedDateTime;
 import java.util.Collection;
 
 import org.springframework.stereotype.Service;
@@ -27,6 +28,12 @@ public class DefaultBarService implements BarService {
 	@Override
 	public void saveAll(String code, Timeframe timeframe, Collection<Bar> bars) {
 		barRepository.saveAll(code, timeframe, bars);
+	}
+	
+	@Override
+	public Bar findByCodeAndTimeframeAndBeginTime(
+			String code, Timeframe timeframe, ZonedDateTime beginTime) {
+		return barRepository.findByCodeAndTimeframeAndBeginTime(code, timeframe, beginTime);
 	}
 
 }

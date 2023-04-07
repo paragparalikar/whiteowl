@@ -119,6 +119,22 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 			}
 		}
 	}
+	
+	@Override
+	@SneakyThrows
+	public Bar findByCodeAndTimeframeAndBeginTime(
+			String code, Timeframe timeframe, ZonedDateTime beginTime) {
+		final String sql = "SELECT * FROM BAR WHERE CODE = ? AND TIMEFRAME = ? AND BEGIN_TIME = ?";
+		try(final Connection connection = dataSource.getConnection();
+				final PreparedStatement ps = connection.prepareStatement(sql)){
+				ps.setString(1, code);
+				ps.setString(2, timeframe.name());
+				ps.setTimestamp(3, Timestamp.from(beginTime.toInstant()));
+				try(final ResultSet rs = ps.executeQuery()){
+					return rs.next() ? map(rs) : null;
+				}
+			}
+	}
 
 	@Override
 	@SneakyThrows

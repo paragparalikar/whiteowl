@@ -187,5 +187,10 @@ public class FileSystemBarRepository implements BarRepository {
 		final LocalTime endLocalTime = endTime.toLocalTime();
 		return Constant.NSE_START_TIME.isBefore(endLocalTime) && Constant.NSE_END_TIME.isAfter(beginLocalTime);
 	}
+	
+	@Override
+	public Bar findByCodeAndTimeframeAndBeginTime(String code, Timeframe timeframe, ZonedDateTime beginTime) {
+		throw new UnsupportedOperationException();
+	}
 
 }
