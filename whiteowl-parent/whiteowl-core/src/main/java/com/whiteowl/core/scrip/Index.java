@@ -1,5 +1,8 @@
 package com.whiteowl.core.scrip;
 
+import java.util.Arrays;
+import java.util.function.Predicate;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -18,5 +21,11 @@ public enum Index {
 	NIFTY500("NIFTY 500", "Nifty 500");
 	
 	private final String code, displayName;
+	
+	public static boolean isIndex(String code) {
+		return Arrays.stream(Index.values())
+				.map(Index::getCode)
+				.anyMatch(Predicate.isEqual(code));
+	}
 	
 }

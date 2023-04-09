@@ -22,6 +22,7 @@ import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.bar.query.BarQuery;
 import com.whiteowl.core.bar.query.BarQueryTransformer;
 import com.whiteowl.core.scrip.Exchange;
+import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
 
@@ -49,7 +50,9 @@ public class BarBackfillJob implements CommandLineRunner {
 	}
 	
 	private boolean predicate(Scrip scrip) {
-		return scrip.isUnderlying() || (scrip.isOption() 
+		return Index.isIndex(scrip.getCode())
+				|| scrip.isUnderlying() 
+				|| (scrip.isOption() 
 				&& Exchange.NFO.equals(scrip.getExchange())
 				&& null != scrip.getExpiry()
 				&& scrip.getExpiry().isBefore(LocalDate.now().plusWeeks(5)));

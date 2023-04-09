@@ -23,8 +23,8 @@ import lombok.RequiredArgsConstructor;
 public class OptionChainBuilder {
 	private static final Timeframe TIMEFRAME = Timeframe.M3;
 
-	private BarService barService;
-	private ScripService scripService;
+	private final BarService barService;
+	private final ScripService scripService;
 
 	public OptionChain build(Scrip underlying, LocalDate expiry, ZonedDateTime timestamp) {
 		final Bar bar = barService.findByCodeAndTimeframeAndBeginTime(underlying.getCode(), TIMEFRAME, timestamp);
