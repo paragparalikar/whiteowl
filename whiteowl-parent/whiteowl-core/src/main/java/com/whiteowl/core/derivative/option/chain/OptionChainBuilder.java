@@ -2,6 +2,7 @@ package com.whiteowl.core.derivative.option.chain;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,7 +29,8 @@ public class OptionChainBuilder {
 
 	public OptionChain build(Scrip underlying, LocalDate expiry, ZonedDateTime timestamp) {
 		final Bar bar = barService.findByCodeAndTimeframeAndBeginTime(underlying.getCode(), TIMEFRAME, timestamp);
-		final Set<Scrip> optionScrips = findOptionScrips(underlying.getCode(), expiry);
+		if(null == bar) return null;
+		final Set<Scrip> optionScrips = findOptionScrips(underlying.getCode(), expiry, bar.getClosePrice().doubleValue());
  		final Set<Option> options = optionScrips.stream()
  			.map(scrip -> Tuple2.of(scrip, barService.findByCodeAndTimeframeAndBeginTime(
 				scrip.getCode(), TIMEFRAME, timestamp)))
@@ -55,12 +57,14 @@ public class OptionChainBuilder {
 				.build();
 	}
 	
-	private Set<Scrip> findOptionScrips(String underlyingCode, LocalDate expiry){
+	private Set<Scrip> findOptionScrips(String underlyingCode, LocalDate expiry, double spotPrice){
 		return scripService.findAll().stream()
 				.filter(scrip -> scrip.isOption())
 				.filter(scrip -> null != scrip.getExpiry())
 				.filter(scrip -> expiry.isEqual(scrip.getExpiry()))
 				.filter(scrip -> underlyingCode.equalsIgnoreCase(resolveUnderlyingCode(scrip)))
+				.sorted(Comparator.comparing(scrip -> Math.abs(spotPrice - scrip.getStrike())))
+				.limit(40)
 				.collect(Collectors.toSet());
 	}
 	
