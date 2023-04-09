@@ -12,6 +12,7 @@ import org.ta4j.core.Bar;
 
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
+import com.whiteowl.core.derivative.option.Greeks;
 import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
@@ -28,13 +29,15 @@ public class OptionChainBuilder {
 	private final ScripService scripService;
 
 	public OptionChain build(Scrip underlying, LocalDate expiry, ZonedDateTime timestamp) {
+		final Bar vixBar = barService.findByCodeAndTimeframeAndBeginTime(Index.VIX.getCode(), TIMEFRAME, timestamp);
+		if(null == vixBar) return null;
 		final Bar bar = barService.findByCodeAndTimeframeAndBeginTime(underlying.getCode(), TIMEFRAME, timestamp);
 		if(null == bar) return null;
 		final Set<Scrip> optionScrips = findOptionScrips(underlying.getCode(), expiry, bar.getClosePrice().doubleValue());
  		final Set<Option> options = optionScrips.stream()
  			.map(scrip -> Tuple2.of(scrip, barService.findByCodeAndTimeframeAndBeginTime(
 				scrip.getCode(), TIMEFRAME, timestamp)))
- 			.map(tuple2 -> buildOption(tuple2.getKey(), tuple2.getValue()))
+ 			.map(tuple2 -> buildOption(tuple2.getKey(), tuple2.getValue(), bar, vixBar))
  			.filter(Objects::nonNull)
  			.collect(Collectors.toSet());
 		return OptionChain.builder()
@@ -46,7 +49,7 @@ public class OptionChainBuilder {
 				.build();
 	}
 	
-	private Option buildOption(Scrip scrip, Bar bar) {
+	private Option buildOption(Scrip scrip, Bar bar, Bar spot, Bar vix) {
 		return null == bar ? null : Option.builder()
 				.code(scrip.getCode())
 				.type(scrip.getType())
@@ -54,6 +57,15 @@ public class OptionChainBuilder {
 				.volume(bar.getVolume().doubleValue())
 				.ltp(bar.getClosePrice().doubleValue())
 				.oi(bar.getOpenInterest().doubleValue())
+				.greeks(Greeks.builder()
+						.spotVolatility(vix.getClosePrice().doubleValue())
+						.spotPrice(spot.getClosePrice().doubleValue())
+						.price(bar.getClosePrice().doubleValue())
+						.strikePrice(scrip.getStrike())
+						.timestamp(bar.getBeginTime())
+						.expiry(scrip.getExpiry())
+						.type(scrip.getType())
+						.build())
 				.build();
 	}
 	
