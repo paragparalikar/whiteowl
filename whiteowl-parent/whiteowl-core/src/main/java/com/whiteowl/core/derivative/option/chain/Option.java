@@ -1,6 +1,5 @@
 package com.whiteowl.core.derivative.option.chain;
 
-import com.whiteowl.core.derivative.option.Greeks;
 import com.whiteowl.core.scrip.ScripType;
 
 import lombok.Builder;
@@ -15,7 +14,6 @@ public class Option {
 	private String code;
 	private ScripType type;
 	private double strike;
-	private Greeks greeks;
 	private double ltp, volume, oi;
 	
 }
