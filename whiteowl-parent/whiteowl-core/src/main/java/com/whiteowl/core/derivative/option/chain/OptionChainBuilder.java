@@ -26,10 +26,9 @@ public class OptionChainBuilder {
 
 	private final BarService barService;
 	private final ScripService scripService;
-
-	public OptionChain build(Scrip underlying, LocalDate expiry, ZonedDateTime timestamp) {
-		final Bar bar = barService.findByCodeAndTimeframeAndBeginTime(underlying.getCode(), TIMEFRAME, timestamp);
-		if(null == bar) return null;
+	
+	public OptionChain build(Scrip underlying, LocalDate expiry, Bar bar) {
+		final ZonedDateTime timestamp = bar.getBeginTime();
 		final Set<Scrip> optionScrips = findOptionScrips(underlying.getCode(), expiry, bar.getClosePrice().doubleValue());
  		final Set<Option> options = optionScrips.stream()
  			.map(scrip -> Tuple2.of(scrip, barService.findByCodeAndTimeframeAndBeginTime(
@@ -44,6 +43,12 @@ public class OptionChainBuilder {
 				.underlying(underlying)
 				.spotPrice(bar.getClosePrice().doubleValue())
 				.build();
+	}
+
+	public OptionChain build(Scrip underlying, LocalDate expiry, ZonedDateTime timestamp) {
+		final Bar bar = barService.findByCodeAndTimeframeAndBeginTime(underlying.getCode(), TIMEFRAME, timestamp);
+		if(null == bar) return null;
+		return build(underlying, expiry, bar);
 	}
 	
 	private Option buildOption(Scrip scrip, Bar bar) {
