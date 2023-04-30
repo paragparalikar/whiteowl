@@ -23,9 +23,11 @@ import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
 import com.whiteowl.core.trade.Trade;
 
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Delegate;
 
+@Builder
 @Component
 @RequiredArgsConstructor
 public class DefaultTradingStrategyContext implements TradingStrategyContext {
@@ -35,7 +37,7 @@ public class DefaultTradingStrategyContext implements TradingStrategyContext {
 	private final TaskScheduler taskScheduler;
 	private final PositionService positionService;
 	private final PortfolioService portfolioService;
-	@Delegate private final BarSeriesCacheManager barListenerManager;
+	@Delegate private final BarSeriesCacheManager barSeriesCacheManager;
 	private final BrokerServiceProviderFactory brokerServiceProviderFactory;
 	
 	@Override

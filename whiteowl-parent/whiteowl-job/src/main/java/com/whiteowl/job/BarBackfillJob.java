@@ -42,7 +42,7 @@ public class BarBackfillJob implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		scripService.findAll().stream()
-			.filter(this::predicate).parallel()
+			.filter(this::predicate).sorted()
 			.forEach(scrip -> download(scrip, barDataProvider));
 	}
 	
