@@ -1,8 +1,7 @@
 package com.whiteowl.job;
 
-import static com.whiteowl.core.bar.Timeframe.M3;
+import static com.whiteowl.core.bar.Timeframe.*;
 
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,8 +20,6 @@ import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.bar.query.BarQuery;
 import com.whiteowl.core.bar.query.BarQueryTransformer;
-import com.whiteowl.core.scrip.Exchange;
-import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.scrip.ScripService;
 
@@ -45,21 +42,16 @@ public class BarBackfillJob implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		scripService.findAll().stream()
-			.filter(this::predicate)
+			.filter(this::predicate).parallel()
 			.forEach(scrip -> download(scrip, barDataProvider));
 	}
 	
 	private boolean predicate(Scrip scrip) {
-		return Index.isIndex(scrip.getCode())
-				|| scrip.isUnderlying() 
-				|| (scrip.isOption() 
-				&& Exchange.NFO.equals(scrip.getExchange())
-				&& null != scrip.getExpiry()
-				&& scrip.getExpiry().isBefore(LocalDate.now().plusWeeks(5)));
+		return scrip.isUnderlying();
 	}
 	
 	private void download(Scrip scrip, BarDataProvider barDataProvider) {
-		for(Timeframe timeframe : Arrays.asList(M3)) {
+		for(Timeframe timeframe : Arrays.asList(D,H1,M30,M15,M10,M5)) {
 			final List<Bar> bars = download(scrip, timeframe, barDataProvider);
 			if(!bars.isEmpty()) {
 				barService.saveAll(scrip.getCode(), timeframe, bars);

@@ -47,7 +47,8 @@ public class NseIndexPopulator implements IndexPopulator {
 	}
 	
 	private Scrip populate(Scrip scrip) {
-		scrip.setUnderlying(getUnderlyingCodes().contains(scrip.getCode().toUpperCase()));
+		final String code = scrip.getCode().trim().toUpperCase();
+		scrip.setUnderlying(getUnderlyingCodes().contains(code));
 		return scrip;
 	}
 	
@@ -55,8 +56,11 @@ public class NseIndexPopulator implements IndexPopulator {
 	private synchronized List<String> getUnderlyingCodes(){
 		return null != underlyingCodes ? underlyingCodes :
 				(underlyingCodes = Files
-					.readAllLines(new ClassPathResource("underlying-nse.csv")
-					.getFile().toPath()));
+					.lines(new ClassPathResource("underlying-nse.csv")
+					.getFile().toPath())
+					.map(String::trim)
+					.map(String::toUpperCase)
+					.collect(Collectors.toList()));
 	}
 
 	@SneakyThrows

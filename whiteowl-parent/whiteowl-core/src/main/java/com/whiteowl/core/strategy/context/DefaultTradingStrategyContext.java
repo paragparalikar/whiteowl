@@ -65,6 +65,11 @@ public class DefaultTradingStrategyContext implements TradingStrategyContext {
 	}
 	
 	@Override
+	public boolean existsByScripAndStatusNot(Scrip scrip, PositionStatus status) {
+		return positionService.existsByScripAndStatusNot(scrip, status);
+	}
+	
+	@Override
 	public void save(Position position) {
 		if(null == position.getPortfolio()) {
 			portfolioService.findAll().stream()

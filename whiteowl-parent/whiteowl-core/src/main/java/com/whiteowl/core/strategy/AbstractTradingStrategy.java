@@ -9,6 +9,7 @@ import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.position.Position;
+import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.position.Positions;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.quote.QuoteMode;
@@ -42,8 +43,8 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> i
 	}
 	
 	private void onBar() {
-		final List<Position> positions = context.getOpenPositions(config.getId());
-		if(positions.isEmpty() && shouldEnter()) {
+		final boolean hasPositions = context.existsByScripAndStatusNot(scrip, PositionStatus.CLOSED);
+		if(!hasPositions && shouldEnter()) {
 			final Collection<Trade> entryTrades = createEntryTrades();
 			final Position position = createNewPosition();
 			position.getEntryTrades().addAll(entryTrades);

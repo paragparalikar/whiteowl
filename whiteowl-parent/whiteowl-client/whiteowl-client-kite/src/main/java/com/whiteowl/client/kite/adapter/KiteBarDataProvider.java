@@ -3,6 +3,7 @@ package com.whiteowl.client.kite.adapter;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -44,6 +45,7 @@ public class KiteBarDataProvider implements BarDataProvider {
 		ZonedDateTime to = barQuery.getTo();
 		ZonedDateTime from = barQuery.getFrom();
 		final Instrument instrument = kiteInstrumentService.findByTradingSymbol(scrip.getCode());
+		if(null == instrument) return Collections.emptyList();			
 		final long instrumentToken = instrument.getInstrumentToken();
 		final Duration duration = kiteMapper.getHistoricalDataBatchLimit(timeframe);
 		final List<Bar> bars = new ArrayList<>();

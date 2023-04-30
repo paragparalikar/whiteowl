@@ -8,14 +8,11 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 import org.ta4j.core.Bar;
+import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
@@ -26,7 +23,7 @@ import com.whiteowl.core.scrip.ScripService;
 import lombok.RequiredArgsConstructor;
 
 @Order
-@Component
+//@Component
 @RequiredArgsConstructor
 public class OptionChainBuilderCommandLineRunner implements CommandLineRunner {
 
@@ -36,26 +33,26 @@ public class OptionChainBuilderCommandLineRunner implements CommandLineRunner {
 	
 	@Override
 	public void run(String... args) throws Exception {
+		final String code = "RELIANCE";
 		final LocalDate expiry = LocalDate.of(2023, 04, 6);
-		final ZonedDateTime startTimestamp = ZonedDateTime.of(LocalDate.of(2023, 4, 3), LocalTime.of(9, 15), ZoneId.systemDefault());
-		final ZonedDateTime endTimestamp = ZonedDateTime.of(LocalDate.of(2023, 04, 6), LocalTime.of(3, 30), ZoneId.systemDefault());
-		final Scrip scrip = scripService.findByCode(Index.NIFTY50.getCode());
-		final List<Bar> bars = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), 
-				Timeframe.M3, 5 * Timeframe.M3.getDayMultiple()).getBarData().stream()
-				.filter(bar -> !bar.getBeginTime().isBefore(startTimestamp))
-				.filter(bar -> !bar.getBeginTime().isAfter(endTimestamp))
-				.collect(Collectors.toList());
+		final ZonedDateTime startTimestamp = ZonedDateTime.of(LocalDate.of(2023, 4, 3), LocalTime.of(9, 30), ZoneId.systemDefault());
+		final ZonedDateTime endTimestamp = ZonedDateTime.of(LocalDate.of(2023, 04, 6), LocalTime.of(2, 0), ZoneId.systemDefault());
+		final Scrip scrip = scripService.findByCode(code);
+		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), 
+				Timeframe.M3, 5 * Timeframe.M3.getDayMultiple());
 		final int count = 20;
 		final List<String> lines = new ArrayList<>();
 		lines.add(header(count));
-		for(int index = 0; index < bars.size() - count; index++) {
-			final Bar bar = bars.get(index);
+		for(int index = 0; index < barSeries.getBarCount() - count; index++) {
+			final Bar bar = barSeries.getBar(index);
+			if(bar.getBeginTime().isBefore(startTimestamp) || bar.getBeginTime().isAfter(endTimestamp)) {
+				continue;
+			}
 			final double vix = barService.findByCodeAndTimeframeAndBeginTime(
 					Index.VIX.getCode(), Timeframe.M3, bar.getBeginTime())
 					.getClosePrice().doubleValue() / Math.sqrt(8760);
 			final OptionChain optionChain = optionChainBuilder.build(scrip, expiry, bar);
-			final OptionChainReport report = new OptionChainReport(optionChain);
-			final String csv = line(report, bars.subList(index, index + count), vix);
+			final String csv = line(optionChain, barSeries.getBarData().subList(index, index + count), vix);
 			System.out.println(csv);
 			lines.add(csv);
 		}
@@ -69,7 +66,8 @@ public class OptionChainBuilderCommandLineRunner implements CommandLineRunner {
 				"hourlyVix", "spot-20");
 	}
 	
-	private String line(OptionChainReport report, List<Bar> bars, double vix) {
+	private String line(OptionChain optionChain, List<Bar> bars, double vix) {
+		final OptionChainReport report = new OptionChainReport(optionChain);
 		final double value = bars.get(0).getClosePrice().doubleValue();
 		return String.join(",", 
 				String.valueOf(report.getPcrOi()), String.valueOf(report.getPcrVolume()), String.valueOf(report.getPcrPrice()),
