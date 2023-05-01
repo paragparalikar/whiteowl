@@ -19,7 +19,7 @@ public class MACDLongTradingStrategyConfig implements TradingStrategyConfig {
 	
 	@Override
 	public int getMinBarCount() {
-		return longBarCount;
+		return longBarCount + 1;
 	}
 
 	@Override
