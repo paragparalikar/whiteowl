@@ -1,5 +1,6 @@
 package com.whiteowl.core.strategy.backtester;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,7 +37,8 @@ public class BackTestService {
 		}
 		tradingStrategy.close();
 		final List<Position> positions = tradingStrategyContext.getMockPositionService().findAll();
-		return BackTestReport.builder().config(config).positions(positions).build();
+		final Duration duration = Duration.between(bars.get(0).getBeginTime(), bars.get(bars.size() - 1).getEndTime());
+		return BackTestReport.builder().config(config).positions(positions).duration(duration).build();
 	}
 	
 	private List<Quote> createQuotes(String code, Bar bar, TradeType tradeType){
