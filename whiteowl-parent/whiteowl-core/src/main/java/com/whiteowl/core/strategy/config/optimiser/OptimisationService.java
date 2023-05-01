@@ -14,6 +14,8 @@ import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.bar.BarService;
+import com.whiteowl.core.bar.DefaultBarService;
+import com.whiteowl.core.bar.JdbcBarRepository;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.strategy.config.backtester.BackTestReport;
@@ -37,6 +39,7 @@ public class OptimisationService {
 			final List<Bar> bars = barSeries.getBarData();
 			final BackTestReport report = backTestService.backtest(config, bars, initialMargin, slippagePercentage);
 			reports.put(config, report.getAnnualReturnsPct());
+			System.out.println(report.getAnnualReturnsPct());
 		});
 		return seekOptimumConfig(reports);
 	}
@@ -51,12 +54,24 @@ public class OptimisationService {
 				.collect(Collectors.averagingDouble(idReturns::get));
 			configAverageReturns.put(config, averageReturns);
 		}
-		return configAverageReturns.entrySet().stream()
+		final TradingStrategyConfig config = configAverageReturns.entrySet().stream()
 				.max(Comparator.comparing(Entry::getValue))
 				.map(Entry::getKey)
 				.orElse(null);
+		System.err.printf("Optimum config %s - Avg Annual Returns %f\n", config.toString(), configAverageReturns.get(config));
+		return config;
 	}
 	
+	public static void main(String[] args) {
+		final String code = "RELIANCE";
+		final Timeframe timeframe = Timeframe.M15;
+		final BarService barService = new DefaultBarService(JdbcBarRepository.instance());
+		final OptimisationService optimisationService = new OptimisationService(barService);
+		final Set<TradingStrategyConfig> configs = getOptimisationUniverse(code, timeframe);
+		System.out.println("Optimisation universe is of size : " + configs.size());
+		final TradingStrategyConfig config = optimisationService.optimise(code, timeframe, configs, 100_00_000, 0.5);
+		System.err.println("Optimum config : " + config.toString());
+	}
 	
 	private static  Set<TradingStrategyConfig> getOptimisationUniverse(String code, Timeframe timeframe) {
 		final Set<TradingStrategyConfig> universe = new HashSet<>();

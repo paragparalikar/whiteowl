@@ -28,7 +28,7 @@ public class MACDLongTradingStrategyConfig extends MACDTradingStrategyConfig {
 	@Override
 	public Set<TradingStrategyConfig> getNeighbours() {
 		final int step = 2;
-		final double percentage = 3;
+		final double percentage = 4;
 		final Set<TradingStrategyConfig> neighbours = new HashSet<>();
 		final int longBarCountSpan = span(getLongBarCount(), step, percentage);
 		final int shortBarCountSpan = span(getShortBarCount(), step, percentage);

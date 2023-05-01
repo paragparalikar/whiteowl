@@ -10,7 +10,9 @@ import org.ta4j.core.Trade.TradeType;
 import com.whiteowl.core.bar.event.BarCreatedEvent;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.quote.Quote;
+import com.whiteowl.core.scrip.Exchange;
 import com.whiteowl.core.scrip.Scrip;
+import com.whiteowl.core.scrip.ScripType;
 import com.whiteowl.core.strategy.TradingStrategy;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 
@@ -20,8 +22,9 @@ public class BackTestService {
 
 	@SneakyThrows
 	public BackTestReport backtest(TradingStrategyConfig config, List<Bar> bars, double initialMargine, double slippagePercentage) {
-		final Scrip scrip = Scrip.builder().code(config.getScripCode()).build();
+		final Scrip scrip = Scrip.builder().code(config.getScripCode()).type(ScripType.EQ).exchange(Exchange.NSE).build();
 		final MockTradingStrategyContext tradingStrategyContext = new MockTradingStrategyContext(initialMargine, slippagePercentage);
+		tradingStrategyContext.getMockScripService().saveAll(Arrays.asList(scrip));
 		tradingStrategyContext.getMockTradingStrategyConfigService().save(config);
 		tradingStrategyContext.getBarSeriesCacheManager().init();
 		final TradingStrategy tradingStrategy = config.createTradingStrategy(tradingStrategyContext);

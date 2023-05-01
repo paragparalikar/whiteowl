@@ -18,6 +18,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.h2.jdbcx.JdbcDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Repository;
@@ -34,6 +35,14 @@ import lombok.SneakyThrows;
 
 @Repository
 public class JdbcBarRepository implements BarRepository, AutoCloseable {
+	
+	public static JdbcBarRepository instance() {
+		final JdbcDataSource dataSource = new JdbcDataSource();
+		dataSource.setUser("sa");
+		dataSource.setPassword("");
+		dataSource.setUrl("jdbc:h2:~/.whiteowl/database/bars");
+		return new JdbcBarRepository(dataSource);
+	}
 	
 	private static HikariDataSource createDataSource(final DataSourceProperties properties) {
 		final HikariConfig config = new HikariConfig();
