@@ -51,6 +51,7 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 
 	@Override
 	public void create(Trade trade, Portfolio portfolio) {
+		if(0 == trade.getPrice()) throw new IllegalArgumentException("Trade price must be provided for backtesting");
 		trade.setBrokerTradeId(UUID.randomUUID().toString());
 		getProvider(portfolio).getTrades().add(trade);
 		final double buyPrice = trade.getPrice() * (100 + slippagePercentage) / 100;
