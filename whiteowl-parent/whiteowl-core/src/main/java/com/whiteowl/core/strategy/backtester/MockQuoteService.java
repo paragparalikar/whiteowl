@@ -3,7 +3,6 @@ package com.whiteowl.core.strategy.backtester;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -19,20 +18,14 @@ import com.whiteowl.core.scrip.Scrip;
 
 public class MockQuoteService implements QuoteService {
 	
-	private final Map<Scrip, Set<Quote>> quotes = new ConcurrentHashMap<>();
-	private final Map<Scrip, Set<Consumer<Quote>>> consumers = new ConcurrentHashMap<>();
+	private final Map<String, Quote> quotes = new ConcurrentHashMap<>();
+	private final Map<String, Set<Consumer<Quote>>> consumers = new ConcurrentHashMap<>();
 	
-	public void clear() {
-		quotes.clear();
-	}
-	
-	public void push(Scrip scrip, List<Quote> quotes) {
-		quotes.forEach(quote -> this.quotes.computeIfAbsent(scrip, key -> Collections.newSetFromMap(new IdentityHashMap<>())).add(quote));
-		Optional.ofNullable(consumers.get(scrip)).ifPresent(consumers -> {
+	public void push(String code, Quote quote) {
+		quotes.put(code, quote);
+		Optional.ofNullable(consumers.get(code)).ifPresent(consumers -> {
 			for(Consumer<Quote> consumer : consumers) {
-				for(Quote quote : quotes) {
-					consumer.accept(quote);
-				}
+				consumer.accept(quote);
 			}
 		});
 	}
@@ -40,16 +33,16 @@ public class MockQuoteService implements QuoteService {
 	@Override
 	public Collection<Quote> getQuotes(Collection<Scrip> scrips, QuoteMode mode) {
 		return scrips.stream()
+				.map(Scrip::getCode)
 				.map(quotes::get)
 				.filter(Objects::nonNull)
-				.flatMap(Collection::stream)
 				.collect(Collectors.toSet());
 	}
 
 	@Override
 	public void subscribe(Collection<Scrip> scrips, QuoteMode mode, Consumer<Quote> quoteListener) {
 		for(Scrip scrip : scrips) {
-			consumers.computeIfAbsent(scrip, key -> Collections.newSetFromMap(new IdentityHashMap<>()))
+			consumers.computeIfAbsent(scrip.getCode(), key -> Collections.newSetFromMap(new IdentityHashMap<>()))
 				.add(quoteListener);
 		}
 	}

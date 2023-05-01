@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeries;
+import org.ta4j.core.num.DoubleNum;
 
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
@@ -44,7 +45,8 @@ public class MockBarService implements BarService {
 		final List<Bar> bars = Optional.ofNullable(cache.get(Tuple2.of(code, timeframe)))
 				.orElse(Collections.emptyList());
 		final int startIndex = bars.size() - count;
-		return new BaseBarSeries(bars.subList(startIndex >= 0 ? startIndex : 0, bars.size()));
+		return bars.isEmpty() ? new BaseBarSeries("", DoubleNum::valueOf) :
+				new BaseBarSeries(bars.subList(startIndex >= 0 ? startIndex : 0, bars.size()));
 	}
 
 }

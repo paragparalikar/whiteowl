@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -22,23 +24,26 @@ import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.strategy.config.TradingStrategyConfigService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class BarSeriesCacheManager {
 	
-	private final int maxBarCount;
+	private int maxBarCount;
 	private final BarService barService;
+	private final TradingStrategyConfigService configService;
 	private final Map<String, BarSeries> cache = new ConcurrentHashMap<>();
 	private final Map<String, Set<Runnable>> barListeners = new ConcurrentHashMap<>();
 	
-	public BarSeriesCacheManager(BarService barService, TradingStrategyConfigService configService){
-		this.barService = barService;
+	@PostConstruct
+	public void init() {
 		this.maxBarCount = configService.findAll().stream()
-			.map(TradingStrategyConfig::getMinBarCount)
-			.max(Comparator.naturalOrder())
-			.orElse(200);
+				.map(TradingStrategyConfig::getMinBarCount)
+				.max(Comparator.naturalOrder())
+				.orElse(200);
 	}
 
 	private String toCacheKey(String scripCode, Timeframe timeframe) {

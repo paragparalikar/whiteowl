@@ -10,7 +10,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import org.ta4j.core.Bar;
 import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.broker.Broker;
@@ -52,9 +51,13 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 
 	@Override
 	public void create(Trade trade, Portfolio portfolio) {
-		trade.setStatus(TradeStatus.OPEN);
 		trade.setBrokerTradeId(UUID.randomUUID().toString());
 		getProvider(portfolio).getTrades().add(trade);
+		final double buyPrice = trade.getPrice() * (100 + slippagePercentage) / 100;
+		final double sellPrice = trade.getPrice() * (100 - slippagePercentage) / 100;
+		trade.setAveragePrice(TradeType.BUY.equals(trade.getType()) ? buyPrice : sellPrice);
+		getProvider(portfolio).getListeners().forEach(listener -> listener.accept(trade));
+		trade.setStatus(TradeStatus.COMPLETE);
 	}
 
 	@Override
@@ -80,20 +83,6 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	@Override
 	public void unsubscribeTradeStatusListener(Consumer<Trade> tradeStatusListener, Portfolio portfolio) {
 		getProvider(portfolio).getListeners().remove(tradeStatusListener);
-	}
-
-	public void executeTrades(Bar bar) {
-		final double buyPrice = bar.getHighPrice().doubleValue() * (100 + slippagePercentage) / 100;
-		final double sellPrice = bar.getLowPrice().doubleValue() * (100 - slippagePercentage) / 100;
-		for(PortfolioBrokerServiceProvider provider : providers.values()) {
-			for(Trade trade : provider.getTrades()) {
-				if(TradeStatus.OPEN.equals(trade.getStatus())) {
-					trade.setStatus(TradeStatus.COMPLETE);
-					trade.setAveragePrice(TradeType.BUY.equals(trade.getType()) ? buyPrice : sellPrice);
-					provider.getListeners().forEach(listener -> listener.accept(trade));
-				}
-			}
-		}
 	}
 	
 }

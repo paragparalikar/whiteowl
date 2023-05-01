@@ -7,8 +7,10 @@ import com.whiteowl.core.strategy.context.BarSeriesCacheManager;
 import com.whiteowl.core.strategy.context.DefaultTradingStrategyContext;
 import com.whiteowl.core.strategy.context.TradingStrategyContext;
 
+import lombok.Getter;
 import lombok.experimental.Delegate;
 
+@Getter
 public class MockTradingStrategyContext implements TradingStrategyContext {
 	
 	private final MockBarService mockBarService;

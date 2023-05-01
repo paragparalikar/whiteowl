@@ -43,8 +43,9 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> i
 	}
 	
 	private void onBar() {
+		final boolean hasBars = config.getMinBarCount() <= barSeries.getBarCount();
 		final boolean hasPositions = context.existsByScripAndStatusNot(scrip, PositionStatus.CLOSED);
-		if(!hasPositions && shouldEnter()) {
+		if(hasBars && !hasPositions && shouldEnter()) {
 			final Collection<Trade> entryTrades = createEntryTrades();
 			final Position position = createNewPosition();
 			position.getEntryTrades().addAll(entryTrades);
