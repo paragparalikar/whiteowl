@@ -8,10 +8,9 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.validation.Valid;
 
@@ -29,7 +28,7 @@ public class XmlTradingStrategyConfigRepository implements TradingStrategyConfig
 	private static final String POSTFIX = "-config.xml";
 	private static final Path DIRECTORY = Constant.HOME.resolve(Paths.get("database", "trading-strategy-configs"));
 	
-	private final Set<TradingStrategyConfig> cache = new HashSet<>();
+	private final Map<String, TradingStrategyConfig> cache = new ConcurrentHashMap<>();
 	
 	private Path getPath(String configId) {
 		return DIRECTORY.resolve(Paths.get(configId + POSTFIX));
@@ -44,7 +43,7 @@ public class XmlTradingStrategyConfigRepository implements TradingStrategyConfig
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 					if(attrs.isRegularFile() && file.endsWith(POSTFIX)) {
 						final TradingStrategyConfig config = (TradingStrategyConfig) XmlUtils.read(file).orElse(null);
-						if(null != config) cache.add(config);
+						if(null != config) cache.put(config.getId(), config);
 					}
 					return FileVisitResult.CONTINUE;
 				}
@@ -52,10 +51,15 @@ public class XmlTradingStrategyConfigRepository implements TradingStrategyConfig
 		}
 	}
 	
+	public TradingStrategyConfig findById(String id) {
+		load();
+		return cache.get(id);
+	}
+	
 	@Override
 	public List<TradingStrategyConfig> findAll() {
 		load();
-		return new ArrayList<>(cache);
+		return new ArrayList<>(cache.values());
 	}
 	
 	@Override
@@ -65,12 +69,7 @@ public class XmlTradingStrategyConfigRepository implements TradingStrategyConfig
 		Files.createDirectories(DIRECTORY);
 		final Path path = getPath(config.getId());
 		XmlUtils.write(path, config);
-		cache.removeIf(oldConfig -> {
-			return Objects.equals(oldConfig.getClass(), config.getClass()) &&
-					Objects.equals(oldConfig.getScripCode(), config.getScripCode()) &&
-					Objects.equals(oldConfig.getTimeframe(), config.getTimeframe());
-		});
-		cache.add(config);
+		cache.put(config.getId(), config);
 		return config;
 	}
 
