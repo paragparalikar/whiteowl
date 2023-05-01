@@ -1,4 +1,4 @@
-package com.whiteowl.core.strategy.impl.trendfollowing;
+package com.whiteowl.core.strategy.impl;
 
 import org.ta4j.core.Trade.TradeType;
 

@@ -1,9 +1,9 @@
-package com.whiteowl.core.strategy.optimiser;
+package com.whiteowl.core.strategy.config.optimiser;
 
 import java.util.Set;
 
-import com.whiteowl.core.strategy.backtester.BackTestService;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
+import com.whiteowl.core.strategy.config.backtester.BackTestService;
 
 public class OptimisationService {
 

@@ -1,4 +1,4 @@
-package com.whiteowl.core.strategy.backtester;
+package com.whiteowl.core.strategy.config.backtester;
 
 import java.time.Duration;
 import java.util.List;

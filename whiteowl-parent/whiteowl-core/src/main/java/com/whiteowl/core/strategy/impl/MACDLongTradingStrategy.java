@@ -1,4 +1,4 @@
-package com.whiteowl.core.strategy.impl.trendfollowing;
+package com.whiteowl.core.strategy.impl;
 
 import java.util.Collection;
 import java.util.Collections;
