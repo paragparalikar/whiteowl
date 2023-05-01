@@ -2,7 +2,7 @@ package com.whiteowl.core.strategy.config.performance;
 
 import java.util.List;
 
-public interface TradingStrategyConfigPerformanceRepository {
+public interface TradingStrategyConfigPerformanceService {
 
 	void save(TradingStrategyConfigPerformance performance);
 	
