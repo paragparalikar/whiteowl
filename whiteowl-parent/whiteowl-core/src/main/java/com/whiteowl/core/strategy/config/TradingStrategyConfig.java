@@ -19,9 +19,10 @@ public interface TradingStrategyConfig {
 	TradingStrategy createTradingStrategy(TradingStrategyContext context);
 	
 	public default String getId() {
-		return String.join(java.io.File.separator, 
+		return String.join("-", 
+				getClass().getCanonicalName(),
+				getTradeType().name(),
 				getScripCode(), 
-				getTimeframe().name(),
-				getClass().getCanonicalName());
+				getTimeframe().name());
 	}
 }

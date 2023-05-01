@@ -28,7 +28,9 @@ public class MACDLongTradingStrategyConfig implements TradingStrategyConfig {
 	}
 	
 	public String getId() {
-		return String.join(java.io.File.separator, 
+		return String.join("-", 
+				"MACD",
+				tradeType.name(),
 				getScripCode(), 
 				getTimeframe().name(),
 				String.valueOf(longBarCount),
