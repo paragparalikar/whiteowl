@@ -60,9 +60,9 @@ public class OptimisationService {
 	
 	private static  Set<TradingStrategyConfig> getOptimisationUniverse(String code, Timeframe timeframe) {
 		final Set<TradingStrategyConfig> universe = new HashSet<>();
-		for(int longBarCount = 13; longBarCount < 144; longBarCount++) {
-			for(int shortBarCount = longBarCount / 4; shortBarCount <= longBarCount * 3 / 4; shortBarCount++) {
-				for(int signalBarCount = 5; signalBarCount < 21; signalBarCount++) {
+		for(int longBarCount = 20; longBarCount <= 200; longBarCount += 2) {
+			for(int shortBarCount = trim(longBarCount / 4, 2); shortBarCount <= trim(longBarCount * 3 / 4, 2); shortBarCount += 2) {
+				for(int signalBarCount = 4; signalBarCount <= 22; signalBarCount += 2) {
 					universe.add(MACDLongTradingStrategyConfig.builder()
 							.scripCode(code)
 							.timeframe(timeframe)
@@ -76,5 +76,8 @@ public class OptimisationService {
 		return universe;
 	}
 	
+	private static int trim(int value, int step) {
+		return ((int)(value / step)) * step;
+	}
 
 }

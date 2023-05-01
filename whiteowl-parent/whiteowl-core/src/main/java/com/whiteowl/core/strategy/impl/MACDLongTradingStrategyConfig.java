@@ -27,10 +27,15 @@ public class MACDLongTradingStrategyConfig extends MACDTradingStrategyConfig {
 	
 	@Override
 	public Set<TradingStrategyConfig> getNeighbours() {
+		final int step = 2;
+		final double percentage = 3;
 		final Set<TradingStrategyConfig> neighbours = new HashSet<>();
-		for(int longBarCount = getLongBarCount() - 7; longBarCount <= getLongBarCount() + 7; longBarCount++) {
-			for(int shortBarCount = getShortBarCount() - 5; shortBarCount <= getShortBarCount() + 5; shortBarCount++) {
-				for(int signalBarCount = getSignalBarCount() - 3; signalBarCount <= getSignalBarCount() + 3; signalBarCount++) {
+		final int longBarCountSpan = span(getLongBarCount(), step, percentage);
+		final int shortBarCountSpan = span(getShortBarCount(), step, percentage);
+		final int signalBarCountSpan = span(getSignalBarCount(), step, percentage);
+		for(int longBarCount = getLongBarCount() - longBarCountSpan; longBarCount <= getLongBarCount() + longBarCountSpan; longBarCount += step) {
+			for(int shortBarCount = getShortBarCount() - shortBarCountSpan; shortBarCount <= getShortBarCount() + shortBarCountSpan; shortBarCount += step) {
+				for(int signalBarCount = getSignalBarCount() - signalBarCountSpan; signalBarCount <= getSignalBarCount() + signalBarCountSpan; signalBarCount += step) {
 					neighbours.add(MACDLongTradingStrategyConfig.builder()
 							.scripCode(getScripCode())
 							.timeframe(getTimeframe())
@@ -42,6 +47,11 @@ public class MACDLongTradingStrategyConfig extends MACDTradingStrategyConfig {
 			}
 		}
 		return neighbours;
+	}
+	
+	private int span(int value, int step, double percentage) {
+		final double limit = value * percentage / 100d;
+		return ((int)(limit / step)) * step;
 	}
 	
 }
