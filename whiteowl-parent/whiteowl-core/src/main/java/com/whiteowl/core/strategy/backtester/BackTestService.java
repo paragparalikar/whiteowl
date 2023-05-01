@@ -14,12 +14,8 @@ import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.TradingStrategy;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 
-import lombok.Builder;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
-@Builder
-@RequiredArgsConstructor
 public class BackTestService {
 
 	@SneakyThrows

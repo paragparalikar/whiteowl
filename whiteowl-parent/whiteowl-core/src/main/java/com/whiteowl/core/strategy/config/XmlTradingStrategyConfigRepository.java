@@ -27,14 +27,19 @@ import lombok.Synchronized;
 @Repository
 public class XmlTradingStrategyConfigRepository implements TradingStrategyConfigRepository {
 	private static final String POSTFIX = "-config.xml";
+	private static final Path DIRECTORY = Constant.HOME.resolve(Paths.get("database", "trading-strategy-configs"));
 	
 	private final Set<TradingStrategyConfig> cache = new HashSet<>();
+	
+	private Path getPath(String configId) {
+		return DIRECTORY.resolve(Paths.get(configId + POSTFIX));
+	}
 	
 	@SneakyThrows
 	@Synchronized
 	private void load() {
-		if(cache.isEmpty()) {
-			Files.walkFileTree(Constant.HOME, new SimpleFileVisitor<Path>() {
+		if(cache.isEmpty() && Files.exists(DIRECTORY)) {
+			Files.walkFileTree(DIRECTORY, new SimpleFileVisitor<Path>() {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 					if(attrs.isRegularFile() && file.endsWith(POSTFIX)) {
@@ -54,9 +59,11 @@ public class XmlTradingStrategyConfigRepository implements TradingStrategyConfig
 	}
 	
 	@Override
+	@SneakyThrows
 	@Synchronized
 	public TradingStrategyConfig save(@NonNull @Valid TradingStrategyConfig config) {
-		final Path path = Constant.HOME.resolve(Paths.get(config.getId()));
+		Files.createDirectories(DIRECTORY);
+		final Path path = getPath(config.getId());
 		XmlUtils.write(path, config);
 		cache.removeIf(oldConfig -> {
 			return Objects.equals(oldConfig.getClass(), config.getClass()) &&
