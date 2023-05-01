@@ -1,5 +1,7 @@
 package com.whiteowl.core.strategy.config;
 
+import java.util.Set;
+
 import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.bar.Timeframe;
@@ -7,6 +9,8 @@ import com.whiteowl.core.strategy.TradingStrategy;
 import com.whiteowl.core.strategy.context.TradingStrategyContext;
 
 public interface TradingStrategyConfig {
+	
+	String getId();
 	
 	int getMinBarCount();
 	
@@ -16,13 +20,8 @@ public interface TradingStrategyConfig {
 	
 	Timeframe getTimeframe();
 	
+	Set<TradingStrategyConfig> getNeighbours();
+	
 	TradingStrategy createTradingStrategy(TradingStrategyContext context);
 	
-	public default String getId() {
-		return String.join("-", 
-				getClass().getCanonicalName(),
-				getTradeType().name(),
-				getScripCode(), 
-				getTimeframe().name());
-	}
 }

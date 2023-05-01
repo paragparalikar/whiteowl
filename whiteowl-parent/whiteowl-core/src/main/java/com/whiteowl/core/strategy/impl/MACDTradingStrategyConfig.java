@@ -32,5 +32,5 @@ public abstract class MACDTradingStrategyConfig implements TradingStrategyConfig
 				String.valueOf(shortBarCount),
 				String.valueOf(signalBarCount));
 	}
-
+	
 }
