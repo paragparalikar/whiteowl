@@ -4,22 +4,16 @@ import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.strategy.TradingStrategy;
-import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.strategy.context.TradingStrategyContext;
 
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-public class MACDLongTradingStrategyConfig implements TradingStrategyConfig {
+public class MACDLongTradingStrategyConfig extends MACDTradingStrategyConfig {
 
-	private String scripCode;
-	private Timeframe timeframe;
-	private final TradeType tradeType = TradeType.BUY;
-	private int longBarCount, shortBarCount, signalBarCount;
-	
-	@Override
-	public int getMinBarCount() {
-		return longBarCount + 1;
+	@Builder
+	public MACDLongTradingStrategyConfig(String scripCode, Timeframe timeframe, int longBarCount,
+			int shortBarCount, int signalBarCount) {
+		super(scripCode, timeframe, TradeType.BUY, longBarCount, shortBarCount, signalBarCount);
 	}
 
 	@Override
@@ -27,15 +21,4 @@ public class MACDLongTradingStrategyConfig implements TradingStrategyConfig {
 		return new MACDLongTradingStrategy(this, context);
 	}
 	
-	public String getId() {
-		return String.join("-", 
-				"MACD",
-				tradeType.name(),
-				getScripCode(), 
-				getTimeframe().name(),
-				String.valueOf(longBarCount),
-				String.valueOf(shortBarCount),
-				String.valueOf(signalBarCount));
-	}
-
 }
