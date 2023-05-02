@@ -8,6 +8,8 @@ import org.ta4j.core.Bar;
 import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.bar.event.BarCreatedEvent;
+import com.whiteowl.core.broker.Broker;
+import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.scrip.Exchange;
@@ -19,11 +21,20 @@ import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import lombok.SneakyThrows;
 
 public class BackTestService {
+	
+	private Portfolio createPortfolio(double initialMargin) {
+		final Portfolio portfolio = new Portfolio();
+		portfolio.setBroker(Broker.TEST);
+		portfolio.setAvailableMargin(initialMargin);
+		portfolio.setMaxTradableAmount(initialMargin);
+		return portfolio;
+	}
 
 	@SneakyThrows
 	public BackTestReport backtest(TradingStrategyConfig config, List<Bar> bars, double initialMargine, double slippagePercentage) {
 		final Scrip scrip = Scrip.builder().code(config.getScripCode()).type(ScripType.EQ).exchange(Exchange.NSE).build();
 		final MockTradingStrategyContext tradingStrategyContext = new MockTradingStrategyContext(initialMargine, slippagePercentage);
+		tradingStrategyContext.getMockPortfolioService().save(createPortfolio(initialMargine));
 		tradingStrategyContext.getMockScripService().saveAll(Arrays.asList(scrip));
 		tradingStrategyContext.getMockTradingStrategyConfigService().save(config);
 		tradingStrategyContext.getBarSeriesCacheManager().init();

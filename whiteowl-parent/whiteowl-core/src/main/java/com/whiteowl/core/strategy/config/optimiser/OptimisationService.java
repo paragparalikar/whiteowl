@@ -35,7 +35,7 @@ public class OptimisationService {
 		final Map<TradingStrategyConfig, Double> reports = new ConcurrentHashMap<>();
 		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
 				code, timeframe, Integer.MAX_VALUE);
-		configs.parallelStream().forEach(config -> {
+		configs.stream().forEach(config -> {
 			final List<Bar> bars = barSeries.getBarData();
 			final BackTestReport report = backTestService.backtest(config, bars, initialMargin, slippagePercentage);
 			reports.put(config, report.getAnnualReturnsPct());

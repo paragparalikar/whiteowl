@@ -63,5 +63,12 @@ public class MACDLongTradingStrategy extends AbstractTradingStrategy<MACDLongTra
 		entryTrade.setProduct(getScrip().isDerivative() ? TradeProduct.NRML : TradeProduct.CNC);
 		return Collections.singleton(entryTrade);
 	}
+	
+	@Override
+	protected Trade createExitTrade(Quote quote, Position position, Trade entryTrade) {
+		final Trade exitTrade = super.createExitTrade(quote, position, entryTrade);
+		exitTrade.setPrice(getBarSeries().getLastBar().getLowPrice().doubleValue());
+		return exitTrade;
+	}
 
 }
