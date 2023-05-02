@@ -37,7 +37,7 @@ public class OptimisationService {
 		final AtomicInteger counter = new AtomicInteger();
 		final Map<TradingStrategyConfig, Double> reports = new ConcurrentHashMap<>();
 		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
-				code, timeframe, Integer.MAX_VALUE);
+				code, timeframe, 1000 * timeframe.getDayMultiple());
 		configs.parallelStream().forEach(config -> {
 			final List<Bar> bars = barSeries.getBarData();
 			final BackTestReport report = backTestService.backtest(config, bars, initialMargin, slippagePercentage);
@@ -48,7 +48,7 @@ public class OptimisationService {
 					report.getPositions().size(), 
 					report.getAnnualReturnsPct(),
 					config.getId());
-			if(0 == (count % 10)) printMinMax(reports);
+			if(0 == (count % 1000)) printMinMax(reports);
 		});
 		return seekOptimumConfig(reports);
 	}
