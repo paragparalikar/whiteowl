@@ -2,6 +2,7 @@ package com.whiteowl.core.strategy.config.backtester;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -24,7 +25,7 @@ public class MockPositionService implements PositionService {
 	@Override
 	public Position save(Position position) {
 		cache.computeIfAbsent(position.getTradingStrategyConfigId(), 
-				key -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+				key -> Collections.newSetFromMap(new IdentityHashMap<>()))
 		.add(position);
 		return position;
 	}

@@ -57,8 +57,8 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		final double buyPrice = trade.getPrice() * (100 + slippagePercentage) / 100;
 		final double sellPrice = trade.getPrice() * (100 - slippagePercentage) / 100;
 		trade.setAveragePrice(TradeType.BUY.equals(trade.getType()) ? buyPrice : sellPrice);
-		getProvider(portfolio).getListeners().forEach(listener -> listener.accept(trade));
 		trade.setStatus(TradeStatus.COMPLETE);
+		getProvider(portfolio).getListeners().forEach(listener -> listener.accept(trade));
 	}
 
 	@Override
