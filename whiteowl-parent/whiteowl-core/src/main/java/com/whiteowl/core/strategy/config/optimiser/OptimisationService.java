@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -41,22 +42,44 @@ public class OptimisationService {
 			final List<Bar> bars = barSeries.getBarData();
 			final BackTestReport report = backTestService.backtest(config, bars, initialMargin, slippagePercentage);
 			reports.put(config, report.getAnnualReturnsPct());
-			System.out.printf("Index : %d out of %d, Positions : %d, Annual Percentage Returns : %f\n",
-					counter.incrementAndGet(), configs.size(), 
+			final int count = counter.incrementAndGet();
+			System.out.printf("Index : %d out of %d, Positions : %d, Annual Percentage Returns : %f, id : %s\n",
+					count, configs.size(), 
 					report.getPositions().size(), 
-					report.getAnnualReturnsPct());
+					report.getAnnualReturnsPct(),
+					config.getId());
+			if(0 == (count % 10)) printMinMax(reports);
 		});
 		return seekOptimumConfig(reports);
 	}
 	
+	private void printMinMax(Map<TradingStrategyConfig, Double> reports) {
+		double minReturns = 0, maxReturns = 0;
+		TradingStrategyConfig min = null, max = null;
+		for(TradingStrategyConfig config : reports.keySet()) {
+			final double returns = reports.getOrDefault(config, 0d);
+			if(null == min || minReturns > returns) {
+				minReturns = returns;
+				min = config;
+			}
+			if(null == max || maxReturns < returns) {
+				maxReturns = returns;
+				max = config;
+			}
+		}
+		System.out.printf("Min : %s Min returns : %f | Max : %s Max returns : %f\n", min.getId(), minReturns, max.getId(), maxReturns);
+	}
+	
 	private TradingStrategyConfig seekOptimumConfig(Map<TradingStrategyConfig, Double> reports) {
+		printMinMax(reports);
 		final Map<String, Double> idReturns = reports.entrySet().stream()
 				.collect(Collectors.toMap(entry -> entry.getKey().getId(), entry -> entry.getValue()));
 		final Map<TradingStrategyConfig, Double> configAverageReturns = new HashMap<>();
 		for(TradingStrategyConfig config : reports.keySet()) {
 			final Double averageReturns = config.getNeighbours().stream()
 				.map(TradingStrategyConfig::getId)
-				.collect(Collectors.averagingDouble(idReturns::get));
+				.filter(Objects::nonNull)
+				.collect(Collectors.averagingDouble(id -> idReturns.getOrDefault(id, 0d)));
 			configAverageReturns.put(config, averageReturns);
 		}
 		final TradingStrategyConfig config = configAverageReturns.entrySet().stream()

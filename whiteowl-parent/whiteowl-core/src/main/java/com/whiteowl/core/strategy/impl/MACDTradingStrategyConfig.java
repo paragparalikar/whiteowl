@@ -7,8 +7,10 @@ import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
+@ToString
 @AllArgsConstructor
 public abstract class MACDTradingStrategyConfig implements TradingStrategyConfig {
 	
