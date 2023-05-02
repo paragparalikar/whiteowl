@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.ta4j.core.Bar;
@@ -32,14 +33,18 @@ public class OptimisationService {
 	
 	public TradingStrategyConfig optimise(String code, Timeframe timeframe, 
 			Set<TradingStrategyConfig> configs, double initialMargin, double slippagePercentage) {
+		final AtomicInteger counter = new AtomicInteger();
 		final Map<TradingStrategyConfig, Double> reports = new ConcurrentHashMap<>();
 		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
 				code, timeframe, Integer.MAX_VALUE);
-		configs.stream().forEach(config -> {
+		configs.parallelStream().forEach(config -> {
 			final List<Bar> bars = barSeries.getBarData();
 			final BackTestReport report = backTestService.backtest(config, bars, initialMargin, slippagePercentage);
 			reports.put(config, report.getAnnualReturnsPct());
-			System.out.println(report.getAnnualReturnsPct());
+			System.out.printf("Index : %d out of %d, Positions : %d, Annual Percentage Returns : %f\n",
+					counter.incrementAndGet(), configs.size(), 
+					report.getPositions().size(), 
+					report.getAnnualReturnsPct());
 		});
 		return seekOptimumConfig(reports);
 	}
