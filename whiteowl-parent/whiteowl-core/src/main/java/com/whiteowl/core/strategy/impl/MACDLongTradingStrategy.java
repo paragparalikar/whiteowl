@@ -59,7 +59,7 @@ public class MACDLongTradingStrategy extends AbstractTradingStrategy<MACDLongTra
 		entryTrade.setLimitType(TradeLimitType.MARKET);
 		entryTrade.setValidity(TradeValidity.DAY);
 		entryTrade.setVariety(TradeVariety.REGULAR);
-		entryTrade.setPrice(getBarSeries().getLastBar().getHighPrice().doubleValue());
+		entryTrade.setPrice(getBarSeries().getLastBar().getClosePrice().doubleValue());
 		entryTrade.setProduct(getScrip().isDerivative() ? TradeProduct.NRML : TradeProduct.CNC);
 		return Collections.singleton(entryTrade);
 	}
@@ -67,7 +67,7 @@ public class MACDLongTradingStrategy extends AbstractTradingStrategy<MACDLongTra
 	@Override
 	protected Trade createExitTrade(Quote quote, Position position, Trade entryTrade) {
 		final Trade exitTrade = super.createExitTrade(quote, position, entryTrade);
-		exitTrade.setPrice(getBarSeries().getLastBar().getLowPrice().doubleValue());
+		exitTrade.setPrice(getBarSeries().getLastBar().getClosePrice().doubleValue());
 		return exitTrade;
 	}
 

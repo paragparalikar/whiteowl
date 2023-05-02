@@ -37,7 +37,7 @@ public class OptimisationService {
 		final AtomicInteger counter = new AtomicInteger();
 		final Map<TradingStrategyConfig, Double> reports = new ConcurrentHashMap<>();
 		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
-				code, timeframe, 1000 * timeframe.getDayMultiple());
+				code, timeframe, 250 * timeframe.getDayMultiple());
 		configs.parallelStream().forEach(config -> {
 			final List<Bar> bars = barSeries.getBarData();
 			final BackTestReport report = backTestService.backtest(config, bars, initialMargin, slippagePercentage);
@@ -97,7 +97,7 @@ public class OptimisationService {
 		final OptimisationService optimisationService = new OptimisationService(barService);
 		final Set<TradingStrategyConfig> configs = getOptimisationUniverse(code, timeframe);
 		System.out.println("Optimisation universe is of size : " + configs.size());
-		final TradingStrategyConfig config = optimisationService.optimise(code, timeframe, configs, 100_00_000, 0.5);
+		final TradingStrategyConfig config = optimisationService.optimise(code, timeframe, configs, 100_00_000, 0);
 		System.err.println("Optimum config : " + config.toString());
 	}
 	
