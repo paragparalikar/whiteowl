@@ -1,5 +1,6 @@
 package com.whiteowl.core.analysis.optimiser;
 
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,6 +22,7 @@ import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.DefaultBarService;
 import com.whiteowl.core.bar.JdbcBarRepository;
 import com.whiteowl.core.bar.Timeframe;
+import com.whiteowl.core.position.Position;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.strategy.impl.MACDLongTradingStrategyConfig;
 
@@ -32,21 +34,23 @@ public class OptimisationService {
 	private final BarService barService;
 	private final BackTestService backTestService = new BackTestService();
 	
-	public TradingStrategyConfig optimise(String code, Timeframe timeframe, 
-			Set<TradingStrategyConfig> configs, double initialMargin, double slippagePercentage) {
+	public TradingStrategyConfig optimise(String code, Timeframe timeframe, Set<TradingStrategyConfig> configs, 
+			int lookbackPeriod, double initialMargin, double slippagePercentage) {
 		final AtomicInteger counter = new AtomicInteger();
 		final Map<TradingStrategyConfig, Double> reports = new ConcurrentHashMap<>();
 		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
-				code, timeframe, 250 * timeframe.getDayMultiple());
+				code, timeframe, lookbackPeriod);
 		configs.parallelStream().forEach(config -> {
 			final List<Bar> bars = barSeries.getBarData();
-			final BackTestReport report = backTestService.backtest(config, bars, initialMargin, slippagePercentage);
-			reports.put(config, report.getAnnualReturnsPct());
+			final Duration duration = Duration.between(bars.get(0).getBeginTime(), bars.get(bars.size() - 1).getEndTime());
+			final List<Position> positions = backTestService.simulate(config, bars, 100_00_000, slippagePercentage);
+			final double annualReturnsPct = BackTestReport.computeAnnualReturnsPct(config, duration, positions);
+			reports.put(config, annualReturnsPct);
 			final int count = counter.incrementAndGet();
 			System.out.printf("Index : %d out of %d, Positions : %d, Annual Percentage Returns : %f, id : %s\n",
 					count, configs.size(), 
-					report.getPositions().size(), 
-					report.getAnnualReturnsPct(),
+					positions.size(), 
+					annualReturnsPct,
 					config.getId());
 			if(0 == (count % 1000)) printMinMax(reports);
 		});
@@ -97,7 +101,8 @@ public class OptimisationService {
 		final OptimisationService optimisationService = new OptimisationService(barService);
 		final Set<TradingStrategyConfig> configs = getOptimisationUniverse(code, timeframe);
 		System.out.println("Optimisation universe is of size : " + configs.size());
-		final TradingStrategyConfig config = optimisationService.optimise(code, timeframe, configs, 100_00_000, 0);
+		final TradingStrategyConfig config = optimisationService.optimise(code, timeframe, configs, 
+				500 * timeframe.getDayMultiple(), 100_00_000, 0);
 		System.err.println("Optimum config : " + config.toString());
 	}
 	

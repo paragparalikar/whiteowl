@@ -29,9 +29,9 @@ public class BackTestService {
 		portfolio.setMaxTradableAmount(initialMargin);
 		return portfolio;
 	}
-
+	
 	@SneakyThrows
-	public BackTestReport backtest(TradingStrategyConfig config, List<Bar> bars, double initialMargine, double slippagePercentage) {
+	public List<Position> simulate(TradingStrategyConfig config, List<Bar> bars, double initialMargine, double slippagePercentage){
 		final Scrip scrip = Scrip.builder().code(config.getScripCode()).type(ScripType.EQ).exchange(Exchange.NSE).build();
 		final MockTradingStrategyContext tradingStrategyContext = new MockTradingStrategyContext(initialMargine, slippagePercentage);
 		tradingStrategyContext.getMockPortfolioService().save(createPortfolio(initialMargine));
@@ -46,8 +46,13 @@ public class BackTestService {
 			tradingStrategyContext.getBarSeriesCacheManager().onBarCreated(barCreatedEvent);
 		}
 		tradingStrategy.close();
-		final List<Position> positions = tradingStrategyContext.getMockPositionService().findAll();
+		return tradingStrategyContext.getMockPositionService().findAll();
+	}
+
+	@SneakyThrows
+	public BackTestReport backtest(TradingStrategyConfig config, List<Bar> bars, double initialMargine, double slippagePercentage) {
 		final Duration duration = Duration.between(bars.get(0).getBeginTime(), bars.get(bars.size() - 1).getEndTime());
+		final List<Position> positions = simulate(config, bars, initialMargine, slippagePercentage);
 		return BackTestReport.builder().config(config).positions(positions).duration(duration).build();
 	}
 	
