@@ -1,4 +1,4 @@
-package com.whiteowl.core.strategy.config.performance;
+package com.whiteowl.core.analysis.performance;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;

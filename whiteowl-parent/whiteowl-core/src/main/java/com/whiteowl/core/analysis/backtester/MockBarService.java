@@ -1,4 +1,4 @@
-package com.whiteowl.core.strategy.config.backtester;
+package com.whiteowl.core.analysis.backtester;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;

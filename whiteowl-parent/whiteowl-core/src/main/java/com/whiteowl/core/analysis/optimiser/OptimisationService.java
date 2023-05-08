@@ -1,4 +1,4 @@
-package com.whiteowl.core.strategy.config.optimiser;
+package com.whiteowl.core.analysis.optimiser;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,13 +15,13 @@ import java.util.stream.Collectors;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 
+import com.whiteowl.core.analysis.backtester.BackTestReport;
+import com.whiteowl.core.analysis.backtester.BackTestService;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.DefaultBarService;
 import com.whiteowl.core.bar.JdbcBarRepository;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
-import com.whiteowl.core.strategy.config.backtester.BackTestReport;
-import com.whiteowl.core.strategy.config.backtester.BackTestService;
 import com.whiteowl.core.strategy.impl.MACDLongTradingStrategyConfig;
 
 import lombok.RequiredArgsConstructor;
