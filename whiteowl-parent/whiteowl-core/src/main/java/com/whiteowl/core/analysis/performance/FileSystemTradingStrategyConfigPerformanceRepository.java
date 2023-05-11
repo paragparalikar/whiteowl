@@ -1,6 +1,8 @@
 package com.whiteowl.core.analysis.performance;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,13 +36,11 @@ public class FileSystemTradingStrategyConfigPerformanceRepository implements Tra
 	public void save(TradingStrategyConfigPerformance performance) {
 		load();
 		final Path path = getPath(performance.getId());
-		final String text = String.join(",", 
-				performance.getId(),
-				String.valueOf(performance.getAnnualReturnsPct()), 
-				String.valueOf(performance.getAccuracy()));
 		Files.createDirectories(DIRECTORY);
-		Files.writeString(path, text);
-		cache.put(performance.getId(), performance);
+		try(ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(path))){
+			oos.writeObject(performance);
+			cache.put(performance.getId(), performance);
+		}
 	}
 	
 	@SneakyThrows
@@ -57,12 +57,9 @@ public class FileSystemTradingStrategyConfigPerformanceRepository implements Tra
 	@SneakyThrows
 	private TradingStrategyConfigPerformance read(Path path) {
 		if(!Files.exists(path)) return null;
-		final String[] tokens = Files.readString(path).split(",");
-		final TradingStrategyConfigPerformance performance = new TradingStrategyConfigPerformance();
-		performance.setId(tokens[0]);
-		performance.setAnnualReturnsPct(Double.parseDouble(tokens[1]));
-		performance.setAccuracy(Double.parseDouble(tokens[2]));
-		return performance;
+		try(ObjectInputStream oos = new ObjectInputStream(Files.newInputStream(path))){
+			return (TradingStrategyConfigPerformance) oos.readObject();
+		}
 	}
 	
 	@SneakyThrows
