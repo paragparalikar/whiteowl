@@ -2,7 +2,6 @@ package com.whiteowl.core.analysis.performance;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -26,7 +25,7 @@ public class TradingStrategyConfigPerformance {
 	private double cagr, maxDrawdownPct, avgDrawdownPct, avgWinPct, avgLossPct, avgReturnPctPerTrade;
 	
 	public TradingStrategyConfigPerformance(double initialAmount, List<Position> positions) {
-		double winSum = 0, lossSum = 0, maxEquity = initialAmount;
+		double winSum = 0, lossSum = 0, maxEquity = initialAmount, maxDrawdown = 0, drawdownSum = 0;
 		totalTradeCount = positions.size();
 		equity = new double[totalTradeCount];
 		drawdown = new double[totalTradeCount];
@@ -40,6 +39,8 @@ public class TradingStrategyConfigPerformance {
 				equity[index] = 0 == index ? maxEquity : equity[index - 1] * returns;
 				maxEquity = Math.max(maxEquity, equity[index]);
 				drawdown[index] = maxEquity - equity[index];
+				maxDrawdown = Math.max(maxDrawdown, drawdown[index]);
+				drawdownSum += drawdown[index];
 				if(0 < returnPct) {
 					winSum += returnPct;
 					winningTradeCount++;
@@ -52,7 +53,8 @@ public class TradingStrategyConfigPerformance {
 		avgWinPct = winSum / winningTradeCount;
 		avgLossPct = lossSum / losingTradeCount;
 		avgReturnPctPerTrade = (winSum + lossSum) / totalTradeCount;
-		maxDrawdownPct = Arrays.stream(drawdown).max().orElse(0) * 100 / maxEquity;
+		maxDrawdownPct = maxDrawdown * 100 / maxEquity;
+		avgDrawdownPct = (drawdownSum / totalTradeCount)  * 100 / maxEquity;
 		
 		final LocalDateTime startTime = positions.get(0).getEntryTrades().stream()
 				.map(Trade::getTimestamp).min(Comparator.naturalOrder()).orElse(LocalDateTime.now());
@@ -60,11 +62,15 @@ public class TradingStrategyConfigPerformance {
 				.map(Trade::getTimestamp).max(Comparator.naturalOrder()).orElse(LocalDateTime.now());
 		final Duration duration = Duration.between(startTime, endTime);
 		final double years = duration.dividedBy(Duration.ofDays(365));
-		cagr = Math.pow((equity[equity.length - 1] / equity[0]), 1 / years) - 1;
+		cagr = 0 == years ? 0 : Math.pow((equity[equity.length - 1] / equity[0]), 1 / years) - 1;
 	}
 	
 	public double getCagrOverAvgDrawdown() {
 		return cagr / Math.max(0.001, avgDrawdownPct);
+	}
+	
+	public double getCagrOverMaxDrawdown() {
+		return cagr / Math.max(0.001, maxDrawdownPct);
 	}
 	
 	public double getProfitFactor() {

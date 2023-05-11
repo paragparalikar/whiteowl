@@ -1,6 +1,5 @@
 package com.whiteowl.core.analysis.backtester;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,7 +30,7 @@ public class BackTestService {
 	}
 	
 	@SneakyThrows
-	public List<Position> simulate(TradingStrategyConfig config, List<Bar> bars, double initialMargine, double slippagePercentage){
+	public List<Position> backtest(TradingStrategyConfig config, List<Bar> bars, double initialMargine, double slippagePercentage){
 		final Scrip scrip = Scrip.builder().code(config.getScripCode()).type(ScripType.EQ).exchange(Exchange.NSE).build();
 		final MockTradingStrategyContext tradingStrategyContext = new MockTradingStrategyContext(initialMargine, slippagePercentage);
 		tradingStrategyContext.getMockPortfolioService().save(createPortfolio(initialMargine));
@@ -40,6 +39,7 @@ public class BackTestService {
 		tradingStrategyContext.getBarSeriesCacheManager().init();
 		final TradingStrategy tradingStrategy = config.createTradingStrategy(tradingStrategyContext);
 		for(Bar bar : bars) {
+			tradingStrategyContext.getMockBrokerServiceProvider().execute(bar, scrip);
 			final List<Quote> quotes = createQuotes(config.getScripCode(), bar, config.getTradeType());
 			quotes.forEach(quote -> tradingStrategyContext.getMockQuoteService().push(config.getScripCode(), quote));
 			final BarCreatedEvent barCreatedEvent = new BarCreatedEvent(bar, scrip, config.getTimeframe());
@@ -47,13 +47,6 @@ public class BackTestService {
 		}
 		tradingStrategy.close();
 		return tradingStrategyContext.getMockPositionService().findAll();
-	}
-
-	@SneakyThrows
-	public BackTestReport backtest(TradingStrategyConfig config, List<Bar> bars, double initialMargine, double slippagePercentage) {
-		final Duration duration = Duration.between(bars.get(0).getBeginTime(), bars.get(bars.size() - 1).getEndTime());
-		final List<Position> positions = simulate(config, bars, initialMargine, slippagePercentage);
-		return BackTestReport.builder().config(config).positions(positions).duration(duration).build();
 	}
 	
 	private List<Quote> createQuotes(String code, Bar bar, TradeType tradeType){
