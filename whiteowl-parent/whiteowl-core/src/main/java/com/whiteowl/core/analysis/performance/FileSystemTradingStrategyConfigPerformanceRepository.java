@@ -23,7 +23,7 @@ import lombok.Synchronized;
 
 @Repository
 public class FileSystemTradingStrategyConfigPerformanceRepository implements TradingStrategyConfigPerformanceRepository {
-	private static final String POSTFIX = ".txt";
+	private static final String POSTFIX = ".dat";
 	private static final Path DIRECTORY = Constant.HOME.resolve(Paths.get("database", "trading-strategy-config-performances"));
 	
 	private final Map<String, TradingStrategyConfigPerformance> cache = new ConcurrentHashMap<>();
