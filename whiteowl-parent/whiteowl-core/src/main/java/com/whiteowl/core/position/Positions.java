@@ -15,6 +15,14 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class Positions {
+	
+	public boolean isOpen(Position position) {
+		return PositionStatus.OPEN.equals(position.getStatus());
+	}
+	
+	public boolean isClosed(Position position) {
+		return PositionStatus.CLOSED.equals(position.getStatus());
+	}
 
 	public Stream<Trade> trades(Position position){
 		return Stream.concat(position.getEntryTrades().stream(), position.getExitTrades().stream());
@@ -44,8 +52,14 @@ public class Positions {
 		return position.getEntryTrades().stream()
 				.filter(trade -> !TradeStatus.REJECTED.equals(trade.getStatus()))
 				.filter(trade -> !TradeStatus.CANCELLED.equals(trade.getStatus()))
-				.map(Trade::getAmount)
-				.collect(Collectors.summingDouble(Double::doubleValue));
+				.collect(Collectors.summingDouble(Trade::getAmount));
+	}
+	
+	public double exitAmount(Position position) {
+		return position.getExitTrades().stream()
+				.filter(trade -> !TradeStatus.REJECTED.equals(trade.getStatus()))
+				.filter(trade -> !TradeStatus.CANCELLED.equals(trade.getStatus()))
+				.collect(Collectors.summingDouble(Trade::getAmount));
 	}
 	
 	public int entryQuantity(Position position) {
@@ -54,8 +68,10 @@ public class Positions {
 				.collect(Collectors.summingInt(Integer::intValue));
 	}
 	
-	public double averageEntryPrice(Position position) {
-		return entryAmount(position) / entryQuantity(position);
+	public double getReturn(Position position) {
+		final double entryAmount = entryAmount(position);
+		final double exitAmount = exitAmount(position);
+		return (entryAmount + exitAmount) / Math.abs(entryAmount);
 	}
 
 }

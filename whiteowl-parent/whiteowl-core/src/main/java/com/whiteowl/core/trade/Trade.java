@@ -170,7 +170,8 @@ public class Trade {
 	}
 	
 	public double getAmount() {
-		return averagePrice * filledQuantity;
+		final double amount = averagePrice * filledQuantity;
+		return TradeType.BUY.equals(type) ? -1 * amount : amount;
 	}
 	
 }
