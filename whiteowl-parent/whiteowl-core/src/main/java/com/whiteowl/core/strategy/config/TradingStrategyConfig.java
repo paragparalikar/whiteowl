@@ -22,6 +22,8 @@ public interface TradingStrategyConfig {
 	
 	Set<TradingStrategyConfig> getNeighbours();
 	
+	Set<TradingStrategyConfig> getOptimisationUniverse();
+	
 	TradingStrategy createTradingStrategy(TradingStrategyContext context);
 	
 }

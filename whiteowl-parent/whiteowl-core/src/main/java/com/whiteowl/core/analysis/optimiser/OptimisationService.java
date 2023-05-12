@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class OptimisationService {
 
 	private final BarService barService;
-	private final BackTestService backTestService = new BackTestService();
+	private final BackTestService backTestService;
 	
 	public TradingStrategyConfig optimise(List<String> codes, Timeframe timeframe, 
 			Set<TradingStrategyConfig> configs, OptimisationFunction optimisationFunction,
@@ -54,7 +54,8 @@ public class OptimisationService {
 	
 	private List<Position> evaluate(String code, Timeframe timeframe, TradingStrategyConfig config,
 			int offsetPeriod, int lookbackPeriod, double initialMargin, double slippagePercentage){
-		final List<Bar> bars = null; // barService.get
+		final List<Bar> bars = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
+				code, timeframe, lookbackPeriod, offsetPeriod).getBarData();
 		return backTestService.backtest(config, bars, initialMargin, slippagePercentage);
 	}
 	
