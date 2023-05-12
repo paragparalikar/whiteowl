@@ -8,7 +8,10 @@ import org.ta4j.core.Bar;
 
 import com.whiteowl.core.analysis.backtester.BackTestService;
 import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
+import com.whiteowl.core.bar.BarRepository;
 import com.whiteowl.core.bar.BarService;
+import com.whiteowl.core.bar.DefaultBarService;
+import com.whiteowl.core.bar.JdbcBarRepository;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
@@ -39,5 +42,19 @@ public class WalkForwardService {
 		}
 		return new TradingStrategyConfigPerformance(initialMargin, positions);
 	}
+	
+	public static void main(String[] args) {
+		final JdbcBarRepository barRepository = JdbcBarRepository.instance();
+		final BarService barService = new DefaultBarService(barRepository);
+		final BackTestService backTestService = new BackTestService();
+		final OptimisationService optimisationService = new OptimisationService(barService, backTestService);
+		final WalkForwardService walkForwardService = new WalkForwardService(barService, backTestService, optimisationService);
+		
+		final Timeframe timeframe = Timeframe.M15;
+		final List<String> codes = barRepository.findAllCodes();
+		
+		
+	}
+	
 	
 }

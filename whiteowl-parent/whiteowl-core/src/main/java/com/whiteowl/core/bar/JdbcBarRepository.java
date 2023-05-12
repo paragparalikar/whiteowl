@@ -127,6 +127,19 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 		}
 	}
 	
+	@SneakyThrows
+	public List<String> findAllCodes(){
+		final String sql = "SELECT DISTINCT(CODE) FROM BAR ORDER BY CODE ASC";
+		try(final Connection connection = dataSource.getConnection();
+				final PreparedStatement ps = connection.prepareStatement(sql);
+				final ResultSet rs = ps.executeQuery()){
+			final List<String> codes = new ArrayList<>();
+			while(rs.next()) codes.add(rs.getString(1));
+			return codes;
+		}
+	}
+	
+	
 	@Override
 	@SneakyThrows
 	public Bar findByCodeAndTimeframeAndBeginTime(
