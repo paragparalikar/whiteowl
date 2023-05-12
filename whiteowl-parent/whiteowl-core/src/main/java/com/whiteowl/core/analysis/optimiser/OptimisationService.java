@@ -18,6 +18,7 @@ import org.ta4j.core.Bar;
 
 import com.whiteowl.core.analysis.backtester.BackTestReport;
 import com.whiteowl.core.analysis.backtester.BackTestService;
+import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.DefaultBarService;
 import com.whiteowl.core.bar.JdbcBarRepository;
@@ -37,15 +38,27 @@ public class OptimisationService {
 	public TradingStrategyConfig optimise(List<String> codes, Timeframe timeframe, 
 			Set<TradingStrategyConfig> configs, OptimisationFunction optimisationFunction,
 			int offsetPeriod, int lookbackPeriod, double initialMargin, double slippagePercentage) {
-		final Map<TradingStrategyConfig, Double> ranks = new ConcurrentHashMap<>();
+		final Map<TradingStrategyConfig, TradingStrategyConfigPerformance> performances = new ConcurrentHashMap<>();
 		configs.stream().forEach(config -> {
-			codes.parallelStream()
+			final TradingStrategyConfigPerformance performance = backtest(codes, timeframe, config, 
+					offsetPeriod, lookbackPeriod, initialMargin, slippagePercentage);
+			performances.put(config, performance);
+		});
+		return performances.entrySet().stream()
+				.max(Entry.comparingByValue(Comparator.comparing(optimisationFunction)))
+				.map(Entry::getKey)
+				.orElse(null);
+	}
+	
+	private TradingStrategyConfigPerformance backtest(List<String> codes, Timeframe timeframe,
+			TradingStrategyConfig config, int offsetPeriod, int lookbackPeriod, double initialMargin, 
+			double slippagePercentage) {
+		final List<Position> positions = codes.parallelStream()
 				.map(code -> backtest(code, timeframe, config, offsetPeriod, lookbackPeriod, initialMargin, slippagePercentage))
 				.flatMap(Collection::stream)
-				.sorted(Comparator.comparing(null))
+				.sorted(Comparator.comparing(Position::getCreatedDate))
 				.collect(Collectors.toList());
-		});
-		return null;
+		return new TradingStrategyConfigPerformance(initialMargin, positions);
 	}
 	
 	private List<Position> backtest(String code, Timeframe timeframe, TradingStrategyConfig config,
