@@ -22,13 +22,13 @@ public class WalkForwardService {
 	private final BackTestService backTestService;
 	private final OptimisationService optimisationService;
 	
-	public TradingStrategyConfigPerformance walk(List<String> codes, Timeframe timeframe, TradingStrategyConfig config,
+	public TradingStrategyConfigPerformance walk(
+			List<String> codes, Timeframe timeframe, Set<TradingStrategyConfig> configs,
 			int trainBarCount, int testBarCount, int steps, double initialMargin, double slippagePercentage) {
 		final List<Position> positions = new ArrayList<>();
-		final Set<TradingStrategyConfig> universe = config.getOptimisationUniverse();
 		final OptimisationFunction optimisationFunction = TradingStrategyConfigPerformance::getCagrOverAvgDrawdown;
 		for(int index = testBarCount * steps; index > 0; index -= testBarCount) {
-			final TradingStrategyConfig optimumConfig = optimisationService.optimise(codes, timeframe, universe, optimisationFunction, 
+			final TradingStrategyConfig optimumConfig = optimisationService.optimise(codes, timeframe, configs, optimisationFunction, 
 					index, trainBarCount, initialMargin, slippagePercentage);
 			for(String code : codes) {
 				final List<Bar> bars = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
