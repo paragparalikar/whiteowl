@@ -28,13 +28,27 @@ public class MACDLongTradingStrategyConfig extends MACDTradingStrategyConfig {
 	
 	@Override
 	public Set<TradingStrategyConfig> getOptimisationUniverse() {
-		return Collections.emptySet();
+		final Set<TradingStrategyConfig> configs = new HashSet<>();
+		for(int longBarCount : new int[]{50, 75, 100, 125, 150, 175, 200}) {
+			for(int shortBarCount : new int[] {10, 20, 30, 40}) {
+				for(int signalBarCount : new int[] {3, 6, 9}) {
+					configs.add(MACDLongTradingStrategyConfig.builder()
+							.scripCode(getScripCode())
+							.timeframe(getTimeframe())
+							.longBarCount(longBarCount)
+							.shortBarCount(shortBarCount)
+							.signalBarCount(signalBarCount)
+							.build());
+				}
+			}
+		}
+		return configs;
 	}
 	
 	@Override
 	public Set<TradingStrategyConfig> getNeighbours() {
 		final int step = 2;
-		final double percentage = 4;
+		final double percentage = 10;
 		final Set<TradingStrategyConfig> neighbours = new HashSet<>();
 		final int longBarCountSpan = span(getLongBarCount(), step, percentage);
 		final int shortBarCountSpan = span(getShortBarCount(), step, percentage);

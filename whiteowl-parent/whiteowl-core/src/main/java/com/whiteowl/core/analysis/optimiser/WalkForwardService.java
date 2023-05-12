@@ -8,13 +8,13 @@ import org.ta4j.core.Bar;
 
 import com.whiteowl.core.analysis.backtester.BackTestService;
 import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
-import com.whiteowl.core.bar.BarRepository;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.DefaultBarService;
 import com.whiteowl.core.bar.JdbcBarRepository;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
+import com.whiteowl.core.strategy.impl.MACDLongTradingStrategyConfig;
 
 import lombok.RequiredArgsConstructor;
 
@@ -52,7 +52,7 @@ public class WalkForwardService {
 		
 		final Timeframe timeframe = Timeframe.M15;
 		final List<String> codes = barRepository.findAllCodes();
-		
+		final Set<TradingStrategyConfig> configs = new MACDLongTradingStrategyConfig(null, null, 0, 0, 0).getOptimisationUniverse();
 		
 	}
 	
