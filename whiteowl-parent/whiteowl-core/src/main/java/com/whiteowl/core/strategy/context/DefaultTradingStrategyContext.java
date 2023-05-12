@@ -52,7 +52,7 @@ public class DefaultTradingStrategyContext implements TradingStrategyContext {
 	}
 	
 	@Override
-	public void unsubscribe(Consumer<Quote> quoteListener) {
+	public void unsubscribeQuoteListener(Consumer<Quote> quoteListener) {
 		quoteService.unsubscribe(quoteListener);
 	}
 	

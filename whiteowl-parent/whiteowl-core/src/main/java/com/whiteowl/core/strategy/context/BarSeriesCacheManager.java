@@ -9,12 +9,14 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.bar.BarService;
@@ -36,7 +38,7 @@ public class BarSeriesCacheManager {
 	private final BarService barService;
 	private final TradingStrategyConfigService configService;
 	private final Map<String, BarSeries> cache = new ConcurrentHashMap<>();
-	private final Map<String, Set<Runnable>> barListeners = new ConcurrentHashMap<>();
+	private final Map<String, Set<Consumer<Bar>>> barListeners = new ConcurrentHashMap<>();
 	
 	@PostConstruct
 	public void init() {
@@ -50,7 +52,7 @@ public class BarSeriesCacheManager {
 		return scripCode + timeframe.name();
 	}
 	
-	public void subscribe(Scrip scrip, Timeframe timeframe, Runnable barListener) {
+	public void subscribe(Scrip scrip, Timeframe timeframe, Consumer<Bar> barListener) {
 		final String key = toCacheKey(scrip.getCode(), timeframe);
 		barListeners.computeIfAbsent(key, 
 				k -> Collections.newSetFromMap(new IdentityHashMap<>()))
@@ -58,11 +60,11 @@ public class BarSeriesCacheManager {
 		getBarSeries(scrip.getCode(), timeframe); // hydrate cache immediately
 	}
 	
-	public void unsubscribe(Runnable barListener) {
+	public void unsubscribeBarListener(Consumer<Bar> barListener) {
 		barListeners.values().forEach(listeners -> listeners.remove(barListener));
-		final Iterator<Entry<String, Set<Runnable>>> iterator = barListeners.entrySet().iterator();
+		final Iterator<Entry<String, Set<Consumer<Bar>>>> iterator = barListeners.entrySet().iterator();
 		while(iterator.hasNext()) {
-			final Entry<String, Set<Runnable>> entry = iterator.next();
+			final Entry<String, Set<Consumer<Bar>>> entry = iterator.next();
 			if(entry.getValue().isEmpty()) {
 				iterator.remove();
 			}
@@ -77,16 +79,16 @@ public class BarSeriesCacheManager {
 		final String key = toCacheKey(scripCode, timeframe);
 		Optional.ofNullable(cache.get(key)).ifPresent(barSeries -> {
 			barSeries.addBar(event.getBar());
-			notifyBarListener(scripCode, timeframe);
+			notifyBarListener(scripCode, timeframe, event.getBar());
 		});
 	}
 	
-	private void notifyBarListener(String scripCode, Timeframe timeframe) {
+	private void notifyBarListener(String scripCode, Timeframe timeframe, Bar bar) {
 		final String key = toCacheKey(scripCode, timeframe);
 		barListeners.getOrDefault(key, Collections.emptySet())
 			.forEach(barListener -> {
 				try {
-					barListener.run();
+					barListener.accept(bar);
 				}catch(Exception e) {
 					log.error("Error while notifying bar listeners", e);
 				}

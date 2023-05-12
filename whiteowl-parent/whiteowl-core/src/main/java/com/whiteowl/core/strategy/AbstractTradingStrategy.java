@@ -1,10 +1,12 @@
 package com.whiteowl.core.strategy;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.bar.Timeframe;
@@ -29,7 +31,7 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> i
 	private final Timeframe timeframe;
 	private final BarSeries barSeries;
 	private final TradingStrategyContext context;
-	private final Runnable barListener = this::onBar;
+	private final Consumer<Bar> barListener = this::onBar;
 	private final Consumer<Quote> quoteListener = this::onQuote;
 	
 	public AbstractTradingStrategy(T config, TradingStrategyContext context) {
@@ -42,12 +44,12 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> i
 		context.subscribe(Arrays.asList(scrip), QuoteMode.FULL, quoteListener);
 	}
 	
-	private void onBar() {
+	private void onBar(Bar bar) {
 		final boolean hasBars = config.getMinBarCount() <= barSeries.getBarCount();
 		final boolean hasPositions = context.existsByScripAndStatusNot(scrip, PositionStatus.CLOSED);
 		if(hasBars && !hasPositions && shouldEnter()) {
 			final Collection<Trade> entryTrades = createEntryTrades();
-			final Position position = createNewPosition();
+			final Position position = createNewPosition(bar.getEndTime().toLocalDateTime());
 			position.getEntryTrades().addAll(entryTrades);
 			context.save(position);
 		}
@@ -69,10 +71,11 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> i
 	
 	protected abstract Collection<Trade> createEntryTrades();
 	
-	protected Position createNewPosition() {
+	protected Position createNewPosition(LocalDateTime timestamp) {
 		final Position position = new Position();
 		position.setScrip(scrip);
 		position.setTradingStrategyConfigId(config.getId());
+		position.setCreatedDate(timestamp);
 		return position;
 	}
 	
@@ -111,8 +114,8 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> i
 	
 	@Override
 	public void close() throws Exception {
-		context.unsubscribe(barListener);
-		context.unsubscribe(quoteListener);
+		context.unsubscribeBarListener(barListener);
+		context.unsubscribeQuoteListener(quoteListener);
 	}
 	
 }

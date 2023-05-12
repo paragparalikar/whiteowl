@@ -5,9 +5,6 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.Positions;
 import com.whiteowl.core.trade.Trade;
@@ -15,39 +12,32 @@ import com.whiteowl.core.trade.Trade;
 import lombok.Data;
 
 @Data
-@Entity
 public class TradingStrategyConfigPerformance {
 
-	@Id
 	private String id;
-	private double[] equity, drawdown;
-	private int totalTradeCount, winningTradeCount, losingTradeCount, openTradeCount;
+	private int totalTradeCount, winningTradeCount, losingTradeCount;
 	private double cagr, maxDrawdownPct, avgDrawdownPct, avgWinPct, avgLossPct, avgReturnPctPerTrade;
 	
 	public TradingStrategyConfigPerformance(double initialAmount, List<Position> positions) {
 		double winSum = 0, lossSum = 0, maxEquity = initialAmount, maxDrawdown = 0, drawdownSum = 0;
 		totalTradeCount = positions.size();
-		equity = new double[totalTradeCount];
-		drawdown = new double[totalTradeCount];
+		final double[] equity = new double[totalTradeCount];
+		final double[] drawdown = new double[totalTradeCount];
 		for(int index = 0; index < totalTradeCount; index++) {
 			final Position position = positions.get(index);
-			if(Positions.isOpen(position)) {
-				openTradeCount++;
+			final double returns = Positions.getReturn(position);
+			final double returnPct = returns * 100;
+			equity[index] = 0 == index ? maxEquity : equity[index - 1] * returns;
+			maxEquity = Math.max(maxEquity, equity[index]);
+			drawdown[index] = maxEquity - equity[index];
+			maxDrawdown = Math.max(maxDrawdown, drawdown[index]);
+			drawdownSum += drawdown[index];
+			if(0 < returnPct) {
+				winSum += returnPct;
+				winningTradeCount++;
 			} else {
-				final double returns = Positions.getReturn(position);
-				final double returnPct = returns * 100;
-				equity[index] = 0 == index ? maxEquity : equity[index - 1] * returns;
-				maxEquity = Math.max(maxEquity, equity[index]);
-				drawdown[index] = maxEquity - equity[index];
-				maxDrawdown = Math.max(maxDrawdown, drawdown[index]);
-				drawdownSum += drawdown[index];
-				if(0 < returnPct) {
-					winSum += returnPct;
-					winningTradeCount++;
-				} else {
-					lossSum += returnPct;
-					losingTradeCount++;
-				}
+				lossSum += returnPct;
+				losingTradeCount++;
 			}
 		}
 		avgWinPct = winSum / winningTradeCount;
@@ -56,8 +46,7 @@ public class TradingStrategyConfigPerformance {
 		maxDrawdownPct = maxDrawdown * 100 / maxEquity;
 		avgDrawdownPct = (drawdownSum / totalTradeCount)  * 100 / maxEquity;
 		
-		final LocalDateTime startTime = positions.get(0).getEntryTrades().stream()
-				.map(Trade::getTimestamp).min(Comparator.naturalOrder()).orElse(LocalDateTime.now());
+		final LocalDateTime startTime = positions.get(0).getCreatedDate();
 		final LocalDateTime endTime = positions.get(positions.size() - 1).getExitTrades().stream()
 				.map(Trade::getTimestamp).max(Comparator.naturalOrder()).orElse(LocalDateTime.now());
 		final Duration duration = Duration.between(startTime, endTime);

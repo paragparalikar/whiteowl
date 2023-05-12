@@ -1,5 +1,6 @@
 package com.whiteowl.core.analysis.backtester;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -17,6 +18,7 @@ import com.whiteowl.core.position.PositionService;
 import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.trade.Trade;
+import com.whiteowl.core.trade.TradeStatus;
 
 public class MockPositionService implements PositionService {
 	
@@ -36,7 +38,35 @@ public class MockPositionService implements PositionService {
 				.flatMap(Collection::stream)
 				.collect(Collectors.toList());
 	}
+	
+	public void closeAll(double price, LocalDateTime timestamp) {
+		cache.values().stream()
+			.flatMap(Collection::stream)
+			.forEach(position -> close(position, price, timestamp));
+	}
 
+	public void close(Position position, double price, LocalDateTime timestamp) {
+		position.getExitTrades().clear();
+		position.getEntryTrades().stream()
+			.map(entryTrade -> complement(entryTrade, price, timestamp))
+			.forEach(position.getExitTrades()::add);
+		position.setLastModifiedDate(timestamp);
+		position.setStatus(PositionStatus.CLOSED);
+	}
+	
+	public Trade complement(Trade entryTrade, double price, LocalDateTime timestamp) {
+		final Trade exitTrade = entryTrade.complement();
+		exitTrade.setAveragePrice(price);
+		exitTrade.setBrokerTradeId(entryTrade.getBrokerTradeId() + "-exit");
+		exitTrade.setCreatedDate(timestamp);
+		exitTrade.setExchangeTimestamp(timestamp);
+		exitTrade.setFilledQuantity(entryTrade.getFilledQuantity());
+		exitTrade.setLastModifiedDate(timestamp);
+		exitTrade.setStatus(TradeStatus.COMPLETE);
+		exitTrade.setTimestamp(timestamp);
+		return exitTrade;
+	}
+	
 	@Override
 	public Optional<Position> findByEntryTradesBrokerTradeId(String brokerTradeId) {
 		return cache.values().stream()

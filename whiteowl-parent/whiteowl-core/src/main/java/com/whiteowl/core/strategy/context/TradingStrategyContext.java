@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.function.Consumer;
 
+import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.bar.Timeframe;
@@ -18,13 +19,13 @@ public interface TradingStrategyContext {
 	
 	ScheduledFuture<?> schedule(Runnable runnable, String cronExpression);
 	
-	void unsubscribe(Runnable barListener);
+	void unsubscribeBarListener(Consumer<Bar> barListener);
 	
 	BarSeries getBarSeries(String scripCode, Timeframe timeframe);
 
-	void subscribe(Scrip scrip, Timeframe timeframe, Runnable barListener);
+	void subscribe(Scrip scrip, Timeframe timeframe, Consumer<Bar> barListener);
 	
-	void unsubscribe(Consumer<Quote> quoteListener);
+	void unsubscribeQuoteListener(Consumer<Quote> quoteListener);
 	
 	void subscribe(Collection<Scrip> scrips, QuoteMode mode, Consumer<Quote> quoteListener);
 	

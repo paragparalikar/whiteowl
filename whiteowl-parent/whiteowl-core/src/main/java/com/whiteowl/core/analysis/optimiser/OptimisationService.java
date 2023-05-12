@@ -1,6 +1,7 @@
 package com.whiteowl.core.analysis.optimiser;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +15,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.ta4j.core.Bar;
-import org.ta4j.core.BarSeries;
 
 import com.whiteowl.core.analysis.backtester.BackTestReport;
 import com.whiteowl.core.analysis.backtester.BackTestService;
@@ -34,16 +34,35 @@ public class OptimisationService {
 	private final BarService barService;
 	private final BackTestService backTestService = new BackTestService();
 	
-	public TradingStrategyConfig optimise(String code, Timeframe timeframe, Set<TradingStrategyConfig> configs, 
-			int lookbackPeriod, double initialMargin, double slippagePercentage) {
+	public TradingStrategyConfig optimise(List<String> codes, Timeframe timeframe, 
+			Set<TradingStrategyConfig> configs, OptimisationFunction optimisationFunction,
+			int offsetPeriod, int lookbackPeriod, double initialMargin, double slippagePercentage) {
+		final Map<TradingStrategyConfig, Double> ranks = new ConcurrentHashMap<>();
+		configs.stream().forEach(config -> {
+			codes.parallelStream()
+				.map(code -> backtest(code, timeframe, config, offsetPeriod, lookbackPeriod, initialMargin, slippagePercentage))
+				.flatMap(Collection::stream)
+				.sorted(Comparator.comparing(null))
+				.collect(Collectors.toList());
+		});
+		return null;
+	}
+	
+	private List<Position> backtest(String code, Timeframe timeframe, TradingStrategyConfig config,
+			int offsetPeriod, int lookbackPeriod, double initialMargin, double slippagePercentage){
+		final List<Bar> bars = null; // barService.get
+		return backTestService.backtest(config, bars, initialMargin, slippagePercentage);
+	}
+	
+	public TradingStrategyConfig optimise(List<Bar> bars, Set<TradingStrategyConfig> configs, 
+			double initialMargin, double slippagePercentage) {
 		final AtomicInteger counter = new AtomicInteger();
 		final Map<TradingStrategyConfig, Double> reports = new ConcurrentHashMap<>();
-		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
-				code, timeframe, lookbackPeriod);
+		
 		configs.parallelStream().forEach(config -> {
-			final List<Bar> bars = barSeries.getBarData();
 			final Duration duration = Duration.between(bars.get(0).getBeginTime(), bars.get(bars.size() - 1).getEndTime());
-			final List<Position> positions = backTestService.simulate(config, bars, 100_00_000, slippagePercentage);
+			final List<Position> positions = backTestService.backtest(config, bars, 100_00_000, slippagePercentage);
+			
 			final double annualReturnsPct = BackTestReport.computeAnnualReturnsPct(config, duration, positions);
 			reports.put(config, annualReturnsPct);
 			final int count = counter.incrementAndGet();

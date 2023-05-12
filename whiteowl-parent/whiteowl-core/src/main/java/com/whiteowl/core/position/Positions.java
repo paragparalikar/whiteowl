@@ -23,7 +23,7 @@ public class Positions {
 	public boolean isClosed(Position position) {
 		return PositionStatus.CLOSED.equals(position.getStatus());
 	}
-
+	
 	public Stream<Trade> trades(Position position){
 		return Stream.concat(position.getEntryTrades().stream(), position.getExitTrades().stream());
 	}
