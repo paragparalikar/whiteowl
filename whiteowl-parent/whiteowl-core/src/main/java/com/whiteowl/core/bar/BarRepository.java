@@ -12,7 +12,7 @@ public interface BarRepository {
 	
 	Bar findByCodeAndTimeframeAndBeginTime(String code, Timeframe timeframe, ZonedDateTime beginTime);
 	
-	List<Bar> findLatestByCodeAndTimeframeOrderByBeginTimeAsc(String code, Timeframe timeframe, int count);
+	List<Bar> findLatestByCodeAndTimeframeOrderByBeginTimeAsc(String code, Timeframe timeframe, int limit, final int offset);
 	
 }
 

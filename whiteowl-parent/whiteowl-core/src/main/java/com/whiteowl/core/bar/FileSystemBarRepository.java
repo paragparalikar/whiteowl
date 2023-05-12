@@ -110,7 +110,8 @@ public class FileSystemBarRepository implements BarRepository {
 
 	@Override
 	@SneakyThrows
-	public List<Bar> findLatestByCodeAndTimeframeOrderByBeginTimeAsc(String code, Timeframe timeframe, int count) {
+	public List<Bar> findLatestByCodeAndTimeframeOrderByBeginTimeAsc(String code, 
+			Timeframe timeframe, int limit, int offset) {
 		final Path path = getPath(code, timeframe);
 		synchronized(path) {
 			if(Files.exists(path)) {
@@ -118,9 +119,12 @@ public class FileSystemBarRepository implements BarRepository {
 					final long length = file.length();
 					if(length >= BYTES) {
 						final long availableBarCount = (length/BYTES);
-						final long effectiveBarCount = Math.min(availableBarCount, count);
-						final List<Bar> bars = new ArrayList<Bar>((int) effectiveBarCount);
-						for(long position = length - effectiveBarCount * BYTES; position <= length - BYTES; position += BYTES) {
+						if(availableBarCount <= offset) return Collections.emptyList();
+						final long effectiveLimit = Math.min(availableBarCount - offset, limit);
+						final List<Bar> bars = new ArrayList<Bar>((int) effectiveLimit);
+						for(long position = length - (effectiveLimit + offset) * BYTES; 
+								position < length - offset * BYTES; 
+								position += BYTES) {
 							file.seek(position);
 							bars.add(read(timeframe, file));
 						}

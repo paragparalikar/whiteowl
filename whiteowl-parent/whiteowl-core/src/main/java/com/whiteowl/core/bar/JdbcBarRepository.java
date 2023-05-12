@@ -1,7 +1,5 @@
 package com.whiteowl.core.bar;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,7 +24,6 @@ import org.ta4j.core.Bar;
 import org.ta4j.core.BaseBar;
 import org.ta4j.core.num.DoubleNum;
 
-import com.whiteowl.core.util.Constant;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -113,13 +110,14 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 	public List<Bar> findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
 			@NonNull final String code, 
 			@NonNull final Timeframe timeframe, 
-			final int count) {
-		final String sql = "SELECT * FROM BAR WHERE CODE = ? AND TIMEFRAME = ? ORDER BY CODE ASC, TIMEFRAME ASC, BEGIN_TIME DESC LIMIT ?";
+			final int limit, final int offset) {
+		final String sql = "SELECT * FROM BAR WHERE CODE = ? AND TIMEFRAME = ? ORDER BY CODE ASC, TIMEFRAME ASC, BEGIN_TIME DESC LIMIT ? OFFSET ?";
 		try(final Connection connection = dataSource.getConnection();
 			final PreparedStatement ps = connection.prepareStatement(sql)){
 			ps.setString(1, code);
 			ps.setString(2, timeframe.name());
-			ps.setInt(3, count);
+			ps.setInt(3, limit);
+			ps.setInt(4, offset);
 			try(final ResultSet rs = ps.executeQuery()){
 				final List<Bar> bars = new ArrayList<>();
 				while(rs.next()) bars.add(map(rs));
@@ -168,30 +166,6 @@ public class JdbcBarRepository implements BarRepository, AutoCloseable {
 			}
 			ps.executeBatch();
 		}
-	}
-	
-	@SuppressWarnings("deprecation")
-	public static void main(String[] args) throws Exception {
-		final DataSourceProperties properties = new DataSourceProperties();
-		properties.setUsername("sa");
-		properties.setPassword("");
-		properties.setDriverClassName("org.h2.Driver");
-		properties.setUrl("jdbc:h2:~/.whiteowl/database/entities;DB_CLOSE_ON_EXIT=FALSE;AUTO_SERVER=TRUE");
-		try(final JdbcBarRepository jdbcBarRepository = new JdbcBarRepository(properties)){
-			final BarRepository fileSystemBarRepository = new FileSystemBarRepository();
-			Files.list(Constant.HOME.resolve("backup"))
-				.map(Path::getFileName)
-				.map(Path::toString)
-				.forEach(code -> {
-					for(Timeframe timeframe : Timeframe.values()) {
-						final List<Bar> bars = fileSystemBarRepository.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
-								code, timeframe, Integer.MAX_VALUE);
-						System.out.printf("%-25s %-5s %6d\n", code, timeframe.name(), bars.size());
-						jdbcBarRepository.saveAll(code, timeframe, bars);
-					}
-				});
-		}
-		
 	}
 
 }

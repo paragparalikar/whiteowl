@@ -78,7 +78,7 @@ public class BarBackfillJob implements CommandLineRunner {
 	}
 	
 	private ZonedDateTime getLastDownloadTimestamp(Scrip scrip, Timeframe timeframe) {
-		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), timeframe, 1);
+		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), timeframe, 1, 0);
 		return 0 < barSeries.getBarCount() ? barSeries.getLastBar().getBeginTime() : ZonedDateTime.now().minusYears(100);
 	}
 	

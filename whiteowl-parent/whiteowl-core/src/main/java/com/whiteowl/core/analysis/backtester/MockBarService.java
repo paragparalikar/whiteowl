@@ -41,12 +41,14 @@ public class MockBarService implements BarService {
 	}
 
 	@Override
-	public BarSeries findLatestByCodeAndTimeframeOrderByBeginTimeAsc(String code, Timeframe timeframe, int count) {
+	public BarSeries findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
+			String code, Timeframe timeframe, int limit, int offset) {
 		final List<Bar> bars = Optional.ofNullable(cache.get(Tuple2.of(code, timeframe)))
 				.orElse(Collections.emptyList());
-		final int startIndex = bars.size() - count;
+		final int startIndex = Math.max(0, bars.size() - offset - limit);
+		final int endIndex = Math.min(bars.size(), bars.size() - limit + 1);
 		return bars.isEmpty() ? new BaseBarSeries("", DoubleNum::valueOf) :
-				new BaseBarSeries(bars.subList(startIndex >= 0 ? startIndex : 0, bars.size()));
+				new BaseBarSeries(bars.subList(startIndex, endIndex));
 	}
 
 }

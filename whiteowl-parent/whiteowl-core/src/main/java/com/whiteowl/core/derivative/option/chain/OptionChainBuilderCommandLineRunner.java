@@ -39,7 +39,7 @@ public class OptionChainBuilderCommandLineRunner implements CommandLineRunner {
 		final ZonedDateTime endTimestamp = ZonedDateTime.of(LocalDate.of(2023, 04, 6), LocalTime.of(2, 0), ZoneId.systemDefault());
 		final Scrip scrip = scripService.findByCode(code);
 		final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(scrip.getCode(), 
-				Timeframe.M3, 5 * Timeframe.M3.getDayMultiple());
+				Timeframe.M3, 5 * Timeframe.M3.getDayMultiple(), 0);
 		final int count = 20;
 		final List<String> lines = new ArrayList<>();
 		lines.add(header(count));

@@ -21,8 +21,9 @@ public class DefaultBarService implements BarService {
 	public BarSeries findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
 			@NonNull final String code, 
 			@NonNull final Timeframe timeframe, 
-			final int count) {
-		return new BaseBarSeries(barRepository.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(code, timeframe, count));
+			int limit, final int offset) {
+		return new BaseBarSeries(barRepository.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(code, 
+				timeframe, limit, offset));
 	}
 	
 	@Override

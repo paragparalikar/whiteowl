@@ -98,7 +98,7 @@ public class BarSeriesCacheManager {
 	public BarSeries getBarSeries(String scripCode, Timeframe timeframe) {
 		return cache.computeIfAbsent(scripCode + timeframe.name(), key -> 
 			barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
-				scripCode, timeframe, maxBarCount));
+				scripCode, timeframe, maxBarCount, 0));
 	}
 
 }
