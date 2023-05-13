@@ -1,12 +1,12 @@
 package com.whiteowl.core.strategy.impl;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.ta4j.core.Trade.TradeType;
 
 import com.whiteowl.core.bar.Timeframe;
+import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.TradingStrategy;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.strategy.context.TradingStrategyContext;
@@ -18,12 +18,12 @@ public class MACDLongTradingStrategyConfig extends MACDTradingStrategyConfig {
 	@Builder
 	public MACDLongTradingStrategyConfig(String scripCode, Timeframe timeframe, int longBarCount,
 			int shortBarCount, int signalBarCount) {
-		super(scripCode, timeframe, TradeType.BUY, longBarCount, shortBarCount, signalBarCount);
+		super(TradeType.BUY, longBarCount, shortBarCount, signalBarCount);
 	}
 
 	@Override
-	public TradingStrategy createTradingStrategy(TradingStrategyContext context) {
-		return new MACDLongTradingStrategy(this, context);
+	public TradingStrategy createTradingStrategy(Scrip scrip, Timeframe timeframe, TradingStrategyContext context) {
+		return new MACDLongTradingStrategy(scrip, timeframe, this, context);
 	}
 	
 	@Override
@@ -33,8 +33,6 @@ public class MACDLongTradingStrategyConfig extends MACDTradingStrategyConfig {
 			for(int shortBarCount : new int[] {10, 20, 30, 40}) {
 				for(int signalBarCount : new int[] {3, 6, 9}) {
 					configs.add(MACDLongTradingStrategyConfig.builder()
-							.scripCode(getScripCode())
-							.timeframe(getTimeframe())
 							.longBarCount(longBarCount)
 							.shortBarCount(shortBarCount)
 							.signalBarCount(signalBarCount)
@@ -57,8 +55,6 @@ public class MACDLongTradingStrategyConfig extends MACDTradingStrategyConfig {
 			for(int shortBarCount = getShortBarCount() - shortBarCountSpan; shortBarCount <= getShortBarCount() + shortBarCountSpan; shortBarCount += step) {
 				for(int signalBarCount = getSignalBarCount() - signalBarCountSpan; signalBarCount <= getSignalBarCount() + signalBarCountSpan; signalBarCount += step) {
 					neighbours.add(MACDLongTradingStrategyConfig.builder()
-							.scripCode(getScripCode())
-							.timeframe(getTimeframe())
 							.longBarCount(longBarCount)
 							.shortBarCount(shortBarCount)
 							.signalBarCount(signalBarCount)

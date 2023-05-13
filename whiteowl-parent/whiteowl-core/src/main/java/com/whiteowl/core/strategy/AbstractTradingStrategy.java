@@ -34,12 +34,13 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> i
 	private final Consumer<Bar> barListener = this::onBar;
 	private final Consumer<Quote> quoteListener = this::onQuote;
 	
-	public AbstractTradingStrategy(T config, TradingStrategyContext context) {
+	public AbstractTradingStrategy(Scrip scrip, Timeframe timeframe, 
+			T config, TradingStrategyContext context) {
+		this.scrip = scrip;
 		this.config= config;
 		this.context = context;
-		this.timeframe = config.getTimeframe();
-		this.scrip = context.getScrip(config.getScripCode());
-		this.barSeries = context.getBarSeries(config.getScripCode(), timeframe);
+		this.timeframe = timeframe;
+		this.barSeries = context.getBarSeries(scrip.getCode(), timeframe);
 		context.subscribe(scrip, timeframe, barListener);
 		context.subscribe(Arrays.asList(scrip), QuoteMode.FULL, quoteListener);
 	}

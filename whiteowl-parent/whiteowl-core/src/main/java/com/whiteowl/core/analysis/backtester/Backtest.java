@@ -6,23 +6,31 @@ import java.util.List;
 import org.ta4j.core.Bar;
 import org.ta4j.core.Trade.TradeType;
 
+import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.bar.event.BarCreatedEvent;
 import com.whiteowl.core.broker.Broker;
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.quote.Quote;
-import com.whiteowl.core.scrip.Exchange;
 import com.whiteowl.core.scrip.Scrip;
-import com.whiteowl.core.scrip.ScripType;
 import com.whiteowl.core.strategy.TradingStrategy;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.strategy.context.BarSeriesCacheManager;
 
+import lombok.Builder;
 import lombok.SneakyThrows;
+import lombok.Value;
 
-public class BackTestService {
+@Value
+@Builder
+public class Backtest {
 	
-	private Portfolio createPortfolio(double initialMargin) {
+	private final Scrip scrip;
+	private final List<Bar> bars;
+	private final Timeframe timeframe;
+	private final double initialMargin, slippagePercentage;
+	
+	private Portfolio createPortfolio() {
 		final Portfolio portfolio = new Portfolio();
 		portfolio.setBroker(Broker.TEST);
 		portfolio.setAvailableMargin(initialMargin);
@@ -31,9 +39,8 @@ public class BackTestService {
 	}
 	
 	@SneakyThrows
-	public List<Position> backtest(TradingStrategyConfig config, List<Bar> bars, double initialMargine, double slippagePercentage){
-		final Scrip scrip = Scrip.builder().code(config.getScripCode()).type(ScripType.EQ).exchange(Exchange.NSE).build();
-		final MockTradingStrategyContext tradingStrategyContext = new MockTradingStrategyContext(initialMargine, slippagePercentage);
+	public List<Position> execute(TradingStrategyConfig config){
+		final MockTradingStrategyContext tradingStrategyContext = new MockTradingStrategyContext(initialMargin, slippagePercentage);
 		final MockQuoteService mockQuoteService = tradingStrategyContext.getMockQuoteService();
 		final MockScripService mockScripService = tradingStrategyContext.getMockScripService();
 		final MockPositionService mockPositionService = tradingStrategyContext.getMockPositionService();
@@ -41,16 +48,16 @@ public class BackTestService {
 		final MockTradingStrategyConfigService mockTradingStrategyConfigService = tradingStrategyContext.getMockTradingStrategyConfigService();
 		final BarSeriesCacheManager barSeriesCacheManager = tradingStrategyContext.getBarSeriesCacheManager();
 		final MockBrokerServiceProvider mockBrokerServiceProvider = tradingStrategyContext.getMockBrokerServiceProvider();
-		mockPortfolioService.save(createPortfolio(initialMargine));
+		mockPortfolioService.save(createPortfolio());
 		mockScripService.saveAll(Arrays.asList(scrip));
 		mockTradingStrategyConfigService.save(config);
 		barSeriesCacheManager.init();
-		final TradingStrategy tradingStrategy = config.createTradingStrategy(tradingStrategyContext);
+		final TradingStrategy tradingStrategy = config.createTradingStrategy(scrip, timeframe, tradingStrategyContext);
 		for(Bar bar : bars) {
 			mockBrokerServiceProvider.execute(bar, scrip);
-			final List<Quote> quotes = createQuotes(config.getScripCode(), bar, config.getTradeType());
-			quotes.forEach(quote -> mockQuoteService.push(config.getScripCode(), quote));
-			final BarCreatedEvent barCreatedEvent = new BarCreatedEvent(bar, scrip, config.getTimeframe());
+			final List<Quote> quotes = createQuotes(scrip.getCode(), bar, config.getTradeType());
+			quotes.forEach(quote -> mockQuoteService.push(scrip.getCode(), quote));
+			final BarCreatedEvent barCreatedEvent = new BarCreatedEvent(bar, scrip, timeframe);
 			barSeriesCacheManager.onBarCreated(barCreatedEvent);
 		}
 		tradingStrategy.close();

@@ -14,8 +14,10 @@ import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import org.ta4j.core.rules.UnderIndicatorRule;
 
+import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.quote.Quote;
+import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.AbstractTradingStrategy;
 import com.whiteowl.core.strategy.context.TradingStrategyContext;
 import com.whiteowl.core.trade.Trade;
@@ -29,8 +31,9 @@ public class MACDLongTradingStrategy extends AbstractTradingStrategy<MACDLongTra
 
 	private final Rule entryRule, exitRule;
 	
-	public MACDLongTradingStrategy(MACDLongTradingStrategyConfig config, TradingStrategyContext context) {
-		super(config, context);
+	public MACDLongTradingStrategy(Scrip scrip, Timeframe timeframe, 
+			MACDLongTradingStrategyConfig config, TradingStrategyContext context) {
+		super(scrip, timeframe, config, context);
 		final Indicator<Num> closePriceIndicator = new ClosePriceIndicator(getBarSeries());
 		final Indicator<Num> macdIndicator = new MACDIndicator(closePriceIndicator, config.getShortBarCount(), config.getLongBarCount());
 		final Indicator<Num> signalIndicator = new EMAIndicator(macdIndicator, config.getSignalBarCount());

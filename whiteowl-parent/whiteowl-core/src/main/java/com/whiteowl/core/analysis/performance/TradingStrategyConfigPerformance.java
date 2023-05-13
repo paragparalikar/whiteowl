@@ -19,6 +19,7 @@ public class TradingStrategyConfigPerformance {
 	private double cagr, maxDrawdownPct, avgDrawdownPct, avgWinPct, avgLossPct, avgReturnPctPerTrade;
 	
 	public TradingStrategyConfigPerformance(double initialAmount, List<Position> positions) {
+		positions.sort(Comparator.comparing(Position::getCreatedDate));
 		double winSum = 0, lossSum = 0, maxEquity = initialAmount, maxDrawdown = 0, drawdownSum = 0;
 		totalTradeCount = positions.size();
 		final double[] equity = new double[totalTradeCount];
