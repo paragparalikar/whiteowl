@@ -47,14 +47,14 @@ public class OptimisationService {
 					.initialMargin(initialMargin)
 					.slippagePercentage(slippagePercentage)
 					.build();
-			configs.stream()
+			configs.parallelStream()
 				.collect(Collectors.toMap(Function.identity(), backtest::execute))
 				.forEach((config, positions) -> configPositions
 						.computeIfAbsent(config, key -> new ArrayList<>()).addAll(positions));
 			log.info("Accumulated trades for scrip {} with all configs", scrip.getCode());
 		});
 		final Map<TradingStrategyConfig, TradingStrategyConfigPerformance> configPerformances = 
-				configPositions.entrySet().parallelStream().collect(Collectors.toMap(Entry::getKey, 
+				configPositions.entrySet().stream().collect(Collectors.toMap(Entry::getKey, 
 					entry -> new TradingStrategyConfigPerformance(initialMargin, entry.getValue())));
 		return configPerformances.entrySet().stream()
 				.max(Entry.comparingByValue(Comparator.comparing(optimisationFunction)))

@@ -91,6 +91,10 @@ public class Position {
 		position.setPortfolio(portfolio);
 		position.setScrip(scrip);
 		position.setStatus(status);
+		position.setTargetPrice(targetPrice);
+		position.setStopLossPrice(stopLossPrice);
+		position.setCreatedDate(createdDate);
+		position.setLastModifiedDate(lastModifiedDate);
 		position.setTradingStrategyConfigId(tradingStrategyConfigId);
 		entryTrades.stream().map(Trade::clone).forEach(position.getEntryTrades()::add);
 		exitTrades.stream().map(Trade::clone).forEach(position.getExitTrades()::add);

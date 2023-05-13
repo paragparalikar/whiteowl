@@ -18,9 +18,7 @@ import com.whiteowl.core.strategy.context.BarSeriesCacheManager;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Value
 @Builder
 public class Backtest {
@@ -56,9 +54,7 @@ public class Backtest {
 		final Bar lastBar = bars.get(bars.size() - 1);
 		positionService.closeAll(lastBar.getClosePrice().doubleValue(), 
 				lastBar.getEndTime().toLocalDateTime());
-		final List<Position> positions = positionService.findAll();
-		log.info("Backtest found {} trades for scrip {}", positions.size(), scrip.getCode());
-		return positions;
+		return positionService.findAll();
 	}
 	
 	private List<Quote> createQuotes(String code, Bar bar, TradeType tradeType){
