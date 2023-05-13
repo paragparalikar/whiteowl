@@ -16,8 +16,7 @@ import lombok.Builder;
 public class MACDLongTradingStrategyConfig extends MACDTradingStrategyConfig {
 
 	@Builder
-	public MACDLongTradingStrategyConfig(String scripCode, Timeframe timeframe, int longBarCount,
-			int shortBarCount, int signalBarCount) {
+	public MACDLongTradingStrategyConfig(int longBarCount, int shortBarCount, int signalBarCount) {
 		super(TradeType.BUY, longBarCount, shortBarCount, signalBarCount);
 	}
 

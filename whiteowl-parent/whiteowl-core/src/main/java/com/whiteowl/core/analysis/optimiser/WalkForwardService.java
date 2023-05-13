@@ -60,7 +60,7 @@ public class WalkForwardService {
 		
 		final Timeframe timeframe = Timeframe.M15;
 		final List<String> codes = barRepository.findAllCodes();
-		final Set<TradingStrategyConfig> configs = new MACDLongTradingStrategyConfig(null, null, 0, 0, 0).getOptimisationUniverse();
+		final Set<TradingStrategyConfig> configs = new MACDLongTradingStrategyConfig(0, 0, 0).getOptimisationUniverse();
 		
 	}
 	
