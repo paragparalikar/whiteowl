@@ -71,4 +71,25 @@ public class TradingStrategyConfigPerformance {
 		return (avgWinPct * winningTradeCount - avgLossPct * losingTradeCount) / totalTradeCount;
 	}
 	
+	@Override
+	public String toString() {
+		final String newLine = System.lineSeparator();
+		final StringBuilder builder = new StringBuilder();
+		builder.append(String.format("%-25s : %s", "ID", id)).append(newLine);
+		builder.append(String.format("%-25s : %d", "Total Trades", totalTradeCount)).append(newLine);
+		builder.append(String.format("%-25s : %d", "Winning Trades", winningTradeCount)).append(newLine);
+		builder.append(String.format("%-25s : %d", "Losing Trades", losingTradeCount)).append(newLine);
+		builder.append(String.format("%-25s : %.2f", "Max Drawdown %", maxDrawdownPct)).append(newLine);
+		builder.append(String.format("%-25s : %.2f", "Avg Drawdown %", avgDrawdownPct)).append(newLine);
+		builder.append(String.format("%-25s : %.2f", "Avg Win %", avgWinPct)).append(newLine);
+		builder.append(String.format("%-25s : %.2f", "Avg Loss %", avgLossPct)).append(newLine);
+		builder.append(String.format("%-25s : %.2f", "Avg Return %", avgReturnPctPerTrade)).append(newLine);
+		builder.append(String.format("%-25s : %.3f", "CAGR", cagr)).append(newLine);
+		builder.append(String.format("%-25s : %.3f", "CAGR/MaxDD", getCagrOverMaxDrawdown())).append(newLine);
+		builder.append(String.format("%-25s : %.3f", "CAGR/AvgDD", getCagrOverAvgDrawdown())).append(newLine);
+		builder.append(String.format("%-25s : %.3f", "Profit Factor", getProfitFactor())).append(newLine);
+		builder.append(String.format("%-25s : %.3f", "Expectancy", getExpectancy())).append(newLine);
+		return builder.toString();
+	}
+	
 }

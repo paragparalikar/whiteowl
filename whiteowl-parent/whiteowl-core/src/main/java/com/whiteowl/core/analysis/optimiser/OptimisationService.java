@@ -21,7 +21,9 @@ import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class OptimisationService {
 
@@ -30,6 +32,8 @@ public class OptimisationService {
 	public TradingStrategyConfig optimise(List<Scrip> scrips, Timeframe timeframe, Set<TradingStrategyConfig> configs, 
 			Function<TradingStrategyConfigPerformance, Double> optimisationFunction,
 			int offsetPeriod, int lookbackPeriod, double initialMargin, double slippagePercentage) {
+		log.info("Initiating optimisation for {} scrips and {} configs with offset {} and lookback {}",
+				scrips.size(), configs.size(), offsetPeriod, lookbackPeriod);
 		final Map<TradingStrategyConfig, List<Position>> configPositions = new ConcurrentHashMap<>();
 		scrips.parallelStream().forEach(scrip -> {
 			final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
@@ -45,6 +49,7 @@ public class OptimisationService {
 				.collect(Collectors.toMap(Function.identity(), backtest::execute))
 				.forEach((config, positions) -> configPositions
 						.computeIfAbsent(config, key -> new ArrayList<>()).addAll(positions));
+			log.info("Accumulated trades for scrip {} with all configs", scrip.getCode());
 		});
 		final Map<TradingStrategyConfig, TradingStrategyConfigPerformance> configPerformances = 
 				configPositions.entrySet().parallelStream().collect(Collectors.toMap(Entry::getKey, 
