@@ -35,9 +35,11 @@ public class OptimisationService {
 		log.info("Initiating optimisation for {} scrips and {} configs with offset {} and lookback {}",
 				scrips.size(), configs.size(), offsetPeriod, lookbackPeriod);
 		final Map<TradingStrategyConfig, List<Position>> configPositions = new ConcurrentHashMap<>();
-		scrips.parallelStream().forEach(scrip -> {
+		scrips.stream().forEach(scrip -> {
+			log.info("Initializing trade aggregation for scrip {}", scrip.getCode());
 			final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
 					scrip.getCode(), timeframe, lookbackPeriod, offsetPeriod);
+			log.info("Fetched {} bars for scrip {} and timeframe {}", barSeries.getBarCount(), scrip.getCode(), timeframe);
 			final Backtest backtest = Backtest.builder()
 					.scrip(scrip)
 					.timeframe(timeframe)
@@ -45,7 +47,7 @@ public class OptimisationService {
 					.initialMargin(initialMargin)
 					.slippagePercentage(slippagePercentage)
 					.build();
-			configs.parallelStream()
+			configs.stream()
 				.collect(Collectors.toMap(Function.identity(), backtest::execute))
 				.forEach((config, positions) -> configPositions
 						.computeIfAbsent(config, key -> new ArrayList<>()).addAll(positions));
