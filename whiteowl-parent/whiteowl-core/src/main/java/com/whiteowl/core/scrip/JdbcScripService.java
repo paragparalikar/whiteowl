@@ -1,17 +1,17 @@
 package com.whiteowl.core.scrip;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.sql.DataSource;
@@ -42,9 +42,8 @@ public class JdbcScripService implements ScripService {
 	private void load() {
 		if(cacheByCode.isEmpty()) {
 			try(Connection connection = dataSource.getConnection();
-					Statement statement = connection.createStatement();
-					ResultSet rsScrips = statement.executeQuery("SELECT * FROM SCRIP");
-					ResultSet rsIndices = statement.executeQuery("SELECT * FROM SCRIP_INDICES")){
+					ResultSet rsScrips = connection.createStatement().executeQuery("SELECT * FROM SCRIP");
+					ResultSet rsIndices = connection.createStatement().executeQuery("SELECT * FROM SCRIP_INDICES")){
 				final Map<String, Set<Index>> indexMappings = new HashMap<>();
 				while(rsIndices.next()) {
 					indexMappings.computeIfAbsent(rsIndices.getString("SCRIP_CODE"), 
@@ -54,17 +53,23 @@ public class JdbcScripService implements ScripService {
 					final Scrip scrip = map(rsScrips);
 					cacheByCode.put(scrip.getCode(), scrip);
 					final Set<Index> indices = indexMappings.get(scrip.getCode());
-					scrip.setIndices(indices);
-					indices.forEach(index -> cacheByIndices
-							.computeIfAbsent(index, key -> new ArrayList<>()).add(scrip));
+					if(null != indices) {
+						scrip.setIndices(indices);
+						indices.forEach(index -> cacheByIndices
+								.computeIfAbsent(index, key -> new ArrayList<>()).add(scrip));
+					}
 				}
 			}
 		}
 	}
 
 	private Scrip map(ResultSet rs) throws SQLException {
-		final Date expiryDate = rs.getDate("EXPIRY");
-		final LocalDate expiry = LocalDate.ofInstant(expiryDate.toInstant(), ZoneId.systemDefault());
+		final LocalDate expiry = Optional.ofNullable(rs.getDate("EXPIRY"))
+			.map(date -> date.getTime())
+			.map(Date::new)
+			.map(Date::toInstant)
+			.map(instant -> LocalDate.ofInstant(instant, ZoneId.systemDefault()))
+			.orElse(null);
 		return Scrip.builder()
 				.code(rs.getString("CODE"))
 				.name(rs.getString("NAME"))
