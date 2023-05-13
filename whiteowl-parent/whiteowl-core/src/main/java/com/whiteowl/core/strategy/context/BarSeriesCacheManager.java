@@ -79,12 +79,11 @@ public class BarSeriesCacheManager {
 		final String key = toCacheKey(scripCode, timeframe);
 		Optional.ofNullable(cache.get(key)).ifPresent(barSeries -> {
 			barSeries.addBar(event.getBar());
-			notifyBarListener(scripCode, timeframe, event.getBar());
+			notifyBarListener(key, event.getBar());
 		});
 	}
 	
-	private void notifyBarListener(String scripCode, Timeframe timeframe, Bar bar) {
-		final String key = toCacheKey(scripCode, timeframe);
+	private void notifyBarListener(String key, Bar bar) {
 		barListeners.getOrDefault(key, Collections.emptySet())
 			.forEach(barListener -> {
 				try {
@@ -96,7 +95,7 @@ public class BarSeriesCacheManager {
 	}
 	
 	public BarSeries getBarSeries(String scripCode, Timeframe timeframe) {
-		return cache.computeIfAbsent(scripCode + timeframe.name(), key -> 
+		return cache.computeIfAbsent(toCacheKey(scripCode, timeframe), key -> 
 			barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
 				scripCode, timeframe, maxBarCount, 0));
 	}

@@ -37,12 +37,20 @@ public class Backtest {
 		final BarSeriesCacheManager barSeriesCacheManager = context.getBarSeriesCacheManager();
 		final MockBrokerServiceProvider brokerServiceProvider = context.getMockBrokerServiceProvider();
 		final TradingStrategy tradingStrategy = config.createTradingStrategy(scrip, timeframe, context);
-		for(Bar bar : bars) {
-			brokerServiceProvider.execute(bar, scrip);
+		for(int barIndex = 0; barIndex < bars.size(); barIndex++) {
+			final Bar bar = bars.get(barIndex);
+			final Bar tradeExecutionBar = barIndex < bars.size() - 1 ? bars.get(barIndex + 1) : bar;
 			final List<Quote> quotes = createQuotes(scrip.getCode(), bar, config.getTradeType());
-			quotes.forEach(quote -> context.getMockQuoteService().push(scrip.getCode(), quote));
+			for(int quoteIndex = 0; quoteIndex < quotes.size(); quoteIndex++) {
+				final Quote quote = quotes.get(quoteIndex);
+				context.getMockQuoteService().push(scrip.getCode(), quote);
+				brokerServiceProvider.execute(tradeExecutionBar, scrip);
+				positionService.updateAll();
+			}
 			final BarCreatedEvent barCreatedEvent = new BarCreatedEvent(bar, scrip, timeframe);
 			barSeriesCacheManager.onBarCreated(barCreatedEvent);
+			brokerServiceProvider.execute(tradeExecutionBar, scrip);
+			positionService.updateAll();
 		}
 		tradingStrategy.close();
 		final Bar lastBar = bars.get(bars.size() - 1);

@@ -26,6 +26,7 @@ public enum PositionStatus {
 	private final boolean terminal;
 	
 	public static void update(Position position) {
+		if(position.getStatus().isTerminal()) return;
 		final Set<Trade> exitTrades = position.getExitTrades();
 		final Set<Trade> entryTrades = position.getEntryTrades();
 		if(entryTrades.isEmpty()) {

@@ -1,12 +1,10 @@
 package com.whiteowl.core.analysis.backtester;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -19,15 +17,17 @@ import com.whiteowl.core.scrip.Scrip;
 public class MockQuoteService implements QuoteService {
 	
 	private final Map<String, Quote> quotes = new ConcurrentHashMap<>();
-	private final Map<String, Set<Consumer<Quote>>> consumers = new ConcurrentHashMap<>();
+	private final Map<String, List<Consumer<Quote>>> consumers = new ConcurrentHashMap<>();
 	
 	public void push(String code, Quote quote) {
 		quotes.put(code, quote);
-		Optional.ofNullable(consumers.get(code)).ifPresent(consumers -> {
-			for(Consumer<Quote> consumer : consumers) {
+		final List<Consumer<Quote>> consumers = this.consumers.get(code);
+		if(null != consumers && !consumers.isEmpty()) {
+			for(int index = 0; index < consumers.size(); index++) {
+				final Consumer<Quote> consumer = consumers.get(index);
 				consumer.accept(quote);
 			}
-		});
+		}
 	}
 
 	@Override
@@ -42,8 +42,7 @@ public class MockQuoteService implements QuoteService {
 	@Override
 	public void subscribe(Collection<Scrip> scrips, QuoteMode mode, Consumer<Quote> quoteListener) {
 		for(Scrip scrip : scrips) {
-			consumers.computeIfAbsent(scrip.getCode(), key -> Collections.newSetFromMap(new IdentityHashMap<>()))
-				.add(quoteListener);
+			consumers.computeIfAbsent(scrip.getCode(), key -> new ArrayList<>()).add(quoteListener);
 		}
 	}
 

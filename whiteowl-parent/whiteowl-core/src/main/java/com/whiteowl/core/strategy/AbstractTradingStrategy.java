@@ -58,14 +58,17 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> i
 	
 	private void onQuote(Quote quote) {
 		final List<Position> positions = context.getOpenPositions(config.getId());
-		positions.stream().parallel()
-			.filter(position -> shouldExit(quote, position))
-			.forEach(position -> {
-				position.getEntryTrades().stream()
-					.map(entryTrade -> createExitTrade(quote, position, entryTrade))
-					.forEach(position.getExitTrades()::add);
-				context.save(position);
-			});
+		if(null != positions && !positions.isEmpty()) {
+			for(int index = 0; index < positions.size(); index++) {
+				final Position position = positions.get(index);
+				if(shouldExit(quote, position)) {
+					position.getEntryTrades().stream()
+						.map(entryTrade -> createExitTrade(quote, position, entryTrade))
+						.forEach(position.getExitTrades()::add);
+					context.save(position);
+				}
+			}
+		}
 	}
 	
 	protected abstract boolean shouldEnter();
