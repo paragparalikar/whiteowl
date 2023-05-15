@@ -1,6 +1,5 @@
 package com.whiteowl.core.analysis.optimiser;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -8,7 +7,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.ta4j.core.BarSeries;
 
@@ -16,7 +14,6 @@ import com.whiteowl.core.analysis.backtester.Backtest;
 import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
-import com.whiteowl.core.position.Position;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 
@@ -34,7 +31,7 @@ public class OptimisationService {
 			int offsetPeriod, int lookbackPeriod, double initialMargin, double slippagePercentage) {
 		log.info("Initiating optimisation for {} scrips and {} configs with offset {} and lookback {}",
 				scrips.size(), configs.size(), offsetPeriod, lookbackPeriod);
-		final Map<TradingStrategyConfig, List<Position>> configPositions = new ConcurrentHashMap<>();
+		final Map<TradingStrategyConfig, TradingStrategyConfigPerformance> configPerformances = new ConcurrentHashMap<>();
 		scrips.stream().forEach(scrip -> {
 			log.info("Initializing trade aggregation for scrip {}", scrip.getCode());
 			final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
@@ -47,15 +44,11 @@ public class OptimisationService {
 					.initialMargin(initialMargin)
 					.slippagePercentage(slippagePercentage)
 					.build();
-			configs.parallelStream()
-				.collect(Collectors.toMap(Function.identity(), backtest::execute))
-				.forEach((config, positions) -> configPositions
-						.computeIfAbsent(config, key -> new ArrayList<>()).addAll(positions));
+			configs.parallelStream().forEach(config -> 
+				backtest.execute(config, configPerformances.computeIfAbsent(config, 
+						key -> new TradingStrategyConfigPerformance(initialMargin))::accept));
 			log.info("Accumulated trades for scrip {} with all configs", scrip.getCode());
 		});
-		final Map<TradingStrategyConfig, TradingStrategyConfigPerformance> configPerformances = 
-				configPositions.entrySet().stream().collect(Collectors.toMap(Entry::getKey, 
-					entry -> new TradingStrategyConfigPerformance(initialMargin, entry.getValue())));
 		return configPerformances.entrySet().stream()
 				.max(Entry.comparingByValue(Comparator.comparing(optimisationFunction)))
 				.map(Entry::getKey)

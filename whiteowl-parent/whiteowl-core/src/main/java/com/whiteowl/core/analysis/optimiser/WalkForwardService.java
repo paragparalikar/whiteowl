@@ -1,6 +1,5 @@
 package com.whiteowl.core.analysis.optimiser;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -13,7 +12,6 @@ import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.DefaultBarService;
 import com.whiteowl.core.bar.JdbcBarRepository;
 import com.whiteowl.core.bar.Timeframe;
-import com.whiteowl.core.position.Position;
 import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.JdbcScripService;
 import com.whiteowl.core.scrip.Scrip;
@@ -32,7 +30,7 @@ public class WalkForwardService {
 	public TradingStrategyConfigPerformance walk(
 			List<Scrip> scrips, Timeframe timeframe, Set<TradingStrategyConfig> configs,
 			int trainBarCount, int testBarCount, int steps, double initialMargin, double slippagePercentage) {
-		final List<Position> positions = new ArrayList<>();
+		final TradingStrategyConfigPerformance performance = new TradingStrategyConfigPerformance(initialMargin);
 		final Function<TradingStrategyConfigPerformance, Double> optimisationFunction = TradingStrategyConfigPerformance::getCagrOverAvgDrawdown;
 		for(int index = testBarCount * steps; index > 0; index -= testBarCount) {
 			final int index_ = index;
@@ -48,11 +46,10 @@ public class WalkForwardService {
 						.initialMargin(initialMargin)
 						.slippagePercentage(slippagePercentage)
 						.build()
-						.execute(optimumConfig)
-						.forEach(positions::add);
+						.execute(optimumConfig, performance);
 			});
 		}
-		return new TradingStrategyConfigPerformance(initialMargin, positions);
+		return performance;
 	}
 	
 	public static void main(String[] args) {

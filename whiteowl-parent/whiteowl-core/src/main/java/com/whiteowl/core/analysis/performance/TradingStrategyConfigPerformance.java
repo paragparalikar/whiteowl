@@ -2,57 +2,62 @@ package com.whiteowl.core.analysis.performance;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.Positions;
 import com.whiteowl.core.trade.Trade;
 
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@Data
-public class TradingStrategyConfigPerformance {
+@Getter
+@RequiredArgsConstructor
+public class TradingStrategyConfigPerformance implements Consumer<Position> {
 
-	private String id;
+	private final double initialMargin;
+	private final String id = UUID.randomUUID().toString();
+	private final List<Double> equity = new ArrayList<>();
+	private final List<Double> drawdown = new ArrayList<>();
+	private final List<Position> positions = new ArrayList<>();
 	private int totalTradeCount, winningTradeCount, losingTradeCount;
 	private double cagr, maxDrawdownPct, avgDrawdownPct, avgWinPct, avgLossPct, avgReturnPctPerTrade;
+	@Getter(AccessLevel.PROTECTED) private double maxEquity, maxDrawdown, drawdownSum;
 	
-	public TradingStrategyConfigPerformance(double initialAmount, List<Position> positions) {
-		positions.sort(Comparator.comparing(Position::getCreatedDate));
-		double winSum = 0, lossSum = 0, maxEquity = initialAmount, maxDrawdown = 0, drawdownSum = 0;
-		totalTradeCount = positions.size();
-		final double[] equity = new double[totalTradeCount];
-		final double[] drawdown = new double[totalTradeCount];
-		for(int index = 0; index < totalTradeCount; index++) {
-			final Position position = positions.get(index);
-			final double returns = Positions.getReturn(position);
-			final double returnPct = returns * 100;
-			equity[index] = 0 == index ? maxEquity : equity[index - 1] * returns;
-			maxEquity = Math.max(maxEquity, equity[index]);
-			drawdown[index] = maxEquity - equity[index];
-			maxDrawdown = Math.max(maxDrawdown, drawdown[index]);
-			drawdownSum += drawdown[index];
-			if(0 < returnPct) {
-				winSum += returnPct;
-				winningTradeCount++;
-			} else {
-				lossSum += returnPct;
-				losingTradeCount++;
-			}
-		}
-		avgWinPct = winSum / winningTradeCount;
-		avgLossPct = lossSum / losingTradeCount;
-		avgReturnPctPerTrade = (winSum + lossSum) / totalTradeCount;
+	@Override
+	public synchronized void accept(Position position) {
+		positions.add(position);
+		totalTradeCount++;
+		final double returns = 1 + Positions.getReturn(position);
+		final double previousEquity = equity.isEmpty() ? initialMargin : equity.get(equity.size() - 1);
+		final double currentEquity = previousEquity * returns;
+		equity.add(currentEquity);
+		maxEquity = Math.max(maxEquity, currentEquity);
+		final double currentDrawdown = Math.max(0, maxEquity - currentEquity);
+		drawdown.add(currentDrawdown);
+		drawdownSum += currentDrawdown;
+		maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
 		maxDrawdownPct = maxDrawdown * 100 / maxEquity;
-		avgDrawdownPct = (drawdownSum / totalTradeCount)  * 100 / maxEquity;
-		
+		if(1 < returns) {
+			winningTradeCount++;
+			avgWinPct = (avgWinPct * (winningTradeCount - 1) + (returns - 1) * 100) / winningTradeCount;
+		} else {
+			losingTradeCount++;
+			avgLossPct = (avgLossPct * (losingTradeCount - 1) + (1 - returns) * 100) / losingTradeCount;
+		}
+		avgReturnPctPerTrade = (avgReturnPctPerTrade * (totalTradeCount - 1) + (returns - 1) * 100) / totalTradeCount;
+	
 		final LocalDateTime startTime = positions.get(0).getCreatedDate();
 		final LocalDateTime endTime = positions.get(positions.size() - 1).getExitTrades().stream()
 				.map(Trade::getTimestamp).max(Comparator.naturalOrder()).orElse(LocalDateTime.now());
 		final Duration duration = Duration.between(startTime, endTime);
 		final double years = duration.dividedBy(Duration.ofDays(365));
-		cagr = 0 == years ? 0 : Math.pow((equity[equity.length - 1] / equity[0]), 1 / years) - 1;
+		cagr = 0 == years ? 0 : Math.pow((equity.get(equity.size() - 1) / equity.get(0)), 1 / years) - 1;
 	}
 	
 	public double getCagrOverAvgDrawdown() {
