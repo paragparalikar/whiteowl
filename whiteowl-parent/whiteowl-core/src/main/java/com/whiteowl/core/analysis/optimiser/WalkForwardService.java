@@ -27,29 +27,53 @@ public class WalkForwardService {
 	private final BarService barService;
 	private final OptimisationService optimisationService;
 	
-	public TradingStrategyConfigPerformance walk(
+	public WalkForwardReport walk(
 			List<Scrip> scrips, Timeframe timeframe, Set<TradingStrategyConfig> configs,
 			int trainBarCount, int testBarCount, int steps, double initialMargin, double slippagePercentage) {
-		final TradingStrategyConfigPerformance performance = new TradingStrategyConfigPerformance(initialMargin);
+		final WalkForwardReport walkForwardReport = new WalkForwardReport(initialMargin);
 		final Function<TradingStrategyConfigPerformance, Double> optimisationFunction = TradingStrategyConfigPerformance::getCagrOverAvgDrawdown;
 		for(int index = testBarCount * steps; index > 0; index -= testBarCount) {
 			final int index_ = index;
-			final TradingStrategyConfig optimumConfig = optimisationService.optimise(scrips, timeframe, configs, optimisationFunction, 
+			final TradingStrategyConfig selectedConfig = optimisationService.optimise(scrips, timeframe, configs, optimisationFunction, 
 					index, trainBarCount, initialMargin, slippagePercentage);
+			final TradingStrategyConfigPerformance testPerformance = new TradingStrategyConfigPerformance(initialMargin);
+			final TradingStrategyConfigPerformance trainPerformance = new TradingStrategyConfigPerformance(initialMargin);
+			
 			scrips.parallelStream().forEach(scrip -> {
+				
+				final int requiredBarCount = selectedConfig.getMinBarCount() + trainBarCount + testBarCount;
 				final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
-						scrip.getCode(), timeframe, testBarCount, index_ + testBarCount);
+						scrip.getCode(), timeframe, requiredBarCount, index_ + testBarCount);
+				
 				Backtest.builder()
 						.scrip(scrip)
 						.timeframe(timeframe)
-						.bars(barSeries.getBarData())
+						.bars(barSeries.getBarData().subList(0, selectedConfig.getMinBarCount() + trainBarCount))
 						.initialMargin(initialMargin)
 						.slippagePercentage(slippagePercentage)
 						.build()
-						.execute(optimumConfig, performance);
+						.execute(selectedConfig, trainPerformance);
+				
+				Backtest.builder()
+					.scrip(scrip)
+					.timeframe(timeframe)
+					.bars(barSeries.getBarData().subList(trainBarCount, requiredBarCount))
+					.initialMargin(initialMargin)
+					.slippagePercentage(slippagePercentage)
+					.build()
+					.execute(selectedConfig, testPerformance);
+				
 			});
+			
+			walkForwardReport.accept(WalkForwardStep.builder()
+					.selectedConfig(selectedConfig)
+					.testBarCount(testBarCount)
+					.testPerformance(testPerformance)
+					.trainBarCount(trainBarCount)
+					.trainPerformance(trainPerformance)
+					.build());
 		}
-		return performance;
+		return walkForwardReport;
 	}
 	
 	public static void main(String[] args) {
@@ -68,9 +92,9 @@ public class WalkForwardService {
 		final int trainBarCount = 500 * timeframe.getDayMultiple();
 		final int testBarCount = 66 * timeframe.getDayMultiple();
 		
-		final TradingStrategyConfigPerformance performance = walkForwardService.walk(scrips, timeframe, 
+		final WalkForwardReport walkForwardReport = walkForwardService.walk(scrips, timeframe, 
 				configs, trainBarCount, testBarCount, steps, initialMargin, slippagePercentage);
-		System.out.println(performance);
+		System.out.println(walkForwardReport);
 	}
 	
 	

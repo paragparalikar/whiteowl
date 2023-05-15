@@ -1,7 +1,6 @@
 package com.whiteowl.core.analysis.optimiser;
 
 import java.io.Serializable;
-import java.time.ZonedDateTime;
 
 import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
@@ -17,7 +16,6 @@ public class WalkForwardStep implements Serializable {
 	private int trainBarCount, testBarCount;
 	private TradingStrategyConfig selectedConfig;
 	private TradingStrategyConfigPerformance trainPerformance, testPerformance;
-	private ZonedDateTime trainStartTime, trainEndTime, testStartTime, testEndTime;
 
 	public double getEfficiencyByCagr() {
 		return testPerformance.getCagr() / Math.max(0.0001, trainPerformance.getCagr());

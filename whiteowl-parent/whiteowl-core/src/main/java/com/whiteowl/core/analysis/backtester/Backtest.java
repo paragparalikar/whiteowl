@@ -77,7 +77,7 @@ public class Backtest {
 	public static void main(String[] args) {
 		final String code = "RELIANCE";
 		final Timeframe timeframe = Timeframe.M15;
-		final double initialMargin = 1_00_00_000;
+		final double initialMargin = 1_00;
 		final double slippagePercentage = 0;
 		final Scrip scrip = Scrip.builder().type(ScripType.EQ).exchange(Exchange.NSE).code(code).build();
 		final TradingStrategyConfig config = MACDLongTradingStrategyConfig.builder()
