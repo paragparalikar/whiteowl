@@ -1,5 +1,7 @@
 package com.whiteowl.core.portfolio;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -22,7 +24,8 @@ import lombok.NonNull;
 @Data
 @Entity
 @NoArgsConstructor
-public class Portfolio {
+public class Portfolio implements Serializable {
+	private static final long serialVersionUID = -4012614641349091811L;
 
 	@Id
 	@GeneratedValue

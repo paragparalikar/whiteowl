@@ -1,5 +1,6 @@
 package com.whiteowl.core.strategy.config;
 
+import java.io.Serializable;
 import java.util.Set;
 
 import org.ta4j.core.Trade.TradeType;
@@ -9,7 +10,7 @@ import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.TradingStrategy;
 import com.whiteowl.core.strategy.context.TradingStrategyContext;
 
-public interface TradingStrategyConfig {
+public interface TradingStrategyConfig extends Serializable{
 	
 	String getId();
 	

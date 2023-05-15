@@ -1,5 +1,6 @@
 package com.whiteowl.core.trade;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import javax.persistence.Column;
@@ -43,7 +44,8 @@ import lombok.NonNull;
 @EntityListeners(AuditingEntityListener.class)
 @EqualsAndHashCode(of = {"id", "brokerTradeId", "scrip", "type", "limitType", 
 		"variety", "product", "validity", "quantity", "price", "triggerPrice"})
-public class Trade {
+public class Trade implements Serializable {
+	private static final long serialVersionUID = 5041643021594039410L;
 
 	@Id
 	@GeneratedValue

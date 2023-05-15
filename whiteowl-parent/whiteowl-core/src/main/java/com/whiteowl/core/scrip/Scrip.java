@@ -1,5 +1,6 @@
 package com.whiteowl.core.scrip;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -26,7 +27,8 @@ import lombok.NonNull;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Scrip implements Comparable<Scrip> {
+public class Scrip implements Comparable<Scrip>, Serializable {
+	private static final long serialVersionUID = -5356392635225187616L;
 
 	@Id @NotBlank
 	private String code;

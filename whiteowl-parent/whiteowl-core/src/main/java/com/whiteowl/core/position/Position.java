@@ -1,5 +1,6 @@
 package com.whiteowl.core.position;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -44,7 +45,8 @@ import lombok.NonNull;
 	})
 @EntityListeners({AuditingEntityListener.class})
 @EqualsAndHashCode(of = {"id", "scrip", "portfolio", "tradingStrategyConfigId"})
-public class Position {
+public class Position implements Serializable {
+	private static final long serialVersionUID = -3135715153112723512L;
 
 	@Id
 	@GeneratedValue

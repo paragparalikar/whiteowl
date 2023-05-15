@@ -1,5 +1,6 @@
 package com.whiteowl.core.analysis.performance;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,7 +19,8 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class TradingStrategyConfigPerformance implements Consumer<Position> {
+public class TradingStrategyConfigPerformance implements Consumer<Position>, Serializable {
+	private static final long serialVersionUID = 7714959761833354015L;
 
 	private final double initialMargin;
 	private final String id = UUID.randomUUID().toString();
@@ -80,6 +82,10 @@ public class TradingStrategyConfigPerformance implements Consumer<Position> {
 	
 	public double getCagrOverAvgDrawdown() {
 		return cagr / Math.max(0.001, avgDrawdownPct);
+	}
+	
+	public double getCagrOverAvgDrawdownAndExposure() {
+		return cagr / (Math.max(0.001, avgDrawdownPct) * exposure);
 	}
 	
 	public double getCagrOverMaxDrawdown() {

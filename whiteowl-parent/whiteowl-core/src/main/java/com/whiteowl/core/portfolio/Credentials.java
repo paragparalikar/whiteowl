@@ -1,5 +1,7 @@
 package com.whiteowl.core.portfolio;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotBlank;
@@ -16,7 +18,8 @@ import lombok.NonNull;
 @Embeddable
 @NoArgsConstructor
 @AllArgsConstructor
-public class Credentials {
+public class Credentials implements Serializable {
+	private static final long serialVersionUID = -7671240408125519234L;
 
 	@NonNull
 	@NotBlank
