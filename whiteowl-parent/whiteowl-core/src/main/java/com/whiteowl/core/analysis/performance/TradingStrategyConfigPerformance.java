@@ -26,8 +26,9 @@ public class TradingStrategyConfigPerformance implements Consumer<Position> {
 	private final List<Double> drawdown = new ArrayList<>();
 	private final List<Position> positions = new ArrayList<>();
 	private int totalTradeCount, winningTradeCount, losingTradeCount;
-	private double cagr, maxDrawdownPct, avgDrawdownPct, avgWinPct, avgLossPct, avgReturnPctPerTrade;
+	private double cagr, exposure, maxDrawdownPct, avgDrawdownPct, avgWinPct, avgLossPct, avgReturnPctPerTrade;
 	@Getter(AccessLevel.PROTECTED) private double maxEquity, maxDrawdown, drawdownSum;
+	@Getter(AccessLevel.PROTECTED) private Duration exposureDuration = Duration.ofSeconds(0);
 	
 	@Override
 	public synchronized void accept(Position position) {
@@ -52,12 +53,29 @@ public class TradingStrategyConfigPerformance implements Consumer<Position> {
 		}
 		avgReturnPctPerTrade = (avgReturnPctPerTrade * (totalTradeCount - 1) + (returns - 1) * 100) / totalTradeCount;
 	
-		final LocalDateTime startTime = positions.get(0).getCreatedDate();
-		final LocalDateTime endTime = positions.get(positions.size() - 1).getExitTrades().stream()
-				.map(Trade::getTimestamp).max(Comparator.naturalOrder()).orElse(LocalDateTime.now());
-		final Duration duration = Duration.between(startTime, endTime);
+		final LocalDateTime firstStartTime = positions.get(0).getCreatedDate();
+		final LocalDateTime currentStartTime = resolveStartTime(position);
+		final LocalDateTime currentEndTime = resolveEndTime(position);
+		final Duration duration = Duration.between(firstStartTime, currentEndTime);
+		final Duration currentDuration = Duration.between(currentStartTime, currentEndTime);
 		final double years = duration.dividedBy(Duration.ofDays(365));
 		cagr = 0 == years ? 0 : Math.pow((equity.get(equity.size() - 1) / equity.get(0)), 1 / years) - 1;
+		exposureDuration = exposureDuration.plus(currentDuration);
+		exposure = ((double)exposureDuration.toMillis()) / ((double)duration.toMillis());
+	}
+	
+	private LocalDateTime resolveStartTime(Position position) {
+		return position.getEntryTrades().stream()
+				.map(Trade::getTimestamp)
+				.min(Comparator.naturalOrder())
+				.orElse(LocalDateTime.now());
+	}
+	
+	private LocalDateTime resolveEndTime(Position position) {
+		return position.getExitTrades().stream()
+				.map(Trade::getTimestamp)
+				.max(Comparator.naturalOrder())
+				.orElse(LocalDateTime.now());
 	}
 	
 	public double getCagrOverAvgDrawdown() {
@@ -69,31 +87,37 @@ public class TradingStrategyConfigPerformance implements Consumer<Position> {
 	}
 	
 	public double getProfitFactor() {
-		return avgWinPct * winningTradeCount / avgLossPct * losingTradeCount;
+		return (avgWinPct * winningTradeCount) / (avgLossPct * losingTradeCount);
 	}
 	
 	public double getExpectancy() {
 		return (avgWinPct * winningTradeCount - avgLossPct * losingTradeCount) / totalTradeCount;
 	}
 	
+	public double getProfitablePct() {
+		return winningTradeCount * 100 / totalTradeCount;
+	}
+	
 	@Override
 	public String toString() {
 		final String newLine = System.lineSeparator();
 		final StringBuilder builder = new StringBuilder();
-		builder.append(String.format("%-25s : %s", "ID", id)).append(newLine);
-		builder.append(String.format("%-25s : %d", "Total Trades", totalTradeCount)).append(newLine);
-		builder.append(String.format("%-25s : %d", "Winning Trades", winningTradeCount)).append(newLine);
-		builder.append(String.format("%-25s : %d", "Losing Trades", losingTradeCount)).append(newLine);
-		builder.append(String.format("%-25s : %.2f", "Max Drawdown %", maxDrawdownPct)).append(newLine);
-		builder.append(String.format("%-25s : %.2f", "Avg Drawdown %", avgDrawdownPct)).append(newLine);
-		builder.append(String.format("%-25s : %.2f", "Avg Win %", avgWinPct)).append(newLine);
-		builder.append(String.format("%-25s : %.2f", "Avg Loss %", avgLossPct)).append(newLine);
-		builder.append(String.format("%-25s : %.2f", "Avg Return %", avgReturnPctPerTrade)).append(newLine);
-		builder.append(String.format("%-25s : %.3f", "CAGR", cagr)).append(newLine);
-		builder.append(String.format("%-25s : %.3f", "CAGR/MaxDD", getCagrOverMaxDrawdown())).append(newLine);
-		builder.append(String.format("%-25s : %.3f", "CAGR/AvgDD", getCagrOverAvgDrawdown())).append(newLine);
-		builder.append(String.format("%-25s : %.3f", "Profit Factor", getProfitFactor())).append(newLine);
-		builder.append(String.format("%-25s : %.3f", "Expectancy", getExpectancy())).append(newLine);
+		builder.append(String.format("%-16s : %s", "ID", id)).append(newLine);
+		builder.append(String.format("%-16s : %d", "Total Trades", totalTradeCount)).append(newLine);
+		builder.append(String.format("%-16s : %d", "Winning Trades", winningTradeCount)).append(newLine);
+		builder.append(String.format("%-16s : %d", "Losing Trades", losingTradeCount)).append(newLine);
+		builder.append(String.format("%-16s : %.2f", "Profitable %", getProfitablePct())).append(newLine);
+		builder.append(String.format("%-16s : %.2f", "Max Drawdown %", maxDrawdownPct)).append(newLine);
+		builder.append(String.format("%-16s : %.2f", "Avg Drawdown %", avgDrawdownPct)).append(newLine);
+		builder.append(String.format("%-16s : %.2f", "Avg Win %", avgWinPct)).append(newLine);
+		builder.append(String.format("%-16s : %.2f", "Avg Loss %", avgLossPct)).append(newLine);
+		builder.append(String.format("%-16s : %.2f", "Avg Return %", avgReturnPctPerTrade)).append(newLine);
+		builder.append(String.format("%-16s : %.3f", "Exposure", exposure)).append(newLine);
+		builder.append(String.format("%-16s : %.3f", "CAGR", cagr)).append(newLine);
+		builder.append(String.format("%-16s : %.3f", "CAGR/MaxDD", getCagrOverMaxDrawdown())).append(newLine);
+		builder.append(String.format("%-16s : %.3f", "CAGR/AvgDD", getCagrOverAvgDrawdown())).append(newLine);
+		builder.append(String.format("%-16s : %.3f", "Profit Factor", getProfitFactor())).append(newLine);
+		builder.append(String.format("%-16s : %.3f", "Expectancy", getExpectancy())).append(newLine);
 		return builder.toString();
 	}
 	
