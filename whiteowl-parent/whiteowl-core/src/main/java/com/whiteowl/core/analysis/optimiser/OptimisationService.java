@@ -1,9 +1,9 @@
 package com.whiteowl.core.analysis.optimiser;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -14,8 +14,10 @@ import com.whiteowl.core.analysis.backtester.Backtest;
 import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
+import com.whiteowl.core.position.Position;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
+import com.whiteowl.core.util.Tuple2;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,14 +31,10 @@ public class OptimisationService {
 	public TradingStrategyConfig optimise(List<Scrip> scrips, Timeframe timeframe, Set<TradingStrategyConfig> configs, 
 			Function<TradingStrategyConfigPerformance, Double> optimisationFunction,
 			int offsetPeriod, int lookbackPeriod, double initialMargin, double slippagePercentage) {
-		log.info("Initiating optimisation for {} scrips and {} configs with offset {} and lookback {}",
-				scrips.size(), configs.size(), offsetPeriod, lookbackPeriod);
-		final Map<TradingStrategyConfig, TradingStrategyConfigPerformance> configPerformances = new ConcurrentHashMap<>();
+		final Map<TradingStrategyConfig, List<Position>> configPositions = new ConcurrentHashMap<>();
 		scrips.stream().forEach(scrip -> {
-			log.info("Initializing trade aggregation for scrip {}", scrip.getCode());
 			final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
 					scrip.getCode(), timeframe, lookbackPeriod, offsetPeriod);
-			log.info("Fetched {} bars for scrip {} and timeframe {}", barSeries.getBarCount(), scrip.getCode(), timeframe);
 			final Backtest backtest = Backtest.builder()
 					.scrip(scrip)
 					.timeframe(timeframe)
@@ -45,14 +43,14 @@ public class OptimisationService {
 					.slippagePercentage(slippagePercentage)
 					.build();
 			configs.parallelStream().forEach(config -> 
-				backtest.execute(config, configPerformances.computeIfAbsent(config, 
-						key -> new TradingStrategyConfigPerformance(initialMargin))::accept));
-			log.info("Accumulated trades for scrip {} with all configs", scrip.getCode());
+				backtest.execute(config, configPositions.computeIfAbsent(config, key -> new ArrayList<>())::add));
+			log.info("Accumulated trades for scrip {}", scrip.getCode());
 		});
-		return configPerformances.entrySet().stream()
-				.max(Entry.comparingByValue(Comparator.comparing(optimisationFunction)))
-				.map(Entry::getKey)
-				.orElse(null);
+		return configPositions.entrySet().stream()
+			.map(entry -> Tuple2.of(entry.getKey(), new TradingStrategyConfigPerformance(initialMargin, entry.getValue())))
+			.max(Comparator.comparing(Tuple2::getValue, Comparator.comparing(optimisationFunction)))
+			.map(Tuple2::getKey)
+			.orElse(null);
 	}
 	
 }

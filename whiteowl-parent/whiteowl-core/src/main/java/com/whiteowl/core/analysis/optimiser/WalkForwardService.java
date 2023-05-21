@@ -87,7 +87,7 @@ public class WalkForwardService {
 		final double initialMargin = 10_00_000;
 		final double slippagePercentage = 0.5;
 		final Timeframe timeframe = Timeframe.M15;
-		final List<Scrip> scrips = scripService.findByIndices(Index.NIFTY50);
+		final List<Scrip> scrips = scripService.findByIndices(Index.NIFTY50).subList(0, 5);
 		final Set<TradingStrategyConfig> configs = new MACDLongTradingStrategyConfig(0, 0, 0).getOptimisationUniverse();
 		final int trainBarCount = 500 * timeframe.getDayMultiple();
 		final int testBarCount = 66 * timeframe.getDayMultiple();

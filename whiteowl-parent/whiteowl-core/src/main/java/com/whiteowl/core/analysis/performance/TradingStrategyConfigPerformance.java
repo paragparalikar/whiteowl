@@ -15,10 +15,8 @@ import com.whiteowl.core.trade.Trade;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
 public class TradingStrategyConfigPerformance implements Consumer<Position>, Serializable {
 	private static final long serialVersionUID = 7714959761833354015L;
 
@@ -31,6 +29,16 @@ public class TradingStrategyConfigPerformance implements Consumer<Position>, Ser
 	private double cagr, exposure, maxDrawdownPct, avgDrawdownPct, avgWinPct, avgLossPct, avgReturnPctPerTrade;
 	@Getter(AccessLevel.PROTECTED) private double maxEquity, maxDrawdown, drawdownSum;
 	@Getter(AccessLevel.PROTECTED) private Duration exposureDuration = Duration.ofSeconds(0);
+	
+	public TradingStrategyConfigPerformance(double initialMargin) {
+		this.initialMargin = initialMargin;
+	}
+	
+	public TradingStrategyConfigPerformance(double initialMargin, List<Position> positions) {
+		this(initialMargin);
+		positions.sort(Comparator.comparing(Position::getCreatedDate));
+		positions.forEach(this);
+	}
 	
 	@Override
 	public synchronized void accept(Position position) {
