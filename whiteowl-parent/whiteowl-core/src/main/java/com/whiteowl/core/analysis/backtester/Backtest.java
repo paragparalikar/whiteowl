@@ -4,7 +4,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.ta4j.core.Bar;
 import org.ta4j.core.Trade.TradeType;
@@ -13,7 +12,6 @@ import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
 import com.whiteowl.core.bar.JdbcBarRepository;
 import com.whiteowl.core.bar.Timeframe;
 import com.whiteowl.core.bar.event.BarCreatedEvent;
-import com.whiteowl.core.position.Position;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.scrip.Exchange;
 import com.whiteowl.core.scrip.Scrip;
@@ -38,8 +36,8 @@ public class Backtest {
 	private final double initialMargin, slippagePercentage;
 	
 	@SneakyThrows
-	public void execute(Consumer<Position> callback){
-		final MockTradingStrategyContext context = new MockTradingStrategyContext(scrip, config, callback, initialMargin, slippagePercentage);
+	public void execute(BacktestListener backtestListener){
+		final MockTradingStrategyContext context = new MockTradingStrategyContext(scrip, config, backtestListener, initialMargin, slippagePercentage);
 		final MockPositionService positionService = context.getMockPositionService();
 		final BarSeriesCacheManager barSeriesCacheManager = context.getBarSeriesCacheManager();
 		final MockBrokerServiceProvider brokerServiceProvider = context.getMockBrokerServiceProvider();

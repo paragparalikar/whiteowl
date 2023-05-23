@@ -1,19 +1,18 @@
 package com.whiteowl.core.analysis.optimiser;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
 import org.ta4j.core.BarSeries;
 
+import com.whiteowl.core.analysis.backtester.AccumulatorBacktestListener;
 import com.whiteowl.core.analysis.backtester.Backtest;
 import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.DefaultBarService;
 import com.whiteowl.core.bar.JdbcBarRepository;
 import com.whiteowl.core.bar.Timeframe;
-import com.whiteowl.core.position.Position;
 import com.whiteowl.core.scrip.Index;
 import com.whiteowl.core.scrip.JdbcScripService;
 import com.whiteowl.core.scrip.Scrip;
@@ -38,8 +37,8 @@ public class WalkForwardService {
 			final int index_ = index;
 			final TradingStrategyConfig selectedConfig = optimisationService.optimise(scrips, timeframe, configs, optimisationFunction, 
 					index, trainBarCount, initialMargin, slippagePercentage);
-			final List<Position> testPositions = new ArrayList<>();
-			final List<Position> trainPositions = new ArrayList<>();
+			final AccumulatorBacktestListener testBacktestListener = new AccumulatorBacktestListener();
+			final AccumulatorBacktestListener trainBacktestListener = new AccumulatorBacktestListener();
 			scrips.parallelStream().forEach(scrip -> {
 				final int requiredBarCount = selectedConfig.getMinBarCount() + trainBarCount + testBarCount;
 				final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
@@ -52,7 +51,7 @@ public class WalkForwardService {
 					.initialMargin(initialMargin)
 					.slippagePercentage(slippagePercentage)
 					.build()
-					.execute(trainPositions::add);
+					.execute(testBacktestListener);
 				Backtest.builder()
 					.scrip(scrip)
 					.timeframe(timeframe)
@@ -61,10 +60,10 @@ public class WalkForwardService {
 					.initialMargin(initialMargin)
 					.slippagePercentage(slippagePercentage)
 					.build()
-					.execute(testPositions::add);
+					.execute(trainBacktestListener);
 			});
-			final TradingStrategyConfigPerformance testPerformance = new TradingStrategyConfigPerformance(initialMargin, testPositions);
-			final TradingStrategyConfigPerformance trainPerformance = new TradingStrategyConfigPerformance(initialMargin, trainPositions);
+			final TradingStrategyConfigPerformance testPerformance = new TradingStrategyConfigPerformance(initialMargin, testBacktestListener.getPositions());
+			final TradingStrategyConfigPerformance trainPerformance = new TradingStrategyConfigPerformance(initialMargin, trainBacktestListener.getPositions());
 			walkForwardReport.accept(WalkForwardStep.builder()
 					.selectedConfig(selectedConfig)
 					.testBarCount(testBarCount)

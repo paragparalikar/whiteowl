@@ -1,6 +1,5 @@
 package com.whiteowl.core.analysis.optimiser;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -10,11 +9,11 @@ import java.util.function.Function;
 
 import org.ta4j.core.BarSeries;
 
+import com.whiteowl.core.analysis.backtester.AccumulatorBacktestListener;
 import com.whiteowl.core.analysis.backtester.Backtest;
 import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.Timeframe;
-import com.whiteowl.core.position.Position;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.util.Tuple2;
@@ -31,7 +30,7 @@ public class OptimisationService {
 	public TradingStrategyConfig optimise(List<Scrip> scrips, Timeframe timeframe, Set<TradingStrategyConfig> configs, 
 			Function<TradingStrategyConfigPerformance, Double> optimisationFunction,
 			int offsetPeriod, int lookbackPeriod, double initialMargin, double slippagePercentage) {
-		final Map<TradingStrategyConfig, List<Position>> configPositions = new ConcurrentHashMap<>();
+		final Map<TradingStrategyConfig, AccumulatorBacktestListener> configPositions = new ConcurrentHashMap<>();
 		scrips.stream().forEach(scrip -> {
 			final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
 					scrip.getCode(), timeframe, lookbackPeriod, offsetPeriod);
@@ -43,11 +42,11 @@ public class OptimisationService {
 				.bars(barSeries.getBarData())
 				.initialMargin(initialMargin)
 				.slippagePercentage(slippagePercentage)
-				.build().execute(configPositions.computeIfAbsent(config, key -> new ArrayList<>())::add));
+				.build().execute(configPositions.computeIfAbsent(config, key -> new AccumulatorBacktestListener())));
 			log.info("Accumulated trades for scrip {}", scrip.getCode());
 		});
 		return configPositions.entrySet().stream()
-			.map(entry -> Tuple2.of(entry.getKey(), new TradingStrategyConfigPerformance(initialMargin, entry.getValue())))
+			.map(entry -> Tuple2.of(entry.getKey(), new TradingStrategyConfigPerformance(initialMargin, entry.getValue().getPositions())))
 			.max(Comparator.comparing(Tuple2::getValue, Comparator.comparing(optimisationFunction)))
 			.map(Tuple2::getKey)
 			.orElse(null);

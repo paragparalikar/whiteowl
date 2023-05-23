@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
 
+import com.whiteowl.core.analysis.backtester.BacktestListener;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.Positions;
 import com.whiteowl.core.trade.Trade;
@@ -17,7 +17,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 @Getter
-public class TradingStrategyConfigPerformance implements Consumer<Position>, Serializable {
+public class TradingStrategyConfigPerformance implements BacktestListener, Serializable {
 	private static final long serialVersionUID = 7714959761833354015L;
 
 	private final double initialMargin;
