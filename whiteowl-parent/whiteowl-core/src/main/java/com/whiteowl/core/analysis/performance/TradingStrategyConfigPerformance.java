@@ -44,32 +44,42 @@ public class TradingStrategyConfigPerformance implements Consumer<Position>, Ser
 	public synchronized void accept(Position position) {
 		positions.add(position);
 		totalTradeCount++;
-		final double returns = 1 + Positions.getReturn(position);
-		final double previousEquity = equity.isEmpty() ? initialMargin : equity.get(equity.size() - 1);
-		final double currentEquity = previousEquity * returns;
+		
+		final double entryAmount = Positions.entryAmount(position);
+		final double exitAmount = Positions.exitAmount(position);
+		final double returns = entryAmount + exitAmount;
+		final double returnsPct = (entryAmount + exitAmount) * 100 / entryAmount;
+		
+		final double previousEquity = equity.isEmpty() ? maxEquity = initialMargin : equity.get(equity.size() - 1);
+		final double currentEquity = previousEquity + returns;
 		equity.add(currentEquity);
 		maxEquity = Math.max(maxEquity, currentEquity);
+		
 		final double currentDrawdown = Math.max(0, maxEquity - currentEquity);
 		drawdown.add(currentDrawdown);
 		drawdownSum += currentDrawdown;
-		maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
-		maxDrawdownPct = maxDrawdown * 100 / maxEquity;
-		if(1 < returns) {
+		final double currentAvgDrawdownPct = currentDrawdown * 100 / maxEquity;
+		avgDrawdownPct = (avgDrawdownPct * (drawdown.size() - 1) + currentAvgDrawdownPct) / drawdown.size();
+		if(currentDrawdown > maxDrawdown) {
+			maxDrawdown = currentDrawdown;
+			maxDrawdownPct = maxDrawdown * 100 / maxEquity;
+		}
+		if(0 < returnsPct) {
 			winningTradeCount++;
-			avgWinPct = (avgWinPct * (winningTradeCount - 1) + (returns - 1) * 100) / winningTradeCount;
+			avgWinPct = (avgWinPct * (winningTradeCount - 1) + returnsPct) / winningTradeCount;
 		} else {
 			losingTradeCount++;
-			avgLossPct = (avgLossPct * (losingTradeCount - 1) + (1 - returns) * 100) / losingTradeCount;
+			avgLossPct = (avgLossPct * (losingTradeCount - 1) + returnsPct) / losingTradeCount;
 		}
-		avgReturnPctPerTrade = (avgReturnPctPerTrade * (totalTradeCount - 1) + (returns - 1) * 100) / totalTradeCount;
+		avgReturnPctPerTrade = (avgReturnPctPerTrade * (totalTradeCount - 1) + returnsPct) / totalTradeCount;
 	
 		final LocalDateTime firstStartTime = positions.get(0).getCreatedDate();
 		final LocalDateTime currentStartTime = resolveStartTime(position);
 		final LocalDateTime currentEndTime = resolveEndTime(position);
 		final Duration duration = Duration.between(firstStartTime, currentEndTime);
 		final Duration currentDuration = Duration.between(currentStartTime, currentEndTime);
-		final double years = duration.dividedBy(Duration.ofDays(365));
-		cagr = 0 == years ? 0 : Math.pow((equity.get(equity.size() - 1) / equity.get(0)), 1 / years) - 1;
+		final double years = ((double)(duration.toMillis())) / ((double)(Duration.ofDays(365).toMillis()));
+		cagr = 0 == years ? 0 : Math.pow(currentEquity / initialMargin, 1 / years) - 1;
 		exposureDuration = exposureDuration.plus(currentDuration);
 		exposure = ((double)exposureDuration.toMillis()) / ((double)duration.toMillis());
 	}
@@ -101,11 +111,11 @@ public class TradingStrategyConfigPerformance implements Consumer<Position>, Ser
 	}
 	
 	public double getProfitFactor() {
-		return (avgWinPct * winningTradeCount) / (avgLossPct * losingTradeCount);
+		return (avgWinPct * winningTradeCount) / ( -1 * avgLossPct * losingTradeCount);
 	}
 	
 	public double getExpectancy() {
-		return (avgWinPct * winningTradeCount - avgLossPct * losingTradeCount) / totalTradeCount;
+		return (avgWinPct * winningTradeCount + avgLossPct * losingTradeCount) / totalTradeCount;
 	}
 	
 	public double getProfitablePct() {
@@ -120,6 +130,8 @@ public class TradingStrategyConfigPerformance implements Consumer<Position>, Ser
 		builder.append(String.format("%-16s : %d", "Total Trades", totalTradeCount)).append(newLine);
 		builder.append(String.format("%-16s : %d", "Winning Trades", winningTradeCount)).append(newLine);
 		builder.append(String.format("%-16s : %d", "Losing Trades", losingTradeCount)).append(newLine);
+		builder.append(String.format("%-16s : %.2f", "Initial Margin", initialMargin)).append(newLine);
+		builder.append(String.format("%-16s : %.2f", "End Equity", equity.get(equity.size() - 1))).append(newLine);
 		builder.append(String.format("%-16s : %.2f", "Profitable %", getProfitablePct())).append(newLine);
 		builder.append(String.format("%-16s : %.2f", "Max Drawdown %", maxDrawdownPct)).append(newLine);
 		builder.append(String.format("%-16s : %.2f", "Avg Drawdown %", avgDrawdownPct)).append(newLine);

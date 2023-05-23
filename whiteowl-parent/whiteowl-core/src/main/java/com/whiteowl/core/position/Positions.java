@@ -68,10 +68,22 @@ public class Positions {
 				.collect(Collectors.summingInt(Integer::intValue));
 	}
 	
-	public double getReturn(Position position) {
+	public double returns(Position position) {
+		final double entryAmount = entryAmount(position);
+		final double exitAmount = exitAmount(position);
+		return entryAmount + exitAmount;
+	}
+	
+	public double returnsRatio(Position position) {
 		final double entryAmount = entryAmount(position);
 		final double exitAmount = exitAmount(position);
 		return (entryAmount + exitAmount) / Math.abs(entryAmount);
+	}
+	
+	public double returnsPct(Position position) {
+		final double entryAmount = entryAmount(position);
+		final double exitAmount = exitAmount(position);
+		return (entryAmount + exitAmount) * 100 / Math.abs(entryAmount);
 	}
 
 }
