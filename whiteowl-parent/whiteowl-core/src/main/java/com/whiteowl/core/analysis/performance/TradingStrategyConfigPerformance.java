@@ -27,7 +27,7 @@ public class TradingStrategyConfigPerformance implements Consumer<Position>, Ser
 	private final List<Position> positions = new ArrayList<>();
 	private int totalTradeCount, winningTradeCount, losingTradeCount;
 	private double cagr, exposure, maxDrawdownPct, avgDrawdownPct, avgWinPct, avgLossPct, avgReturnPctPerTrade;
-	@Getter(AccessLevel.PROTECTED) private double maxEquity, maxDrawdown, drawdownSum;
+	@Getter(AccessLevel.PROTECTED) private double maxEquity, maxDrawdown;
 	@Getter(AccessLevel.PROTECTED) private Duration exposureDuration = Duration.ofSeconds(0);
 	
 	public TradingStrategyConfigPerformance(double initialMargin) {
@@ -48,7 +48,7 @@ public class TradingStrategyConfigPerformance implements Consumer<Position>, Ser
 		final double entryAmount = Positions.entryAmount(position);
 		final double exitAmount = Positions.exitAmount(position);
 		final double returns = entryAmount + exitAmount;
-		final double returnsPct = (entryAmount + exitAmount) * 100 / entryAmount;
+		final double returnsPct = returns * 100 / Math.abs(entryAmount);
 		
 		final double previousEquity = equity.isEmpty() ? maxEquity = initialMargin : equity.get(equity.size() - 1);
 		final double currentEquity = previousEquity + returns;
@@ -57,14 +57,13 @@ public class TradingStrategyConfigPerformance implements Consumer<Position>, Ser
 		
 		final double currentDrawdown = Math.max(0, maxEquity - currentEquity);
 		drawdown.add(currentDrawdown);
-		drawdownSum += currentDrawdown;
 		final double currentAvgDrawdownPct = currentDrawdown * 100 / maxEquity;
 		avgDrawdownPct = (avgDrawdownPct * (drawdown.size() - 1) + currentAvgDrawdownPct) / drawdown.size();
 		if(currentDrawdown > maxDrawdown) {
 			maxDrawdown = currentDrawdown;
 			maxDrawdownPct = maxDrawdown * 100 / maxEquity;
 		}
-		if(0 < returnsPct) {
+		if(0 < returns) {
 			winningTradeCount++;
 			avgWinPct = (avgWinPct * (winningTradeCount - 1) + returnsPct) / winningTradeCount;
 		} else {

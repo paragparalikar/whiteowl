@@ -34,10 +34,11 @@ public class Backtest {
 	private final Scrip scrip;
 	private final List<Bar> bars;
 	private final Timeframe timeframe;
+	private final TradingStrategyConfig config;
 	private final double initialMargin, slippagePercentage;
 	
 	@SneakyThrows
-	public void execute(TradingStrategyConfig config, Consumer<Position> callback){
+	public void execute(Consumer<Position> callback){
 		final MockTradingStrategyContext context = new MockTradingStrategyContext(scrip, config, callback, initialMargin, slippagePercentage);
 		final MockPositionService positionService = context.getMockPositionService();
 		final BarSeriesCacheManager barSeriesCacheManager = context.getBarSeriesCacheManager();
@@ -94,11 +95,12 @@ public class Backtest {
 		Backtest.builder()
 			.bars(bars)
 			.scrip(scrip)
+			.config(config)
 			.timeframe(timeframe)
 			.initialMargin(initialMargin)
 			.slippagePercentage(slippagePercentage)
 			.build()
-			.execute(config, performance);
+			.execute(performance);
 		System.out.println(performance);
 	}
 

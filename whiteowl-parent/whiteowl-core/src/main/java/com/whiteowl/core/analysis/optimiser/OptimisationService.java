@@ -35,15 +35,15 @@ public class OptimisationService {
 		scrips.stream().forEach(scrip -> {
 			final BarSeries barSeries = barService.findLatestByCodeAndTimeframeOrderByBeginTimeAsc(
 					scrip.getCode(), timeframe, lookbackPeriod, offsetPeriod);
-			final Backtest backtest = Backtest.builder()
-					.scrip(scrip)
-					.timeframe(timeframe)
-					.bars(barSeries.getBarData())
-					.initialMargin(initialMargin)
-					.slippagePercentage(slippagePercentage)
-					.build();
 			configs.parallelStream().forEach(config -> 
-				backtest.execute(config, configPositions.computeIfAbsent(config, key -> new ArrayList<>())::add));
+			Backtest.builder()
+				.scrip(scrip)
+				.timeframe(timeframe)
+				.config(config)
+				.bars(barSeries.getBarData())
+				.initialMargin(initialMargin)
+				.slippagePercentage(slippagePercentage)
+				.build().execute(configPositions.computeIfAbsent(config, key -> new ArrayList<>())::add));
 			log.info("Accumulated trades for scrip {}", scrip.getCode());
 		});
 		return configPositions.entrySet().stream()
