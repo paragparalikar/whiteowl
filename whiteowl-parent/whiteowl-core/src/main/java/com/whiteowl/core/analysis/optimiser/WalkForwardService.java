@@ -6,8 +6,8 @@ import java.util.function.Function;
 
 import org.ta4j.core.BarSeries;
 
-import com.whiteowl.core.analysis.backtester.AccumulatorBacktestListener;
 import com.whiteowl.core.analysis.backtester.Backtest;
+import com.whiteowl.core.analysis.backtester.listener.AccumulatorBacktestListener;
 import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
 import com.whiteowl.core.bar.BarService;
 import com.whiteowl.core.bar.DefaultBarService;

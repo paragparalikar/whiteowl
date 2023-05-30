@@ -1,4 +1,4 @@
-package com.whiteowl.core.analysis.backtester;
+package com.whiteowl.core.analysis.backtester.mock;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

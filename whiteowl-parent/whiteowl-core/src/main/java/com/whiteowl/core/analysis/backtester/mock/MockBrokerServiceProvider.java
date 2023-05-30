@@ -1,13 +1,5 @@
-package com.whiteowl.core.analysis.backtester;
+package com.whiteowl.core.analysis.backtester.mock;
 
-import static com.whiteowl.core.trade.TradeLimitType.LIMIT;
-import static com.whiteowl.core.trade.TradeLimitType.MARKET;
-import static com.whiteowl.core.trade.TradeLimitType.SL;
-import static com.whiteowl.core.trade.TradeLimitType.SLM;
-import static com.whiteowl.core.trade.TradeStatus.COMPLETE;
-import static org.ta4j.core.Trade.TradeType.BUY;
-
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -19,16 +11,15 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import org.ta4j.core.Bar;
-import org.ta4j.core.Trade.TradeType;
-
+import com.whiteowl.core.analysis.backtester.mock.broker.CompositeTradeExecutor;
+import com.whiteowl.core.analysis.backtester.mock.broker.TradeExecutor;
 import com.whiteowl.core.broker.Broker;
 import com.whiteowl.core.broker.BrokerServiceProvider;
 import com.whiteowl.core.portfolio.Portfolio;
+import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.scrip.Exchange;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.trade.Trade;
-import com.whiteowl.core.trade.TradeLimitType;
 import com.whiteowl.core.trade.TradeProduct;
 import com.whiteowl.core.trade.TradeStatus;
 
@@ -39,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	
 	private final double initialMargin, slippagePercentage;
+	private final TradeExecutor tradeExecutor = new CompositeTradeExecutor();
 	private final Map<Portfolio, PortfolioBrokerServiceProvider> providers = new ConcurrentHashMap<>();
 
 	@Override
@@ -48,7 +40,7 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	
 	private PortfolioBrokerServiceProvider getProvider(Portfolio portfolio) {
 		return providers.computeIfAbsent(portfolio, key -> 
-			new PortfolioBrokerServiceProvider(initialMargin, slippagePercentage));
+			new PortfolioBrokerServiceProvider(tradeExecutor, initialMargin, slippagePercentage));
 	}
 
 	@Override
@@ -69,8 +61,8 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		getProvider(portfolio).getActiveTrades().add(trade);
 	}
 	
-	public void execute(Bar bar, Scrip scrip) {
-		providers.values().forEach(provider -> provider.execute(bar, scrip));
+	public void execute(Quote quote) {
+		providers.values().forEach(provider -> provider.execute(quote));
 	}
 	
 	@Override
@@ -110,13 +102,15 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 @Getter
 class PortfolioBrokerServiceProvider {
 	
+	private final TradeExecutor tradeExecutor;
 	private double availableMargin, slippagePercentage;
 	private final Map<Scrip, Integer> availableQuantities = new ConcurrentHashMap<>();
 	private final Set<Trade> activeTrades = Collections.newSetFromMap(new ConcurrentHashMap<>());
 	private final Set<Trade> terminatedTrades = Collections.newSetFromMap(new ConcurrentHashMap<>());
 	private final Set<Consumer<Trade>> listeners = Collections.newSetFromMap(new IdentityHashMap<>());
 	
-	public PortfolioBrokerServiceProvider(double initialMargin, double slippagePercentage) {
+	public PortfolioBrokerServiceProvider(TradeExecutor tradeExecutor, double initialMargin, double slippagePercentage) {
+		this.tradeExecutor = tradeExecutor;
 		this.availableMargin = initialMargin;
 		this.slippagePercentage = slippagePercentage;
 	}
@@ -128,47 +122,19 @@ class PortfolioBrokerServiceProvider {
 		return allTrades;
 	}
 	
-	public void execute(Bar bar, Scrip scrip) {
+	public void execute(Quote quote) {
 		final Iterator<Trade> activeTradeIterator = activeTrades.iterator();
 		while(activeTradeIterator.hasNext()) {
 			final Trade activeTrade = activeTradeIterator.next();
-			if(scrip.equals(activeTrade.getScrip())) {
-				final TradeType type = activeTrade.getType();
-				final TradeLimitType limitType = activeTrade.getLimitType();
-				if((SL.equals(limitType) || SLM.equals(limitType)) 
-						&& (activeTrade.getTriggerPrice() < bar.getLowPrice().doubleValue()
-								|| activeTrade.getTriggerPrice() > bar.getHighPrice().doubleValue())) {
-					continue;
+			if(activeTrade.getScrip().getCode().equals(quote.getCode())) {
+				if(tradeExecutor.execute(activeTrade, quote, slippagePercentage)) {
+					availableMargin += activeTrade.getAmount();
+					activeTradeIterator.remove();
+					terminatedTrades.add(activeTrade);
+					listeners.forEach(listener -> listener.accept(activeTrade));
 				}
-				
-				if(LIMIT.equals(limitType) 
-						&& ((BUY.equals(type) && activeTrade.getPrice() < bar.getLowPrice().doubleValue())
-								|| (TradeType.SELL.equals(type) && activeTrade.getPrice() > bar.getHighPrice().doubleValue()))) {
-					continue;
-				}
-				
-				final double price = MARKET.equals(limitType) ?
-						bar.getOpenPrice().doubleValue() : activeTrade.getPrice();
-				final double buyPrice = price * (100 + slippagePercentage) / 100;
-				final double sellPrice = price * (100 - slippagePercentage) / 100;
-				activeTrade.setAveragePrice(BUY.equals(type) ? buyPrice : sellPrice);
-				activeTrade.setStatus(COMPLETE);
-				activeTrade.setFilledQuantity(activeTrade.getQuantity());
-				setTimestamps(bar, activeTrade);
-				availableMargin += activeTrade.getAmount();
-				activeTradeIterator.remove();
-				terminatedTrades.add(activeTrade);
-				listeners.forEach(listener -> listener.accept(activeTrade));
 			}
 		}
-	}
-	
-	private void setTimestamps(Bar bar, Trade trade) {
-		final LocalDateTime timestamp = bar.getBeginTime().toLocalDateTime();
-		trade.setCreatedDate(timestamp);
-		trade.setExchangeTimestamp(timestamp);
-		trade.setLastModifiedDate(timestamp);
-		trade.setTimestamp(timestamp);
 	}
 	
 }

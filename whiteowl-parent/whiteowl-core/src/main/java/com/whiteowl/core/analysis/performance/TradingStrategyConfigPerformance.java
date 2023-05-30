@@ -8,7 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-import com.whiteowl.core.analysis.backtester.BacktestListener;
+import com.whiteowl.core.analysis.backtester.listener.BacktestListener;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.Positions;
 import com.whiteowl.core.trade.Trade;

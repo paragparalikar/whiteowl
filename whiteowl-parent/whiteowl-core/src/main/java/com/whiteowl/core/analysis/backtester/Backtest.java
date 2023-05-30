@@ -7,7 +7,12 @@ import java.util.List;
 
 import org.ta4j.core.Bar;
 import org.ta4j.core.Trade.TradeType;
+import org.ta4j.core.num.Num;
 
+import com.whiteowl.core.analysis.backtester.listener.BacktestListener;
+import com.whiteowl.core.analysis.backtester.mock.MockBrokerServiceProvider;
+import com.whiteowl.core.analysis.backtester.mock.MockPositionService;
+import com.whiteowl.core.analysis.backtester.mock.MockTradingStrategyContext;
 import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
 import com.whiteowl.core.bar.JdbcBarRepository;
 import com.whiteowl.core.bar.Timeframe;
@@ -44,18 +49,15 @@ public class Backtest {
 		final TradingStrategy tradingStrategy = config.createTradingStrategy(scrip, timeframe, context);
 		for(int barIndex = 0; barIndex < bars.size(); barIndex++) {
 			final Bar bar = bars.get(barIndex);
-			final Bar tradeExecutionBar = barIndex < bars.size() - 1 ? bars.get(barIndex + 1) : bar;
 			final List<Quote> quotes = createQuotes(scrip.getCode(), bar, config.getTradeType());
 			for(int quoteIndex = 0; quoteIndex < quotes.size(); quoteIndex++) {
 				final Quote quote = quotes.get(quoteIndex);
 				context.getMockQuoteService().push(scrip.getCode(), quote);
-				brokerServiceProvider.execute(bar, scrip);
+				brokerServiceProvider.execute(quote);
 				positionService.updateAll();
 			}
 			final BarCreatedEvent barCreatedEvent = new BarCreatedEvent(bar, scrip, timeframe);
 			barSeriesCacheManager.onBarCreated(barCreatedEvent);
-			brokerServiceProvider.execute(tradeExecutionBar, scrip);
-			positionService.updateAll();
 		}
 		tradingStrategy.close();
 		final Bar lastBar = bars.get(bars.size() - 1);
@@ -64,13 +66,21 @@ public class Backtest {
 	}
 	
 	private List<Quote> createQuotes(String code, Bar bar, TradeType tradeType){
-		final Quote openQuote = Quote.builder().code(code).lastPrice(bar.getOpenPrice().doubleValue()).build();
-		final Quote highQuote = Quote.builder().code(code).lastPrice(bar.getHighPrice().doubleValue()).build();
-		final Quote lowQuote = Quote.builder().code(code).lastPrice(bar.getLowPrice().doubleValue()).build();
-		final Quote closeQuote = Quote.builder().code(code).lastPrice(bar.getClosePrice().doubleValue()).build();
+		final Quote openQuote = createQuote(code, bar.getOpenPrice(), bar.getBeginTime());
+		final Quote highQuote = createQuote(code, bar.getHighPrice(), bar.getEndTime());
+		final Quote lowQuote = createQuote(code, bar.getLowPrice(), bar.getEndTime());
+		final Quote closeQuote = createQuote(code, bar.getClosePrice(), bar.getEndTime());
 		return TradeType.BUY.equals(tradeType) ? 
 				Arrays.asList(openQuote, lowQuote, highQuote, closeQuote) :
 				Arrays.asList(openQuote, highQuote, lowQuote, closeQuote);
+	}
+	
+	private Quote createQuote(String code, Num lastPrice, ZonedDateTime lastTradeTime) {
+		return Quote.builder()
+				.code(code)
+				.lastPrice(lastPrice.doubleValue())
+				.lastTradeTime(lastTradeTime.toLocalDateTime())
+				.build();
 	}
 	
 	public static void main(String[] args) {

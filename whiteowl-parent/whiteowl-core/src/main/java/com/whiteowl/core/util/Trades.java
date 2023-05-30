@@ -8,6 +8,7 @@ import org.ta4j.core.indicators.ATRIndicator;
 import org.ta4j.core.num.Num;
 
 import com.whiteowl.core.Range;
+import com.whiteowl.core.trade.Trade;
 
 public interface Trades {
 	
@@ -34,6 +35,13 @@ public interface Trades {
 			maximumPrice = bar.getHighPrice().max(maximumPrice);
 		}
 		return new Range(maximumPrice.doubleValue(), minimumPrice.doubleValue());
+	}
+	
+	public static void setTimestamps(Trade trade, LocalDateTime timestamp) {
+		trade.setCreatedDate(timestamp);
+		trade.setExchangeTimestamp(timestamp);
+		trade.setLastModifiedDate(timestamp);
+		trade.setTimestamp(timestamp);
 	}
 	
 }
