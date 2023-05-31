@@ -1,4 +1,4 @@
-package com.whiteowl.core.analysis.optimiser;
+package com.whiteowl.core.analysis.walkForward;
 
 import java.io.Serializable;
 

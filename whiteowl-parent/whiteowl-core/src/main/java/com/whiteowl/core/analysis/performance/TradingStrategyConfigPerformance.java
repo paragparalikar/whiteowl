@@ -25,7 +25,7 @@ public class TradingStrategyConfigPerformance implements BacktestListener, Seria
 	private final List<Double> equity = new ArrayList<>();
 	private final List<Double> drawdown = new ArrayList<>();
 	private final List<Position> positions = new ArrayList<>();
-	private int totalTradeCount, winningTradeCount, losingTradeCount;
+	private int totalTradeCount, winningTradeCount, losingTradeCount, openTradeCount;
 	private double cagr, exposure, maxDrawdownPct, avgDrawdownPct, avgWinPct, avgLossPct, avgReturnPctPerTrade;
 	@Getter(AccessLevel.PROTECTED) private double maxEquity, maxDrawdown;
 	@Getter(AccessLevel.PROTECTED) private Duration exposureDuration = Duration.ofSeconds(0);
@@ -44,6 +44,10 @@ public class TradingStrategyConfigPerformance implements BacktestListener, Seria
 	public synchronized void onExit(Position position) {
 		positions.add(position);
 		totalTradeCount++;
+		if(Positions.isOpen(position)) {
+			openTradeCount++;
+			return;
+		}
 		
 		final double entryAmount = Positions.entryAmount(position);
 		final double exitAmount = Positions.exitAmount(position);

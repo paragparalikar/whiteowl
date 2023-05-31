@@ -47,7 +47,9 @@ public class Backtest {
 		final BarSeriesCacheManager barSeriesCacheManager = context.getBarSeriesCacheManager();
 		final MockBrokerServiceProvider brokerServiceProvider = context.getMockBrokerServiceProvider();
 		final TradingStrategy tradingStrategy = config.createTradingStrategy(scrip, timeframe, context);
+		
 		backtestListener.onStart(this);
+		
 		for(int barIndex = 0; barIndex < bars.size(); barIndex++) {
 			final Bar bar = bars.get(barIndex);
 			final List<Quote> quotes = createQuotes(scrip.getCode(), bar, config.getTradeType());
@@ -62,10 +64,9 @@ public class Backtest {
 			barSeriesCacheManager.onBarCreated(barCreatedEvent);
 			backtestListener.onBar(bar);
 		}
+		positionService.flush();
 		tradingStrategy.close();
-		final Bar lastBar = bars.get(bars.size() - 1);
-		positionService.closeAll(lastBar.getClosePrice().doubleValue(), 
-				lastBar.getEndTime().toLocalDateTime());
+		
 		backtestListener.onEnd(this);
 	}
 	

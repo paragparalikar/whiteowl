@@ -1,6 +1,5 @@
 package com.whiteowl.core.analysis.backtester.mock;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -18,7 +17,6 @@ import com.whiteowl.core.position.PositionService;
 import com.whiteowl.core.position.PositionStatus;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.trade.Trade;
-import com.whiteowl.core.trade.TradeStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -45,6 +43,10 @@ public class MockPositionService implements PositionService {
 		}
 		return position;
 	}
+	
+	public void flush() {
+		activePositions.forEach(listener::onExit);
+	}
 
 	@Override
 	public List<Position> findAll() {
@@ -65,35 +67,6 @@ public class MockPositionService implements PositionService {
 				listener.onExit(position);
 			}
 		}
-	}
-	
-	public void closeAll(double price, LocalDateTime timestamp) {
-		activePositions.forEach(position -> close(position, price, timestamp));
-		terminalPositions.addAll(activePositions);
-		activePositions.clear();
-	}
-
-	public void close(Position position, double price, LocalDateTime timestamp) {
-		position.getExitTrades().clear();
-		position.getEntryTrades().stream()
-			.map(entryTrade -> complement(entryTrade, price, timestamp))
-			.forEach(position.getExitTrades()::add);
-		position.setLastModifiedDate(timestamp);
-		position.setStatus(PositionStatus.CLOSED);
-		listener.onExit(position);
-	}
-	
-	public Trade complement(Trade entryTrade, double price, LocalDateTime timestamp) {
-		final Trade exitTrade = entryTrade.complement();
-		exitTrade.setAveragePrice(price);
-		exitTrade.setBrokerTradeId(entryTrade.getBrokerTradeId() + "-exit");
-		exitTrade.setCreatedDate(timestamp);
-		exitTrade.setExchangeTimestamp(timestamp);
-		exitTrade.setFilledQuantity(entryTrade.getFilledQuantity());
-		exitTrade.setLastModifiedDate(timestamp);
-		exitTrade.setStatus(TradeStatus.COMPLETE);
-		exitTrade.setTimestamp(timestamp);
-		return exitTrade;
 	}
 	
 	@Override

@@ -1,9 +1,8 @@
-package com.whiteowl.core.analysis.optimiser;
+package com.whiteowl.core.analysis.walkForward;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
@@ -11,7 +10,7 @@ import com.whiteowl.core.analysis.performance.TradingStrategyConfigPerformance;
 import lombok.Getter;
 
 @Getter
-public class WalkForwardReport implements Consumer<WalkForwardStep>, Serializable {
+public class WalkForwardReport implements WalkForwardListener, Serializable {
 	private static final long serialVersionUID = -3090614699412868090L;
 
 	private final TradingStrategyConfigPerformance performance;
@@ -23,7 +22,7 @@ public class WalkForwardReport implements Consumer<WalkForwardStep>, Serializabl
 	}
 	
 	@Override
-	public void accept(WalkForwardStep step) {
+	public void onTestEnd(WalkForwardStep step) {
 		steps.add(step);
 		step.getTestPerformance().getPositions().forEach(performance::onExit);
 		efficiencyByCagr = average(this::getEfficiencyByCagr, step.getEfficiencyByCagr());
