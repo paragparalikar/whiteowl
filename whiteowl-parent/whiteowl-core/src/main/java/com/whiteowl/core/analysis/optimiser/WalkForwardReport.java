@@ -25,7 +25,7 @@ public class WalkForwardReport implements Consumer<WalkForwardStep>, Serializabl
 	@Override
 	public void accept(WalkForwardStep step) {
 		steps.add(step);
-		step.getTestPerformance().getPositions().forEach(performance);
+		step.getTestPerformance().getPositions().forEach(performance::onExit);
 		efficiencyByCagr = average(this::getEfficiencyByCagr, step.getEfficiencyByCagr());
 		efficiencyByCagrOverAvgDrawdown = average(this::getEfficiencyByCagrOverAvgDrawdown, step.getEfficiencyByCagrOverAvgDrawdown());
 		efficiencyByCagrOverAvgDrawdownAndExposure = average(

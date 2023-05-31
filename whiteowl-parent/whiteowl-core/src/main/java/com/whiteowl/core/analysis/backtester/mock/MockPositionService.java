@@ -9,9 +9,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.whiteowl.core.analysis.backtester.listener.BacktestListener;
 import com.whiteowl.core.portfolio.Portfolio;
 import com.whiteowl.core.position.Position;
 import com.whiteowl.core.position.PositionService;
@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MockPositionService implements PositionService {
 
-	private final Consumer<Position> callback;
+	private final BacktestListener listener;
 	private final AtomicLong idGenerator = new AtomicLong();
 	private final Set<Position> activePositions = new HashSet<>();
 	private final Set<Position> terminalPositions = new HashSet<>();
@@ -34,10 +34,15 @@ public class MockPositionService implements PositionService {
 	public Position save(Position position) {
 		if(null == position.getId() || 0 == position.getId()) {
 			position.setId(idGenerator.incrementAndGet());
+			listener.onEntry(position);
 		}
-		activePositions.remove(position);
-		final Set<Position> positions = position.getStatus().isTerminal() ? terminalPositions : activePositions;
-		positions.add(position);
+		if(position.getStatus().isTerminal()) {
+			activePositions.remove(position);
+			terminalPositions.add(position);
+			listener.onExit(position);
+		} else {
+			activePositions.add(position);
+		}
 		return position;
 	}
 
@@ -57,7 +62,7 @@ public class MockPositionService implements PositionService {
 			if(position.getStatus().isTerminal()) {
 				iterator.remove();
 				terminalPositions.add(position);
-				callback.accept(position);
+				listener.onExit(position);
 			}
 		}
 	}
@@ -65,7 +70,6 @@ public class MockPositionService implements PositionService {
 	public void closeAll(double price, LocalDateTime timestamp) {
 		activePositions.forEach(position -> close(position, price, timestamp));
 		terminalPositions.addAll(activePositions);
-		activePositions.forEach(callback);
 		activePositions.clear();
 	}
 
@@ -76,6 +80,7 @@ public class MockPositionService implements PositionService {
 			.forEach(position.getExitTrades()::add);
 		position.setLastModifiedDate(timestamp);
 		position.setStatus(PositionStatus.CLOSED);
+		listener.onExit(position);
 	}
 	
 	public Trade complement(Trade entryTrade, double price, LocalDateTime timestamp) {

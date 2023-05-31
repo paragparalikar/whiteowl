@@ -13,7 +13,7 @@ public class AccumulatorBacktestListener implements BacktestListener {
 	private final List<Position> positions = new ArrayList<>();
 
 	@Override
-	public void accept(Position position) {
+	public void onExit(Position position) {
 		positions.add(position);
 	}
 	

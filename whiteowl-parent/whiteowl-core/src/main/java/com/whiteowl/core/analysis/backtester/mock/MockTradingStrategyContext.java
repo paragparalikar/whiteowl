@@ -1,12 +1,11 @@
 package com.whiteowl.core.analysis.backtester.mock;
 
 import java.util.Arrays;
-import java.util.function.Consumer;
 
+import com.whiteowl.core.analysis.backtester.listener.BacktestListener;
 import com.whiteowl.core.broker.Broker;
 import com.whiteowl.core.broker.BrokerServiceProviderFactory;
 import com.whiteowl.core.portfolio.Portfolio;
-import com.whiteowl.core.position.Position;
 import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.strategy.context.BarSeriesCacheManager;
@@ -30,13 +29,13 @@ public class MockTradingStrategyContext implements TradingStrategyContext {
 	private final MockTradingStrategyConfigService mockTradingStrategyConfigService;
 	@Delegate private final TradingStrategyContext delegate;
 
-	public MockTradingStrategyContext(Scrip scrip, TradingStrategyConfig config, Consumer<Position> callback,
+	public MockTradingStrategyContext(Scrip scrip, TradingStrategyConfig config, BacktestListener listener,
 			double initialMargin, double slippagePercentage) {
 		this.mockBarService = new MockBarService();
 		this.mockScripService = new MockScripService();
 		this.mockQuoteService = new MockQuoteService();
 		this.mockPortfolioService = new MockPortfolioService();
-		this.mockPositionService = new MockPositionService(callback);
+		this.mockPositionService = new MockPositionService(listener);
 		this.mockTradingStrategyConfigService = new MockTradingStrategyConfigService();
 		this.mockBrokerServiceProvider = new MockBrokerServiceProvider(initialMargin, slippagePercentage);
 		this.barSeriesCacheManager = new BarSeriesCacheManager(mockBarService, mockTradingStrategyConfigService);

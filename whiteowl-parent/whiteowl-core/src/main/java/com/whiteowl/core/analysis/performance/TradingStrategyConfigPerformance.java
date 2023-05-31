@@ -37,11 +37,11 @@ public class TradingStrategyConfigPerformance implements BacktestListener, Seria
 	public TradingStrategyConfigPerformance(double initialMargin, List<Position> positions) {
 		this(initialMargin);
 		positions.sort(Comparator.comparing(Position::getCreatedDate));
-		positions.forEach(this);
+		positions.forEach(this::onExit);
 	}
 	
 	@Override
-	public synchronized void accept(Position position) {
+	public synchronized void onExit(Position position) {
 		positions.add(position);
 		totalTradeCount++;
 		
