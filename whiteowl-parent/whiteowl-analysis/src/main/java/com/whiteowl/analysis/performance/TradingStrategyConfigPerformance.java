@@ -49,13 +49,17 @@ public class TradingStrategyConfigPerformance implements BacktestListener, Seria
 			return;
 		}
 		
+		final double previousEquity = equity.isEmpty() ? maxEquity = initialMargin : equity.get(equity.size() - 1);
 		final double entryAmount = Positions.entryAmount(position);
 		final double exitAmount = Positions.exitAmount(position);
 		final double returns = entryAmount + exitAmount;
+		if(0 == returns) {
+			computeTimeBasedMetrics(previousEquity);
+			return;
+		}
 		final double returnsPct = returns * 100 / Math.abs(entryAmount);
-		
-		final double previousEquity = equity.isEmpty() ? maxEquity = initialMargin : equity.get(equity.size() - 1);
 		final double currentEquity = previousEquity + returns;
+		computeTimeBasedMetrics(currentEquity);
 		equity.add(currentEquity);
 		maxEquity = Math.max(maxEquity, currentEquity);
 		
@@ -75,7 +79,10 @@ public class TradingStrategyConfigPerformance implements BacktestListener, Seria
 			avgLossPct = (avgLossPct * (losingTradeCount - 1) + returnsPct) / losingTradeCount;
 		}
 		avgReturnPctPerTrade = (avgReturnPctPerTrade * (totalTradeCount - 1) + returnsPct) / totalTradeCount;
+	}
 	
+	private void computeTimeBasedMetrics(double currentEquity) {
+		final Position position = positions.get(positions.size() - 1);
 		final LocalDateTime firstStartTime = positions.get(0).getCreatedDate();
 		final LocalDateTime currentStartTime = resolveStartTime(position);
 		final LocalDateTime currentEndTime = resolveEndTime(position);
@@ -97,10 +104,10 @@ public class TradingStrategyConfigPerformance implements BacktestListener, Seria
 	private LocalDateTime resolveEndTime(Position position) {
 		return position.getExitTrades().stream()
 				.map(Trade::getTimestamp)
-				.max(Comparator.nullsFirst(Comparator.naturalOrder()))
+				.max(Comparator.naturalOrder())
 				.orElseGet(() -> position.getEntryTrades().stream()
 						.map(Trade::getTimestamp)
-						.max(Comparator.nullsFirst(Comparator.naturalOrder()))
+						.max(Comparator.naturalOrder())
 						.orElse(LocalDateTime.now()));
 	}
 	
