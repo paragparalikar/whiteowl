@@ -5,8 +5,7 @@ import com.whiteowl.core.trade.Trade;
 
 public class MockTradeExecutor implements TradeExecutor {
 
-	private final TradeExecutor delegate = 
-			new ValidityAwareTradeExecutor(new LimitTypeAwareTradeExecutor());
+	private final TradeExecutor delegate = new LimitTypeAwareTradeExecutor();
 
 	@Override
 	public boolean execute(Trade trade, Quote quote, double slippagePercentage) {

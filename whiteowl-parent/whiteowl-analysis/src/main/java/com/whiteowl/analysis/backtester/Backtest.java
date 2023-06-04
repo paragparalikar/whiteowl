@@ -1,5 +1,6 @@
 package com.whiteowl.analysis.backtester;
 
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -47,6 +48,7 @@ public class Backtest {
 		final BarSeriesCacheManager barSeriesCacheManager = context.getBarSeriesCacheManager();
 		final MockBrokerServiceProvider brokerServiceProvider = context.getMockBrokerServiceProvider();
 		final TradingStrategy tradingStrategy = config.createTradingStrategy(scrip, timeframe, context);
+		LocalDateTime timestamp = bars.get(0).getBeginTime().toLocalDateTime();
 		
 		backtestListener.onStart(this);
 		
@@ -55,6 +57,10 @@ public class Backtest {
 			final List<Quote> quotes = createQuotes(scrip.getCode(), bar, config.getTradeType());
 			for(int quoteIndex = 0; quoteIndex < quotes.size(); quoteIndex++) {
 				final Quote quote = quotes.get(quoteIndex);
+				if(quote.getTimestamp().toLocalDate().isAfter(timestamp.toLocalDate())) {
+					brokerServiceProvider.expire(timestamp); // Expire all trades with TradeValidity = DAY
+					timestamp = quote.getTimestamp();
+				}
 				context.getMockQuoteService().push(scrip.getCode(), quote);
 				brokerServiceProvider.execute(quote);
 				positionService.updateAll();

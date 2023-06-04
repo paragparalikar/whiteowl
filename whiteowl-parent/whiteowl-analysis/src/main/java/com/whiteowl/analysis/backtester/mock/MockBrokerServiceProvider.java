@@ -1,5 +1,6 @@
 package com.whiteowl.analysis.backtester.mock;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -22,6 +23,7 @@ import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.TradeProduct;
 import com.whiteowl.core.trade.TradeStatus;
+import com.whiteowl.core.util.Trades;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +57,6 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 
 	@Override
 	public void create(Trade trade, Portfolio portfolio) {
-		if(0 == trade.getPrice()) throw new IllegalArgumentException("Trade price must be provided for backtesting");
 		trade.setStatus(TradeStatus.PENDING);
 		trade.setBrokerTradeId(UUID.randomUUID().toString());
 		getProvider(portfolio).getActiveTrades().add(trade);
@@ -63,6 +64,10 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	
 	public void execute(Quote quote) {
 		providers.values().forEach(provider -> provider.execute(quote));
+	}
+	
+	public void expire(LocalDateTime timestamp) {
+		providers.values().forEach(provider -> provider.expire(timestamp));
 	}
 	
 	@Override
@@ -75,6 +80,7 @@ public class MockBrokerServiceProvider implements BrokerServiceProvider {
 		final PortfolioBrokerServiceProvider provider = getProvider(portfolio);
 		if(provider.getActiveTrades().contains(trade)) {
 			trade.setStatus(TradeStatus.CANCELLED);
+			Trades.setTimestamps(trade, trade.getCreatedDate());
 			provider.getActiveTrades().remove(trade);
 			provider.getTerminatedTrades().add(trade);
 		} else {
@@ -122,10 +128,23 @@ class PortfolioBrokerServiceProvider {
 		return allTrades;
 	}
 	
+	public void expire(LocalDateTime timestamp) {
+		final Iterator<Trade> activeTradeIterator = activeTrades.iterator();
+		while(activeTradeIterator.hasNext()) {
+			final Trade activeTrade = activeTradeIterator.next();
+			activeTrade.setStatus(TradeStatus.CANCELLED);
+			Trades.setTimestamps(activeTrade, timestamp);
+			activeTradeIterator.remove();
+			terminatedTrades.add(activeTrade);
+			listeners.forEach(listener -> listener.accept(activeTrade));
+		}
+	}
+	
 	public void execute(Quote quote) {
 		final Iterator<Trade> activeTradeIterator = activeTrades.iterator();
 		while(activeTradeIterator.hasNext()) {
 			final Trade activeTrade = activeTradeIterator.next();
+			if(null == activeTrade.getCreatedDate()) activeTrade.setCreatedDate(quote.getTimestamp());
 			if(activeTrade.getScrip().getCode().equals(quote.getCode())) {
 				if(tradeExecutor.execute(activeTrade, quote, slippagePercentage)) {
 					availableMargin += activeTrade.getAmount();

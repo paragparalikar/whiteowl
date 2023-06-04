@@ -49,7 +49,9 @@ public class MockTradingStrategyContext implements TradingStrategyContext {
 				.brokerServiceProviderFactory(brokerServiceProviderFactory)
 				.build();
 		
-		mockPortfolioService.save(createPortfolio(initialMargin));
+		final Portfolio portfolio = createPortfolio(initialMargin);
+		mockPortfolioService.save(portfolio);
+		mockBrokerServiceProvider.subscribeTradeStatusListener(trade -> mockPositionService.updateAll(), portfolio);
 		mockScripService.saveAll(Arrays.asList(scrip));
 		mockTradingStrategyConfigService.save(config);
 		barSeriesCacheManager.init();

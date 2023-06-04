@@ -38,7 +38,6 @@ public interface Trades {
 	}
 	
 	public static void setTimestamps(Trade trade, LocalDateTime timestamp) {
-		trade.setCreatedDate(timestamp);
 		trade.setExchangeTimestamp(timestamp);
 		trade.setLastModifiedDate(timestamp);
 		trade.setTimestamp(timestamp);

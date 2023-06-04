@@ -40,15 +40,28 @@ public class TradingStrategyConfigPerformance implements BacktestListener, Seria
 		positions.forEach(this::onExit);
 	}
 	
+	@SuppressWarnings("unused")
+	private void print(Position position) {
+		System.out.printf("ID : %d, Status : %s\n", position.getId(), String.valueOf(position.getStatus()));
+		position.getEntryTrades().forEach(trade -> System.out.printf("Entry %s", print(trade)));
+		position.getExitTrades().forEach(trade -> System.out.printf("Exit %s", print(trade)));
+	}
+	
+	private String print(Trade trade) {
+		return String.format("Price : %.2f\tQuantity : %d\tStatus : %s\tDate : %s\n", 
+				trade.getAveragePrice(), trade.getFilledQuantity(), 
+				String.valueOf(trade.getStatus()), trade.getTimestamp());
+	}
+	
 	@Override
 	public synchronized void onExit(Position position) {
+		//print(position);
 		positions.add(position);
 		totalTradeCount++;
 		if(Positions.isOpen(position)) {
 			openTradeCount++;
 			return;
 		}
-		
 		final double previousEquity = equity.isEmpty() ? maxEquity = initialMargin : equity.get(equity.size() - 1);
 		final double entryAmount = Positions.entryAmount(position);
 		final double exitAmount = Positions.exitAmount(position);
@@ -143,6 +156,8 @@ public class TradingStrategyConfigPerformance implements BacktestListener, Seria
 		builder.append(String.format("%-16s : %d", "Total Trades", totalTradeCount)).append(newLine);
 		builder.append(String.format("%-16s : %d", "Winning Trades", winningTradeCount)).append(newLine);
 		builder.append(String.format("%-16s : %d", "Losing Trades", losingTradeCount)).append(newLine);
+		builder.append(String.format("%-16s : %d", "Breakeven Trades", totalTradeCount - winningTradeCount - losingTradeCount)).append(newLine);
+		builder.append(String.format("%-16s : %d", "Open Trades", openTradeCount)).append(newLine);
 		builder.append(String.format("%-16s : %.2f", "Initial Margin", initialMargin)).append(newLine);
 		builder.append(String.format("%-16s : %.2f", "End Equity", equity.get(equity.size() - 1))).append(newLine);
 		builder.append(String.format("%-16s : %.2f", "Profitable %", getProfitablePct())).append(newLine);

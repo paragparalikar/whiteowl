@@ -2,6 +2,7 @@ package com.whiteowl.core.strategy.impl;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.function.Predicate;
 
 import org.ta4j.core.Indicator;
 import org.ta4j.core.Rule;
@@ -47,7 +48,24 @@ public class MACDLongTradingStrategy extends AbstractTradingStrategy<MACDLongTra
 	
 	@Override
 	protected boolean shouldExit(Quote quote, Position position) {
-		return exitRule.isSatisfied(getBarSeries().getEndIndex());
+		// Below code is written in inefficient manner, but it is descriptive.
+		final boolean allEntryTradesCompleted = !position.getEntryTrades().isEmpty() 
+				&& position.getEntryTrades().stream()
+				.map(Trade::getStatus)
+				.allMatch(Predicate.isEqual(TradeStatus.COMPLETE));
+		if(allEntryTradesCompleted) {
+			final boolean exitRuleSatisfied = exitRule.isSatisfied(getBarSeries().getEndIndex());
+			if(exitRuleSatisfied) {
+				return true;
+			} else {
+				final boolean allExitTradesCancelled = !position.getExitTrades().isEmpty() 
+						&& position.getExitTrades().stream()
+						.map(Trade::getStatus)
+						.allMatch(Predicate.isEqual(TradeStatus.CANCELLED));
+				return allExitTradesCancelled ? true : false;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -60,16 +78,8 @@ public class MACDLongTradingStrategy extends AbstractTradingStrategy<MACDLongTra
 		entryTrade.setLimitType(TradeLimitType.MARKET);
 		entryTrade.setValidity(TradeValidity.DAY);
 		entryTrade.setVariety(TradeVariety.REGULAR);
-		entryTrade.setPrice(getBarSeries().getLastBar().getClosePrice().doubleValue());
 		entryTrade.setProduct(getScrip().isDerivative() ? TradeProduct.NRML : TradeProduct.CNC);
 		return Collections.singleton(entryTrade);
-	}
-	
-	@Override
-	protected Trade createExitTrade(Quote quote, Position position, Trade entryTrade) {
-		final Trade exitTrade = super.createExitTrade(quote, position, entryTrade);
-		exitTrade.setPrice(getBarSeries().getLastBar().getClosePrice().doubleValue());
-		return exitTrade;
 	}
 
 }
