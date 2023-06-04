@@ -48,24 +48,15 @@ public class MACDLongTradingStrategy extends AbstractTradingStrategy<MACDLongTra
 	
 	@Override
 	protected boolean shouldExit(Quote quote, Position position) {
-		// Below code is written in inefficient manner, but it is descriptive.
-		final boolean allEntryTradesCompleted = !position.getEntryTrades().isEmpty() 
-				&& position.getEntryTrades().stream()
-				.map(Trade::getStatus)
-				.allMatch(Predicate.isEqual(TradeStatus.COMPLETE));
-		if(allEntryTradesCompleted) {
-			final boolean exitRuleSatisfied = exitRule.isSatisfied(getBarSeries().getEndIndex());
-			if(exitRuleSatisfied) {
-				return true;
-			} else {
-				final boolean allExitTradesCancelled = !position.getExitTrades().isEmpty() 
-						&& position.getExitTrades().stream()
-						.map(Trade::getStatus)
-						.allMatch(Predicate.isEqual(TradeStatus.CANCELLED));
-				return allExitTradesCancelled ? true : false;
-			}
+		if(exitRule.isSatisfied(getBarSeries().getEndIndex())) {
+			return true;
+		} else {
+			final boolean allExitTradesCancelled = !position.getExitTrades().isEmpty() 
+					&& position.getExitTrades().stream()
+					.map(Trade::getStatus)
+					.allMatch(Predicate.isEqual(TradeStatus.CANCELLED));
+			return allExitTradesCancelled ? true : false;
 		}
-		return false;
 	}
 
 	@Override

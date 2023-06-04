@@ -19,6 +19,7 @@ import com.whiteowl.core.scrip.Scrip;
 import com.whiteowl.core.strategy.config.TradingStrategyConfig;
 import com.whiteowl.core.strategy.context.TradingStrategyContext;
 import com.whiteowl.core.trade.Trade;
+import com.whiteowl.core.trade.TradeStatus;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -61,7 +62,10 @@ public abstract class AbstractTradingStrategy<T extends TradingStrategyConfig> i
 		if(null != positions && !positions.isEmpty()) {
 			for(int index = 0; index < positions.size(); index++) {
 				final Position position = positions.get(index);
-				if(shouldExit(quote, position)) {
+				final boolean entryCompleted = !position.getEntryTrades().isEmpty() 
+						&& position.getEntryTrades().stream()
+						.map(Trade::getStatus).allMatch(TradeStatus::isTerminal);
+				if(entryCompleted && shouldExit(quote, position)) {
 					position.getEntryTrades().stream()
 						.map(entryTrade -> createExitTrade(quote, position, entryTrade))
 						.forEach(position.getExitTrades()::add);
