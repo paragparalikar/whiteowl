@@ -11,7 +11,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import com.whiteowl.analysis.backtester.mock.broker.CompositeTradeExecutor;
+import com.whiteowl.analysis.backtester.mock.broker.MockTradeExecutor;
 import com.whiteowl.analysis.backtester.mock.broker.TradeExecutor;
 import com.whiteowl.core.broker.Broker;
 import com.whiteowl.core.broker.BrokerServiceProvider;
@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class MockBrokerServiceProvider implements BrokerServiceProvider {
 	
 	private final double initialMargin, slippagePercentage;
-	private final TradeExecutor tradeExecutor = new CompositeTradeExecutor();
+	private final TradeExecutor tradeExecutor = new MockTradeExecutor();
 	private final Map<Portfolio, PortfolioBrokerServiceProvider> providers = new ConcurrentHashMap<>();
 
 	@Override

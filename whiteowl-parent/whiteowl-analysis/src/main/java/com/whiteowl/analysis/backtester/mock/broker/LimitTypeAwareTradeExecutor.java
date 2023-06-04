@@ -7,11 +7,11 @@ import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.TradeLimitType;
 
-public class CompositeTradeExecutor implements TradeExecutor {
+public class LimitTypeAwareTradeExecutor implements TradeExecutor {
 
 	private final Map<TradeLimitType, TradeExecutor> delegates = new EnumMap<>(TradeLimitType.class);
 	
-	public CompositeTradeExecutor() {
+	public LimitTypeAwareTradeExecutor() {
 		delegates.put(TradeLimitType.MARKET, new MarketTradeExecutor());
 		delegates.put(TradeLimitType.LIMIT, new LimitTradeExecutor());
 		delegates.put(TradeLimitType.SL, new StoplossLimitTradeExecutor());

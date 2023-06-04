@@ -84,6 +84,7 @@ public class Backtest {
 		return Quote.builder()
 				.code(code)
 				.lastPrice(lastPrice.doubleValue())
+				.timestamp(lastTradeTime.toLocalDateTime())
 				.lastTradeTime(lastTradeTime.toLocalDateTime())
 				.build();
 	}
