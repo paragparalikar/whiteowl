@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import com.whiteowl.core.quote.Quote;
 import com.whiteowl.core.trade.Trade;
 import com.whiteowl.core.trade.TradeStatus;
+import com.whiteowl.core.util.Trades;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,8 +21,9 @@ public class DayTradeExecutor implements TradeExecutor {
 			timestamp = quote.getTimestamp(); // Reset, as we have started iterating over bar series again from beginning
 		}
 		if(null != timestamp && quote.getTimestamp().toLocalDate().isAfter(timestamp.toLocalDate())) {
-			trade.setStatus(TradeStatus.CANCELLED);
 			timestamp = quote.getTimestamp();
+			Trades.setTimestamps(trade, timestamp);
+			trade.setStatus(TradeStatus.CANCELLED);
 			return true;
 		}
 		timestamp = quote.getTimestamp();

@@ -97,8 +97,11 @@ public class TradingStrategyConfigPerformance implements BacktestListener, Seria
 	private LocalDateTime resolveEndTime(Position position) {
 		return position.getExitTrades().stream()
 				.map(Trade::getTimestamp)
-				.max(Comparator.naturalOrder())
-				.orElse(LocalDateTime.now());
+				.max(Comparator.nullsFirst(Comparator.naturalOrder()))
+				.orElseGet(() -> position.getEntryTrades().stream()
+						.map(Trade::getTimestamp)
+						.max(Comparator.nullsFirst(Comparator.naturalOrder()))
+						.orElse(LocalDateTime.now()));
 	}
 	
 	public double getCagrOverAvgDrawdown() {
