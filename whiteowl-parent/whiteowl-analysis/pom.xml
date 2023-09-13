@@ -8,6 +8,10 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>whiteowl-analysis</artifactId>
+	
+	<properties>
+		<aparapi.version>3.0.0</aparapi.version>
+	</properties>
 
 	<dependencies>
 		<dependency>
@@ -20,6 +24,11 @@
 			<groupId>com.whiteowl</groupId>
 			<artifactId>whiteowl-core</artifactId>
 			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.aparapi</groupId>
+			<artifactId>aparapi</artifactId>
+			<version>${aparapi.version}</version>
 		</dependency>
 	</dependencies>
 
