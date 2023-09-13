@@ -38,7 +38,7 @@ import com.whiteowl.client.kite.model.KiteMarketDepth;
 import com.whiteowl.client.kite.model.KiteQuoteMode;
 import com.whiteowl.client.kite.model.KiteTick;
 import com.whiteowl.client.kite.model.Order;
-import com.whiteowl.core.util.Dates;
+import com.whiteowl.client.kite.util.Dates;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;

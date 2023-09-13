@@ -15,11 +15,6 @@
 			<artifactId>lombok</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.whiteowl</groupId>
-			<artifactId>whiteowl-core</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>com.warrenstrange</groupId>
 			<artifactId>googleauth</artifactId>
 			<version>${googleauth.version}</version>
@@ -33,6 +28,16 @@
 			<groupId>com.neovisionaries</groupId>
 			<artifactId>nv-websocket-client</artifactId>
 			<version>${nv-websocket.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.javalite</groupId>
+			<artifactId>javalite-common</artifactId>
+			<version>${javalite.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.brotli</groupId>
+			<artifactId>dec</artifactId>
+			<version>${brotli.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

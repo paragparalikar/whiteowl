@@ -10,5 +10,6 @@
   <modules>
   	<module>whiteowl-client-kite</module>
   	<module>whiteowl-client-nse</module>
+  	<module>whiteowl-client-kite-adapter</module>
   </modules>
 </project>

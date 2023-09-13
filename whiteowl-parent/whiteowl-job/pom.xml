@@ -23,7 +23,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.whiteowl</groupId>
-			<artifactId>whiteowl-client-kite</artifactId>
+			<artifactId>whiteowl-client-kite-adapter</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

@@ -17,8 +17,6 @@ import java.util.zip.GZIPInputStream;
 import org.brotli.dec.BrotliInputStream;
 import org.javalite.http.Get;
 import org.javalite.http.Request;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.whiteowl.client.kite.model.CandleSeries;
@@ -46,7 +44,7 @@ import com.whiteowl.client.kite.request.PositionsRequest;
 import com.whiteowl.client.kite.request.ProfileRequest;
 import com.whiteowl.client.kite.request.QuoteRequest;
 import com.whiteowl.client.kite.request.UpdateOrderRequest;
-import com.whiteowl.core.util.Strings;
+import com.whiteowl.client.kite.util.Strings;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -80,9 +78,9 @@ public class KiteHttpClient {
 					response.getStatus(), 
 					response.getErrorType(), 
 					response.getMessage());
-			final Field field = ReflectionUtils.findField(Request.class, "url");
-			ReflectionUtils.makeAccessible(field);
-			log.error(String.valueOf(ReflectionUtils.getField(field, request)));
+			final Field field = Request.class.getField("url");
+			field.setAccessible(true);
+			log.error(String.valueOf(field.get(request)));
 			log.error(message);
 			throw new RuntimeException(message);
 		} else {
@@ -93,7 +91,7 @@ public class KiteHttpClient {
 	@SneakyThrows
 	private InputStream resolveInputStream(Request<?> request) {
 		final String contentEncoding = getHeaderValue("content-encoding", request);
-		if(StringUtils.hasText(contentEncoding)) {
+		if(Strings.hasText(contentEncoding)) {
 			if("gzip".equalsIgnoreCase(contentEncoding)) {
 				return new GZIPInputStream(request.getInputStream());
 			} else if("br".equalsIgnoreCase(contentEncoding)) {

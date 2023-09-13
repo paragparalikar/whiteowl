@@ -1,14 +1,14 @@
 package com.whiteowl.client.kite;
 
 import static com.whiteowl.client.kite.KiteConstant.JSON;
-import static com.whiteowl.core.util.Http.AUTHORIZATION;
-import static com.whiteowl.core.util.Http.BAD_REQUEST;
-import static com.whiteowl.core.util.Http.BR;
-import static com.whiteowl.core.util.Http.CONTENT_ENCODING;
-import static com.whiteowl.core.util.Http.COOKIE;
-import static com.whiteowl.core.util.Http.FORBIDDEN;
-import static com.whiteowl.core.util.Http.GZIP;
-import static com.whiteowl.core.util.Http.SET_COOKIE;
+import static com.whiteowl.client.kite.util.Http.AUTHORIZATION;
+import static com.whiteowl.client.kite.util.Http.BAD_REQUEST;
+import static com.whiteowl.client.kite.util.Http.BR;
+import static com.whiteowl.client.kite.util.Http.CONTENT_ENCODING;
+import static com.whiteowl.client.kite.util.Http.COOKIE;
+import static com.whiteowl.client.kite.util.Http.FORBIDDEN;
+import static com.whiteowl.client.kite.util.Http.GZIP;
+import static com.whiteowl.client.kite.util.Http.SET_COOKIE;
 
 import java.io.InputStream;
 import java.net.HttpCookie;
@@ -24,7 +24,6 @@ import java.util.zip.GZIPInputStream;
 
 import org.brotli.dec.BrotliInputStream;
 import org.javalite.http.Request;
-import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.whiteowl.client.kite.model.Response;
@@ -32,7 +31,7 @@ import com.whiteowl.client.kite.model.Twofa;
 import com.whiteowl.client.kite.request.LoginRequest;
 import com.whiteowl.client.kite.request.RootRequest;
 import com.whiteowl.client.kite.request.TwofaRequest;
-import com.whiteowl.core.util.Strings;
+import com.whiteowl.client.kite.util.Strings;
 
 import lombok.Data;
 import lombok.NonNull;
@@ -90,7 +89,7 @@ public class KiteSession {
 	@SneakyThrows
 	private InputStream resolveInputStream(Request<?> request) {
 		final String contentEncoding = getHeaderValue(CONTENT_ENCODING, request);
-		if(StringUtils.hasText(contentEncoding)) {
+		if(Strings.hasText(contentEncoding)) {
 			if(GZIP.equalsIgnoreCase(contentEncoding)) {
 				return new GZIPInputStream(request.getInputStream());
 			} else if(BR.equalsIgnoreCase(contentEncoding)) {
