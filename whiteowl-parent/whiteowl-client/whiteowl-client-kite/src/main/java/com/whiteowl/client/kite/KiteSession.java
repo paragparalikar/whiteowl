@@ -49,7 +49,7 @@ public class KiteSession {
 	@NonNull private final KiteCredentials credentials;
 	private final Set<HttpCookie> cookies = Collections.newSetFromMap(new ConcurrentHashMap<>());
 	
-	public void setCookies(Request<?> request) {
+	private void setCookies(Request<?> request) {
 		request.headers().entrySet().stream()
 			.filter(Objects::nonNull)
 			.filter(entry -> SET_COOKIE.equalsIgnoreCase(entry.getKey()))
