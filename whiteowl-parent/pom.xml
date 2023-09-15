@@ -95,5 +95,6 @@
 		<module>whiteowl-ui</module>
 		<module>whiteowl-ml</module>
 		<module>whiteowl-analysis</module>
+		<module>whiteowl-developer</module>
 	</modules>
 </project>
