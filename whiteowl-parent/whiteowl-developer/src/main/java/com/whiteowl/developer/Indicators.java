@@ -3,7 +3,7 @@ package com.whiteowl.developer;
 import java.util.List;
 
 public interface Indicators {
-
+	
 	public static float[] stochastics(List<Bar> bars, int barCount) {
 		final int size = bars.size();
 		final float[] values = new float[size];

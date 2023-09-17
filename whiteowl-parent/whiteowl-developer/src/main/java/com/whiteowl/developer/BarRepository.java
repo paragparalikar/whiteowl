@@ -10,7 +10,6 @@ import javax.sql.DataSource;
 
 import org.h2.jdbcx.JdbcDataSource;
 
-import lombok.NonNull;
 import lombok.SneakyThrows;
 
 public class BarRepository {
@@ -31,14 +30,13 @@ public class BarRepository {
 	
 	@SneakyThrows
 	public List<Bar> load(
-			@NonNull final String code, 
-			@NonNull final String timeframe, 
+			final Series series, 
 			final int limit, final int offset) {
 		final String sql = "SELECT * FROM BAR WHERE CODE = ? AND TIMEFRAME = ? ORDER BY CODE ASC, TIMEFRAME ASC, BEGIN_TIME DESC LIMIT ? OFFSET ?";
 		try(final Connection connection = dataSource.getConnection();
 			final PreparedStatement ps = connection.prepareStatement(sql)){
-			ps.setString(1, code);
-			ps.setString(2, timeframe);
+			ps.setString(1, series.code);
+			ps.setString(2, series.timeframe.name());
 			ps.setInt(3, limit);
 			ps.setInt(4, offset);
 			try(final ResultSet rs = ps.executeQuery()){
