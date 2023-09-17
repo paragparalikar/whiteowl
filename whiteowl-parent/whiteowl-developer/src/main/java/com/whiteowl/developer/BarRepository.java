@@ -12,11 +12,17 @@ import org.h2.jdbcx.JdbcDataSource;
 
 import lombok.SneakyThrows;
 
-public class BarRepository {
+public final class BarRepository {
+	
+	private static final BarRepository INSTANCE = new BarRepository();
+	
+	public static BarRepository getInstance() {
+		return BarRepository.INSTANCE;
+	}
 
 	private final DataSource dataSource;
 	
-	public BarRepository() {
+	private BarRepository() {
 		this.dataSource = createDataSource();
 	}
 	
