@@ -1,9 +1,15 @@
 package com.whiteowl.developer.indicator;
 
+import java.util.List;
+
+import com.whiteowl.developer.Bar;
+
 public interface Indicator {
 	
-	int getSize();
-
+	List<Bar> getBars();
+	
+	default void refresh() {};
+	
 	float getValue(int index);
 	
 }

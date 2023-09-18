@@ -4,13 +4,24 @@ import java.util.List;
 
 import com.whiteowl.developer.Bar;
 
+import lombok.Getter;
+
 public class StochasticIndicator implements Indicator {
 	
+	private final int barCount;
 	private final float[] values;
+	@Getter private final List<Bar> bars;
 
 	public StochasticIndicator(List<Bar> bars, int barCount) {
+		this.bars = bars;
+		this.barCount = barCount;
+		this.values = new float[bars.size()];
+		refresh();
+	}
+	
+	@Override
+	public void refresh() {
 		final int size = bars.size();
-		values = new float[size];
 		for(int index = size - 1; index >= 0; index--) {
 			final int start = index + barCount - 1;
 			float highest = Float.MIN_VALUE, lowest = Float.MAX_VALUE;
@@ -32,9 +43,4 @@ public class StochasticIndicator implements Indicator {
 		return values[index];
 	}
 	
-	@Override
-	public int getSize() {
-		return values.length;
-	}
-
 }

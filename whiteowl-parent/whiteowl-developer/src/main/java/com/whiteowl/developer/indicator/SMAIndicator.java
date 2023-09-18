@@ -1,13 +1,26 @@
 package com.whiteowl.developer.indicator;
 
+import java.util.List;
+
+import com.whiteowl.developer.Bar;
+
 public class SMAIndicator implements Indicator {
 
+	private final int barCount;
 	private final float[] values;
+	private final Indicator delegate;
 	
 	public SMAIndicator(Indicator delegate, int barCount) {
-		final int size = delegate.getSize();
-		values = new float[size];
+		this.barCount = barCount;
+		this.delegate = delegate;
+		this.values = new float[delegate.getBars().size()];
+		refresh();
+	}
+	
+	@Override
+	public void refresh() {
 		float sum = 0;
+		final int size = delegate.getBars().size();
 		for(int index = size - 1; index >= 0; index--) {
 			 sum += delegate.getValue(index);
 			 if(index > size - barCount) {
@@ -27,8 +40,8 @@ public class SMAIndicator implements Indicator {
 	}
 	
 	@Override
-	public int getSize() {
-		return values.length;
+	public List<Bar> getBars() {
+		return delegate.getBars();
 	}
 
 }

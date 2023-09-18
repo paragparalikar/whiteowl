@@ -4,13 +4,14 @@ import java.util.List;
 
 import com.whiteowl.developer.Bar;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class TRIndicator implements Indicator {
 	
-	private final List<Bar> bars;
-
+	@Getter private final List<Bar> bars;
+	
 	@Override
 	public float getValue(int index) {
 		if(index == bars.size() - 1) return Float.NaN;
@@ -19,11 +20,6 @@ public class TRIndicator implements Indicator {
 		return Math.max(bar.high - bar.close, 
 				Math.max(Math.abs(bar.high - previousBar.close), 
 						Math.abs(previousBar.close - bar.low)));
-	}
-	
-	@Override
-	public int getSize() {
-		return bars.size();
 	}
 
 }
