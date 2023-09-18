@@ -9,12 +9,19 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class OpenPriceIndicator implements Indicator {
+	
+	public static String name() { return "open"; }
 
 	@Getter private final List<Bar> bars;
 	
 	@Override
 	public float getValue(int index) {
 		return bars.get(index).open;
+	}
+	
+	@Override
+	public String toString() {
+		return OpenPriceIndicator.name();
 	}
 
 }

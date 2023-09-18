@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class LowPriceIndicator implements Indicator {
+	
+	public static String name() { return "low"; }
 
 	@Getter private final List<Bar> bars;
 
@@ -17,4 +19,9 @@ public class LowPriceIndicator implements Indicator {
 		return bars.get(index).low;
 	}
 
+	@Override
+	public String toString() {
+		return LowPriceIndicator.name();
+	}
+	
 }

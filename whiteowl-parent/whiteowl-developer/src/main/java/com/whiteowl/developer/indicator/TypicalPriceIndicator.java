@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class TypicalPriceIndicator implements Indicator {
+	
+	public static String name() { return "tp"; }
 
 	@Getter private final List<Bar> bars;
 
@@ -18,4 +20,9 @@ public class TypicalPriceIndicator implements Indicator {
 		return (bar.high + bar.close + bar.low) / 3;
 	}
 
+	@Override
+	public String toString() {
+		return TypicalPriceIndicator.name();
+	}
+	
 }

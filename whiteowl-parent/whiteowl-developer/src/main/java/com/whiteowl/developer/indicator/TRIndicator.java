@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TRIndicator implements Indicator {
 	
+	public static String name() { return "tr"; }
+	
 	@Getter private final List<Bar> bars;
 	
 	@Override
@@ -22,4 +24,9 @@ public class TRIndicator implements Indicator {
 						Math.abs(previousBar.close - bar.low)));
 	}
 
+	@Override
+	public String toString() {
+		return TRIndicator.name();
+	}
+	
 }

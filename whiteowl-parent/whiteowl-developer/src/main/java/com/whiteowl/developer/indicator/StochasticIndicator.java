@@ -8,6 +8,8 @@ import lombok.Getter;
 
 public class StochasticIndicator implements Indicator {
 	
+	public static String name(int barCount) { return "stochastics(" + barCount + ")"; }
+	
 	private final int barCount;
 	private final float[] values;
 	@Getter private final List<Bar> bars;
@@ -40,6 +42,11 @@ public class StochasticIndicator implements Indicator {
 	@Override
 	public float getValue(int index) {
 		return values[index];
+	}
+	
+	@Override
+	public String toString() {
+		return StochasticIndicator.name(barCount);
 	}
 	
 }

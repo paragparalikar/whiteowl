@@ -7,6 +7,8 @@ import com.whiteowl.developer.Bar;
 import lombok.Getter;
 
 public class CloseLocationIndicator implements Indicator {
+	
+	public static String name() { return "close-location"; }
 
 	private final float[] values;
 	@Getter private final List<Bar> bars;
@@ -29,5 +31,10 @@ public class CloseLocationIndicator implements Indicator {
 	@Override
 	public float getValue(int index) {
 		return values[index];
+	}
+	
+	@Override
+	public String toString() {
+		return CloseLocationIndicator.name();
 	}
 }

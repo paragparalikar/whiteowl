@@ -5,6 +5,8 @@ import java.util.List;
 import com.whiteowl.developer.Bar;
 
 public class SMAIndicator implements Indicator {
+	
+	public static String name(int barCount) { return "sma(" + barCount + ")"; }
 
 	private final int barCount;
 	private final float[] values;
@@ -42,6 +44,11 @@ public class SMAIndicator implements Indicator {
 	@Override
 	public List<Bar> getBars() {
 		return delegate.getBars();
+	}
+	
+	@Override
+	public String toString() {
+		return SMAIndicator.name(barCount);
 	}
 
 }
