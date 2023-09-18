@@ -15,30 +15,44 @@ public class Indicators {
 	private final Map<String, Indicator> cache = new ConcurrentHashMap<>();
 	
 	public Indicator open() {
-		return cache.computeIfAbsent("open", key -> new OpenPriceIndicator(bars));
+		return cache.computeIfAbsent(OpenPriceIndicator.name(), key -> new OpenPriceIndicator(bars));
 	}
 	
 	public Indicator high() {
-		return cache.computeIfAbsent("high", key -> new HighPriceIndicator(bars));
+		return cache.computeIfAbsent(HighPriceIndicator.name(), key -> new HighPriceIndicator(bars));
 	}
 	
 	public Indicator low() {
-		return cache.computeIfAbsent("low", key -> new LowPriceIndicator(bars));
+		return cache.computeIfAbsent(LowPriceIndicator.name(), key -> new LowPriceIndicator(bars));
 	}
 	
 	public Indicator close() {
-		return cache.computeIfAbsent("close", key -> new ClosePriceIndicator(bars));
+		return cache.computeIfAbsent(ClosePriceIndicator.name(), key -> new ClosePriceIndicator(bars));
 	}
 	
 	public Indicator closeLocation() {
-		return cache.computeIfAbsent("close-location", key -> new CloseLocationIndicator(bars));
+		return cache.computeIfAbsent(CloseLocationIndicator.name(), key -> new CloseLocationIndicator(bars));
 	}
 	
 	public Indicator typicalPrice() {
-		return cache.computeIfAbsent("typical-price", key -> new TypicalPriceIndicator(bars));
+		return cache.computeIfAbsent(TypicalPriceIndicator.name(), key -> new TypicalPriceIndicator(bars));
 	}
 	
-	public Indicator sma() {
-		
+	public Indicator sma(Indicator delegate, int barCount) {
+		return cache.computeIfAbsent(SMAIndicator.name(delegate, barCount), key -> new SMAIndicator(delegate, barCount));
 	}
+	
+	public Indicator tr() {
+		return cache.computeIfAbsent(TRIndicator.name(), key -> new TRIndicator(bars));
+	}
+	
+	public Indicator atr(int barCount) {
+		return cache.computeIfAbsent(ATRIndicator.name(barCount), key -> new ATRIndicator(bars, barCount));
+	}
+	
+	public Indicator stochastics(int barCount) {
+		return cache.computeIfAbsent(StochasticIndicator.name(barCount), key -> new StochasticIndicator(bars, barCount));
+	}
+	
+	
 }

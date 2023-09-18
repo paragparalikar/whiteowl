@@ -6,7 +6,9 @@ import com.whiteowl.developer.Bar;
 
 public class SMAIndicator implements Indicator {
 	
-	public static String name(int barCount) { return "sma(" + barCount + ")"; }
+	public static String name(Indicator delegate, int barCount) { 
+		return "sma(" + delegate + "," + barCount + ")"; 
+	}
 
 	private final int barCount;
 	private final float[] values;
@@ -48,7 +50,7 @@ public class SMAIndicator implements Indicator {
 	
 	@Override
 	public String toString() {
-		return SMAIndicator.name(barCount);
+		return SMAIndicator.name(delegate, barCount);
 	}
 
 }
