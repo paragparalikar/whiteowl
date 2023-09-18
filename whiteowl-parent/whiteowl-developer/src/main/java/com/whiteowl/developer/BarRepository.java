@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -36,17 +37,18 @@ public final class BarRepository {
 	
 	@SneakyThrows
 	public void load(final Series series, final int limit, final List<Bar> bars) {
+		bars.clear();
 		final String sql = "SELECT * FROM BAR WHERE CODE = ? AND TIMEFRAME = ? ORDER BY CODE ASC, TIMEFRAME ASC, BEGIN_TIME DESC LIMIT ?";
 		try(final Connection connection = dataSource.getConnection();
 			final PreparedStatement ps = connection.prepareStatement(sql)){
 			ps.setString(1, series.code);
 			ps.setString(2, series.timeframe.name());
 			ps.setInt(3, limit);
-			int index = limit;
 			try(final ResultSet rs = ps.executeQuery()){
-				while(rs.next()) bars.set(--index, new Bar(rs.getFloat("OPEN"), rs.getFloat("HIGH"), 
+				while(rs.next()) bars.add(new Bar(rs.getFloat("OPEN"), rs.getFloat("HIGH"), 
 						rs.getFloat("LOW"), rs.getFloat("CLOSE"), rs.getLong("VOLUME"),
 						rs.getTimestamp("BEGIN_TIME").getTime()));
+				Collections.reverse(bars);
 			}
 		}
 	}

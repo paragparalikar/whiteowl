@@ -14,6 +14,10 @@ public class Indicators {
 	private final List<Bar> bars;
 	private final Map<String, Indicator> cache = new ConcurrentHashMap<>();
 	
+	public void refresh() {
+		cache.values().forEach(Indicator::refresh);
+	}
+	
 	public Indicator open() {
 		return cache.computeIfAbsent(OpenPriceIndicator.name(), key -> new OpenPriceIndicator(bars));
 	}
