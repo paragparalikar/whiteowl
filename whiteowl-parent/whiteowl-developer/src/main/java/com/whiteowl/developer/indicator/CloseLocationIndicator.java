@@ -19,7 +19,7 @@ public class CloseLocationIndicator implements Indicator {
 	
 	@Override
 	public void refresh() {
-		for(int index = bars.size() - 1; index >= 0; index--) {
+		for(int index = 0; index < bars.size(); index++) {
 			final Bar bar = bars.get(index);
 			values[index] = bar.high == bar.low ? 0.5f : 
 					(bar.close - bar.low) / (bar.high - bar.low);

@@ -21,7 +21,7 @@ public class SMAIndicator implements Indicator {
 	public void refresh() {
 		float sum = 0;
 		final int size = delegate.getBars().size();
-		for(int index = size - 1; index >= 0; index--) {
+		for(int index = 0; index < size; index++) {
 			 sum += delegate.getValue(index);
 			 if(index > size - barCount) {
 				values[index] = Float.NaN;

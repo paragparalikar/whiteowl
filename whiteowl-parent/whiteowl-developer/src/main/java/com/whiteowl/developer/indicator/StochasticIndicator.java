@@ -22,17 +22,16 @@ public class StochasticIndicator implements Indicator {
 	@Override
 	public void refresh() {
 		final int size = bars.size();
-		for(int index = size - 1; index >= 0; index--) {
-			final int start = index + barCount - 1;
-			float highest = Float.MIN_VALUE, lowest = Float.MAX_VALUE;
-			for(int j = start >= size ? size - 1 : start; j >= index; j--) {
-				final Bar bar = bars.get(j);
-				highest = highest >= bar.high ? highest : bar.high;
-				lowest = lowest <= bar.low ? lowest : bar.low;
-			}
-			if(index > size - barCount) {
+		for(int index = 0; index < size; index++) {
+			if(index < barCount - 1) {
 				values[index] = Float.NaN;
 			} else {
+				float highest = Float.MIN_VALUE, lowest = Float.MAX_VALUE;
+				for(int j = index - barCount + 1; j <= index; j++) {
+					final Bar bar = bars.get(j);
+					highest = highest >= bar.high ? highest : bar.high;
+					lowest = lowest <= bar.low ? lowest : bar.low;
+				}
 				values[index] = (bars.get(index).close - lowest) * 100 / (highest - lowest);
 			}
 		}
