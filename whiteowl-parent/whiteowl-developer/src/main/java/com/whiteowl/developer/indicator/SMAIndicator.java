@@ -11,7 +11,7 @@ public class SMAIndicator implements Indicator {
 	}
 
 	private final int barCount;
-	private final float[] values;
+	private volatile float[] values;
 	private final Indicator delegate;
 	
 	public SMAIndicator(Indicator delegate, int barCount) {
@@ -25,6 +25,9 @@ public class SMAIndicator implements Indicator {
 	public void refresh() {
 		float sum = 0;
 		final int size = delegate.getBars().size();
+		if(values.length != size) {
+			this.values = new float[size];
+		}
 		for(int index = 0; index < size; index++) {
 			 sum += delegate.getValue(index);
 			 if(index > size - barCount) {

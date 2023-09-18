@@ -11,7 +11,7 @@ public class StochasticIndicator implements Indicator {
 	public static String name(int barCount) { return "stochastics(" + barCount + ")"; }
 	
 	private final int barCount;
-	private final float[] values;
+	private volatile float[] values;
 	@Getter private final List<Bar> bars;
 
 	public StochasticIndicator(List<Bar> bars, int barCount) {
@@ -24,6 +24,7 @@ public class StochasticIndicator implements Indicator {
 	@Override
 	public void refresh() {
 		final int size = bars.size();
+		if(values.length != size) this.values = new float[size];
 		for(int index = 0; index < size; index++) {
 			if(index < barCount - 1) {
 				values[index] = Float.NaN;

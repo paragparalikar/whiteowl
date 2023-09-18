@@ -10,7 +10,7 @@ public class CloseLocationIndicator implements Indicator {
 	
 	public static String name() { return "close-location"; }
 
-	private final float[] values;
+	private volatile float[] values;
 	@Getter private final List<Bar> bars;
 	
 	public CloseLocationIndicator(List<Bar> bars) {
@@ -21,6 +21,7 @@ public class CloseLocationIndicator implements Indicator {
 	
 	@Override
 	public void refresh() {
+		if(values.length != bars.size()) this.values = new float[bars.size()];
 		for(int index = 0; index < bars.size(); index++) {
 			final Bar bar = bars.get(index);
 			values[index] = bar.high == bar.low ? 0.5f : 
