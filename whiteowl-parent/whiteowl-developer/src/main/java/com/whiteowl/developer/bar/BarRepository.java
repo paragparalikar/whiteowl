@@ -1,4 +1,4 @@
-package com.whiteowl.developer;
+package com.whiteowl.developer.bar;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,7 +36,7 @@ public final class BarRepository {
 	}
 	
 	@SneakyThrows
-	public void load(final Series series, final int limit, final List<Bar> bars) {
+	public void load(final BarSeries series, final int limit, final List<Bar> bars) {
 		bars.clear();
 		final String sql = "SELECT * FROM BAR WHERE CODE = ? AND TIMEFRAME = ? ORDER BY CODE ASC, TIMEFRAME ASC, BEGIN_TIME DESC LIMIT ?";
 		try(final Connection connection = dataSource.getConnection();

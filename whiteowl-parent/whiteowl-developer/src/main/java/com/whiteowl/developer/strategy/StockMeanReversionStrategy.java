@@ -12,13 +12,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
-import com.whiteowl.developer.Bar;
-import com.whiteowl.developer.BarRepository;
 import com.whiteowl.developer.Indicators;
-import com.whiteowl.developer.Series;
-import com.whiteowl.developer.Timeframe;
-import com.whiteowl.developer.Trade;
-import com.whiteowl.developer.TradeSeries;
+import com.whiteowl.developer.bar.Bar;
+import com.whiteowl.developer.bar.BarRepository;
+import com.whiteowl.developer.bar.BarSeries;
+import com.whiteowl.developer.bar.Timeframe;
+import com.whiteowl.developer.trade.Trade;
+import com.whiteowl.developer.trade.TradeSeries;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -40,14 +40,14 @@ public class StockMeanReversionStrategy {
 		final List<String> codes = BarRepository.getInstance().findAllCodes();
 		final LocalTime start = LocalTime.now();
 		codes.stream().forEach(code -> {
-			final Collection<TradeSeries<StockMeanReversionConfig>> serieses = strategy.apply(new Series(code, Timeframe.D));
+			final Collection<TradeSeries<StockMeanReversionConfig>> serieses = strategy.apply(new BarSeries(code, Timeframe.D));
 		});
 		System.out.printf("Time taken for processing %d codes is %d seconds", codes.size(), 
 				Duration.between(start, LocalTime.now()).getSeconds());
 	}
 	
 	@SneakyThrows
-	public Collection<TradeSeries<StockMeanReversionConfig>> apply(Series series) {
+	public Collection<TradeSeries<StockMeanReversionConfig>> apply(BarSeries series) {
 		int globalId = 0;
 		this.barrier.reset();
 		this.tradeSerieses = Collections.newSetFromMap(new ConcurrentHashMap<>());

@@ -1,4 +1,4 @@
-package com.whiteowl.developer;
+package com.whiteowl.developer.trade;
 
 import lombok.RequiredArgsConstructor;
 

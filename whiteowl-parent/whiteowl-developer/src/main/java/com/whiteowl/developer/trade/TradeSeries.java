@@ -1,6 +1,8 @@
-package com.whiteowl.developer;
+package com.whiteowl.developer.trade;
 
 import java.util.ArrayList;
+
+import com.whiteowl.developer.bar.Timeframe;
 
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -10,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 public class TradeSeries extends ArrayList<Trade> {
 	private static final long serialVersionUID = 1L;
 
-	public final int[] config;
 	public final String code;
+	public final int[] config;
 	public final Timeframe timeframe;
 	
 }

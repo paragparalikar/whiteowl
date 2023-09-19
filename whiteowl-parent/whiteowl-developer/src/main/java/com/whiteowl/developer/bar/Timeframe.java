@@ -1,4 +1,4 @@
-package com.whiteowl.developer;
+package com.whiteowl.developer.bar;
 
 import java.time.Duration;
 import java.util.Arrays;

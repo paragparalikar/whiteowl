@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.whiteowl.developer.Bar;
+import com.whiteowl.developer.bar.Bar;
 
 import lombok.RequiredArgsConstructor;
 

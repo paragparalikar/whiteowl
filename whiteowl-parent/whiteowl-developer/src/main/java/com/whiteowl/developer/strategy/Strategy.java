@@ -1,10 +1,11 @@
 package com.whiteowl.developer.strategy;
 
-import com.whiteowl.developer.TradeSeries;
+import com.whiteowl.developer.bar.BarSeries;
+import com.whiteowl.developer.trade.TradeSeries;
 
 public interface Strategy {
 
-	public int[] getConfigLengths();
+	public int[][] getConfigs();
 	
-	void execute(int[] configIndices, TradeSeries tradeSeries);
+	TradeSeries execute(int[] config, BarSeries barSeries);
 }

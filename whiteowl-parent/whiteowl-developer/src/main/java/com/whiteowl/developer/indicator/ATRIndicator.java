@@ -2,7 +2,7 @@ package com.whiteowl.developer.indicator;
 
 import java.util.List;
 
-import com.whiteowl.developer.Bar;
+import com.whiteowl.developer.bar.Bar;
 
 public class ATRIndicator extends SMAIndicator {
 	
