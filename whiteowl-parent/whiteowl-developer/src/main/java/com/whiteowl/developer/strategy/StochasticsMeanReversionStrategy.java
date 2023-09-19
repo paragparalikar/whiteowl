@@ -19,9 +19,14 @@ public class StochasticsMeanReversionStrategy implements Strategy<Config> {
 	
 	@EqualsAndHashCode
 	@RequiredArgsConstructor
-	public static class Config {
+	public static class Config implements StrategyConfig{
 		public final float maxStochastics;
 		public final int stochasticsBarCount, smaBarCount;
+		
+		@Override
+		public int getUnstablePeriod() {
+			return Math.max(stochasticsBarCount, smaBarCount);
+		}
 	}
 
 	@Override
