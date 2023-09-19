@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.whiteowl.developer.bar.BarRepository;
 import com.whiteowl.developer.bar.BarSeries;
@@ -26,11 +27,14 @@ public class StrategyRunner {
 			final int barCount = LIMIT * barSeries.timeframe.getDayMultiple();
 			barRepository.load(barSeries, barCount, Indicators.bars);
 			Indicators.refresh();
-			final int initialSize = results.size();
-			configs.parallelStream().forEach(config ->
-				results.put(config, strategy.execute(config)));
+			final AtomicInteger counter = new AtomicInteger();
+			configs.parallelStream().forEach(config -> {
+				final List<Trade> trades = strategy.execute(config);
+				results.put(config, trades);
+				counter.addAndGet(trades.size());
+			});
 			System.out.printf("%d / %d\t\tCollected %d trades for %s %s\n", 
-					index, barSerieses.size(), results.size() - initialSize,
+					index, barSerieses.size(), counter.get(),
 					barSeries.code, barSeries.timeframe.name());
 		}
 	}
