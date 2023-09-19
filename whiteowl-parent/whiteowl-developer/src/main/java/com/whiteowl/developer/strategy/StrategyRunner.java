@@ -1,15 +1,14 @@
 package com.whiteowl.developer.strategy;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import com.whiteowl.developer.bar.Bar;
 import com.whiteowl.developer.bar.BarRepository;
 import com.whiteowl.developer.bar.BarSeries;
 import com.whiteowl.developer.indicator.Indicators;
+import com.whiteowl.developer.trade.Trade;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,20 +16,23 @@ import lombok.RequiredArgsConstructor;
 public class StrategyRunner {
 	private static final int LIMIT = 1000;
 	
-	private final List<Bar> bars = new ArrayList<>(LIMIT);
-	private final Indicators indicators = new Indicators(bars);
 	private final BarRepository barRepository = BarRepository.getInstance();
-	private final ExecutorService executorService = Executors.newWorkStealingPool(100);
 	
-	public void run(Strategy strategy, List<BarSeries> barSerieses) {
-		for(BarSeries barSeries : barSerieses) {
+	public <T> void run(Strategy<T> strategy, List<BarSeries> barSerieses) {
+		final Map<T, List<Trade>> results = new ConcurrentHashMap<>();
+		final Set<T> configs = strategy.getConfigs();
+		for(int index = 0; index < barSerieses.size(); index++) {
+			final BarSeries barSeries = barSerieses.get(index);
 			final int barCount = LIMIT * barSeries.timeframe.getDayMultiple();
-			barRepository.load(barSeries, barCount, bars);
-			indicators.refresh();
-			final CountDownLatch latch = new CountDownLatch(0);
+			barRepository.load(barSeries, barCount, Indicators.bars);
+			Indicators.refresh();
+			final int initialSize = results.size();
+			configs.parallelStream().forEach(config ->
+				results.put(config, strategy.execute(config)));
+			System.out.printf("%d / %d\t\tCollected %d trades for %s %s\n", 
+					index, barSerieses.size(), results.size() - initialSize,
+					barSeries.code, barSeries.timeframe.name());
 		}
-		
 	}
 	
-
 }

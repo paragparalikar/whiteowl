@@ -1,11 +1,13 @@
 package com.whiteowl.developer.strategy;
 
-import com.whiteowl.developer.bar.BarSeries;
-import com.whiteowl.developer.trade.TradeSeries;
+import java.util.List;
+import java.util.Set;
 
-public interface Strategy {
+import com.whiteowl.developer.trade.Trade;
 
-	public int[][] getConfigs();
+public interface Strategy<T> {
+
+	public Set<T> getConfigs();
 	
-	TradeSeries execute(int[] config, BarSeries barSeries);
+	List<Trade> execute(T config);
 }
