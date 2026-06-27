@@ -1,0 +1,145 @@
+.script-editor-pane {
+    -fx-padding: 0;
+    -fx-spacing: 0;
+}
+
+.script-editor-header {
+    -fx-padding: 10 12 8 12;
+    -fx-background-color: transparent;
+}
+
+.script-editor-title {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.script-editor-title:hover {
+    -fx-text-fill: #e0e0e0;
+}
+
+.script-editor-title-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 14px;
+    -fx-border-color: #4a4d52;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 4 2 4;
+    -fx-background-radius: 0;
+}
+
+.script-editor-name-error {
+    -fx-text-fill: #ef5350;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+    -fx-padding: 0 12 0 12;
+}
+
+.script-editor-code-area {
+    -fx-background-color: #1e1f22;
+    -fx-padding: 4 0 4 0;
+}
+
+.script-editor-code-area .text {
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 13px;
+    -fx-fill: #bbbbbb;
+}
+
+.script-editor-code-area .paragraph-box:has-caret {
+    -fx-background-color: #2a2b2e;
+}
+
+.script-editor-code-area .caret {
+    -fx-stroke: #bbbbbb;
+}
+
+.script-editor-code-area .selection {
+    -fx-fill: #2d5c88;
+}
+
+.script-editor-code-area .content {
+    -fx-background-color: #1e1f22;
+}
+
+.script-editor-code-area .scroll-bar .thumb {
+    -fx-background-color: #3c3f41;
+}
+
+.script-editor-code-area .scroll-bar .track {
+    -fx-background-color: #1e1f22;
+}
+
+.script-editor-code-area .lineno {
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: #4a4d52;
+    -fx-background-color: #1e1f22;
+    -fx-padding: 0 8 0 8;
+}
+
+.script-editor-save-button {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #e0e0e0;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 4 12 4 8;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.script-editor-save-button:hover {
+    -fx-background-color: #35689e;
+}
+
+.script-editor-save-icon {
+    -fx-icon-color: #e0e0e0;
+}
+
+.script-editor-status {
+    -fx-text-fill: #4ec9b0;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 4 12 2 12;
+}
+
+.script-editor-error {
+    -fx-text-fill: #ef5350;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 2 12 4 12;
+}
+
+.script-editor-reference {
+    -fx-border-color: #3c3f41 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.script-editor-reference > .title {
+    -fx-background-color: #2b2d30;
+    -fx-padding: 6 12 6 12;
+}
+
+.script-editor-reference > .title > .text {
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-fill: #6e7681;
+}
+
+.script-editor-reference > .title > .arrow-button .arrow {
+    -fx-background-color: #6e7681;
+    -fx-shape: "M 0 0 L 4 4 L 8 0 Z";
+}
+
+.script-editor-reference > *.content {
+    -fx-background-color: #2b2d30;
+    -fx-padding: 4 12 10 12;
+}
+
+.script-editor-reference-content {
+    -fx-text-fill: #868a91;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 11px;
+}

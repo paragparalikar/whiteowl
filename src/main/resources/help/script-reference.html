@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WhiteOwl Script Reference</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
+    background: #1e1f22; color: #bbbbbb; padding: 24px 32px; line-height: 1.6;
+  }
+  h1 { color: #e0e0e0; font-weight: 300; font-size: 28px; margin-bottom: 8px; }
+  h2 { color: #4A78C2; font-weight: 500; font-size: 18px; margin: 32px 0 12px 0;
+       border-bottom: 1px solid #3c3f41; padding-bottom: 6px; }
+  h3 { color: #c0c0c0; font-weight: 500; font-size: 14px; margin: 20px 0 8px 0; }
+  p { margin: 8px 0; font-size: 13px; }
+  code {
+    background: #2b2d30; color: #a9dc76; padding: 1px 5px; border-radius: 3px;
+    font-family: "JetBrains Mono", "Consolas", monospace; font-size: 12px;
+  }
+  pre {
+    background: #2b2d30; border: 1px solid #3c3f41; border-radius: 6px;
+    padding: 12px 16px; margin: 10px 0; overflow-x: auto;
+    font-family: "JetBrains Mono", "Consolas", monospace; font-size: 12px;
+    line-height: 1.5; color: #c0c0c0;
+  }
+  pre .kw { color: #ff6188; }
+  pre .fn { color: #a9dc76; }
+  pre .str { color: #ffd866; }
+  pre .num { color: #ab9df2; }
+  pre .cm { color: #555555; }
+  pre .var { color: #78dce8; }
+  pre .type { color: #fc9867; }
+  table {
+    border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 12px;
+  }
+  th {
+    background: #2b2d30; color: #868a91; text-align: left; padding: 8px 12px;
+    border-bottom: 1px solid #3c3f41; font-weight: 500;
+  }
+  td {
+    padding: 6px 12px; border-bottom: 1px solid #2b2d30; vertical-align: top;
+  }
+  .subtitle { color: #6e7681; font-size: 13px; margin-bottom: 24px; }
+  .section-note {
+    background: #2d5c8822; border-left: 3px solid #4A78C2; padding: 8px 12px;
+    margin: 10px 0; border-radius: 0 4px 4px 0; font-size: 12px;
+  }
+  .toc { margin: 16px 0 32px 0; }
+  .toc a { color: #4A78C2; text-decoration: none; font-size: 13px; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ul { list-style: none; padding-left: 16px; }
+  .toc > ul { padding-left: 0; }
+  .toc li { margin: 4px 0; }
+  a { color: #4A78C2; }
+  hr { border: none; border-top: 1px solid #3c3f41; margin: 32px 0; }
+</style>
+</head>
+<body>
+
+<h1>WhiteOwl Script Reference</h1>
+<p class="subtitle">Groovy-based DSL for Indicators, Screeners, Rankers, and Trading Strategies</p>
+
+<div class="toc">
+<h3>Contents</h3>
+<ul>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#common">Common API</a>
+    <ul>
+      <li><a href="#bar-data">Bar Data Variables</a></li>
+      <li><a href="#inputs">User Inputs</a></li>
+      <li><a href="#indicator-functions">Indicator Functions</a></li>
+    </ul>
+  </li>
+  <li><a href="#indicators">Indicators</a></li>
+  <li><a href="#screeners">Screeners</a></li>
+  <li><a href="#rankers">Rankers</a></li>
+  <li><a href="#strategies">Trading Strategies</a></li>
+  <li><a href="#tips">Tips &amp; Patterns</a></li>
+</ul>
+</div>
+
+<hr>
+
+<h2 id="overview">Overview</h2>
+<p>Scripts are written in <strong>Groovy</strong> and execute within a sandboxed DSL environment.
+Each script type has its own base class that provides bar data, indicator functions, and
+type-specific methods. Scripts are compiled once and cached in memory for the session.</p>
+
+<div class="section-note">
+Scripts are plain <code>.groovy</code> files managed in the <strong>Scripts</strong> panel.
+Press <code>Ctrl+S</code> in the script editor to save and recompile instantly.
+</div>
+
+<hr>
+
+<h2 id="common">Common API</h2>
+<p>The following variables and functions are available in <strong>all</strong> script types
+(Indicators, Screeners, Rankers, and Strategies).</p>
+
+<h3 id="bar-data">Bar Data Variables</h3>
+<p>These are pre-bound <code>float[]</code> arrays (or <code>long[]</code> for volume/timestamps)
+indexed from <code>0</code> (oldest) to <code>barCount - 1</code> (newest).</p>
+
+<table>
+<tr><th>Variable</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>open</code></td><td><code>float[]</code></td><td>Opening price of each bar</td></tr>
+<tr><td><code>high</code></td><td><code>float[]</code></td><td>Highest price of each bar</td></tr>
+<tr><td><code>low</code></td><td><code>float[]</code></td><td>Lowest price of each bar</td></tr>
+<tr><td><code>close</code></td><td><code>float[]</code></td><td>Closing price of each bar</td></tr>
+<tr><td><code>volume</code></td><td><code>long[]</code></td><td>Volume traded for each bar</td></tr>
+<tr><td><code>timestamps</code></td><td><code>long[]</code></td><td>Epoch milliseconds for each bar</td></tr>
+<tr><td><code>barCount</code></td><td><code>int</code></td><td>Total number of bars available</td></tr>
+</table>
+
+<h3 id="inputs">User Inputs</h3>
+<p>Declare configurable parameters that appear as editable settings in the UI.
+If no inputs are declared, no settings dialog is shown.</p>
+
+<table>
+<tr><th>Signature</th><th>Description</th></tr>
+<tr><td><code>input(name, defaultValue)</code></td><td>Declares a numeric input with a default value</td></tr>
+<tr><td><code>input(name, default, min, max)</code></td><td>Adds min/max bounds</td></tr>
+<tr><td><code>input(name, default, min, max, step)</code></td><td>Adds step increment for UI spinner</td></tr>
+</table>
+
+<pre><span class="kw">def</span> <span class="var">period</span> = input(<span class="str">"Period"</span>, <span class="num">20</span>, <span class="num">5</span>, <span class="num">200</span>)
+<span class="kw">def</span> <span class="var">multiplier</span> = input(<span class="str">"Multiplier"</span>, <span class="num">2.0</span>, <span class="num">0.5</span>, <span class="num">5.0</span>, <span class="num">0.5</span>)</pre>
+
+<div class="section-note">
+<code>input()</code> returns a <code>Number</code>. Use <code>.intValue()</code> or
+<code>.doubleValue()</code> when passing to functions that require a specific type.
+</div>
+
+<h3 id="indicator-functions">Indicator Functions</h3>
+<p>Built-in technical analysis functions. All operate on the full bar array and return
+arrays of the same length (with <code>NaN</code> for warmup periods).</p>
+
+<table>
+<tr><th>Function</th><th>Returns</th><th>Description</th></tr>
+<tr><td><code>sma(source, period)</code></td><td><code>float[]</code></td><td>Simple Moving Average</td></tr>
+<tr><td><code>ema(source, period)</code></td><td><code>float[]</code></td><td>Exponential Moving Average</td></tr>
+<tr><td><code>rsi(source, period)</code></td><td><code>float[]</code></td><td>Relative Strength Index (0&ndash;100)</td></tr>
+<tr><td><code>atr(period)</code></td><td><code>float[]</code></td><td>Average True Range (uses high/low/close automatically)</td></tr>
+<tr><td><code>macd(source, fast, slow, signal)</code></td><td><code>float[][]</code></td><td>MACD. Returns <code>[macdLine, signalLine, histogram]</code></td></tr>
+<tr><td><code>crossover(a, b)</code></td><td><code>boolean[]</code></td><td><code>true</code> where series <code>a</code> crosses above <code>b</code></td></tr>
+<tr><td><code>crossunder(a, b)</code></td><td><code>boolean[]</code></td><td><code>true</code> where series <code>a</code> crosses below <code>b</code></td></tr>
+<tr><td><code>highest(source, period)</code></td><td><code>float[]</code></td><td>Highest value in the last <code>period</code> bars</td></tr>
+<tr><td><code>lowest(source, period)</code></td><td><code>float[]</code></td><td>Lowest value in the last <code>period</code> bars</td></tr>
+</table>
+
+<pre><span class="kw">def</span> <span class="var">ma</span> = sma(close, <span class="num">20</span>)
+<span class="kw">def</span> <span class="var">rsiValues</span> = rsi(close, <span class="num">14</span>)
+<span class="kw">def</span> (<span class="var">macdLine</span>, <span class="var">signal</span>, <span class="var">hist</span>) = macd(close, <span class="num">12</span>, <span class="num">26</span>, <span class="num">9</span>)
+<span class="kw">def</span> <span class="var">goldenCross</span> = crossover(sma(close, <span class="num">50</span>), sma(close, <span class="num">200</span>))</pre>
+
+<hr>
+
+<h2 id="indicators">Indicators</h2>
+<p>Indicator scripts compute a numeric series that is plotted on the chart.
+The script must <strong>return a <code>float[]</code></strong> (or <code>double[]</code>) array
+of the same length as the bar data.</p>
+
+<h3>Display Mode</h3>
+<p>Control where the indicator is rendered by calling <code>displayMode</code> at the top of your script:</p>
+
+<table>
+<tr><th>Mode</th><th>Description</th></tr>
+<tr><td><code>"subchart"</code></td><td><strong>Default.</strong> Rendered in its own pane below the price chart with an auto-scaled Y-axis. Best for oscillators and values not in the price range (e.g., RSI, Bollinger Width).</td></tr>
+<tr><td><code>"overlay"</code></td><td>Drawn directly on the candlestick chart using the price Y-axis. Best for moving averages, bands, and other price-relative indicators.</td></tr>
+<tr><td><code>"volume"</code></td><td>Drawn on the volume pane. Use for volume-based indicators.</td></tr>
+</table>
+
+<h3>Example: Simple Moving Average (overlay)</h3>
+<pre>displayMode <span class="str">"overlay"</span>
+
+<span class="kw">def</span> <span class="var">period</span> = input(<span class="str">"Period"</span>, <span class="num">20</span>, <span class="num">5</span>, <span class="num">200</span>)
+<span class="kw">return</span> sma(close, <span class="var">period</span>.intValue())</pre>
+
+<h3>Example: RSI (sub-chart)</h3>
+<pre>displayMode <span class="str">"subchart"</span>
+
+<span class="kw">def</span> <span class="var">period</span> = input(<span class="str">"Period"</span>, <span class="num">14</span>, <span class="num">2</span>, <span class="num">50</span>)
+<span class="kw">return</span> rsi(close, <span class="var">period</span>.intValue())</pre>
+
+<h3>Example: Bollinger Bandwidth (sub-chart)</h3>
+<pre><span class="kw">def</span> <span class="var">period</span> = input(<span class="str">"Period"</span>, <span class="num">20</span>, <span class="num">5</span>, <span class="num">100</span>)
+<span class="kw">def</span> <span class="var">mult</span> = input(<span class="str">"Multiplier"</span>, <span class="num">2.0</span>, <span class="num">0.5</span>, <span class="num">5.0</span>, <span class="num">0.5</span>)
+<span class="kw">def</span> <span class="var">p</span> = <span class="var">period</span>.intValue()
+<span class="kw">def</span> <span class="var">m</span> = <span class="var">mult</span>.doubleValue()
+
+<span class="kw">def</span> <span class="var">mid</span> = sma(close, <span class="var">p</span>)
+<span class="kw">def</span> <span class="var">width</span> = <span class="kw">new</span> <span class="type">float</span>[barCount]
+<span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="var">p</span> - <span class="num">1</span>; <span class="var">i</span> &lt; barCount; <span class="var">i</span>++) {
+    <span class="type">float</span> <span class="var">sum</span> = <span class="num">0</span>
+    <span class="kw">for</span> (<span class="kw">int</span> <span class="var">j</span> = <span class="var">i</span> - <span class="var">p</span> + <span class="num">1</span>; <span class="var">j</span> &lt;= <span class="var">i</span>; <span class="var">j</span>++) {
+        <span class="type">float</span> <span class="var">diff</span> = close[<span class="var">j</span>] - <span class="var">mid</span>[<span class="var">i</span>]
+        <span class="var">sum</span> += <span class="var">diff</span> * <span class="var">diff</span>
+    }
+    <span class="type">float</span> <span class="var">stddev</span> = (<span class="type">float</span>) Math.sqrt(<span class="var">sum</span> / <span class="var">p</span>)
+    <span class="var">width</span>[<span class="var">i</span>] = (<span class="num">2</span> * <span class="var">m</span> * <span class="var">stddev</span>) / <span class="var">mid</span>[<span class="var">i</span>]
+}
+<span class="kw">return</span> <span class="var">width</span></pre>
+
+<h3>Example: EMA Crossover Signal (overlay)</h3>
+<pre>displayMode <span class="str">"overlay"</span>
+
+<span class="kw">def</span> <span class="var">fastPeriod</span> = input(<span class="str">"Fast"</span>, <span class="num">9</span>, <span class="num">2</span>, <span class="num">50</span>)
+<span class="kw">def</span> <span class="var">slowPeriod</span> = input(<span class="str">"Slow"</span>, <span class="num">21</span>, <span class="num">5</span>, <span class="num">200</span>)
+<span class="kw">return</span> ema(close, <span class="var">fastPeriod</span>.intValue())</pre>
+
+<h3>Example: Volume SMA (volume overlay)</h3>
+<pre>displayMode <span class="str">"volume"</span>
+
+<span class="kw">def</span> <span class="var">period</span> = input(<span class="str">"Period"</span>, <span class="num">20</span>, <span class="num">5</span>, <span class="num">100</span>)
+<span class="kw">def</span> <span class="var">volFloat</span> = <span class="kw">new</span> <span class="type">float</span>[barCount]
+<span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> &lt; barCount; <span class="var">i</span>++) <span class="var">volFloat</span>[<span class="var">i</span>] = volume[<span class="var">i</span>]
+<span class="kw">return</span> sma(<span class="var">volFloat</span>, <span class="var">period</span>.intValue())</pre>
+
+<hr>
+
+<h2 id="screeners">Screeners</h2>
+<p>Screener scripts filter stocks by returning a <strong><code>boolean</code></strong>.
+Return <code>true</code> if the stock passes the screen, <code>false</code> otherwise.
+The script is evaluated once per stock using its most recent bar data.</p>
+
+<h3>Example: Price Above 50 SMA</h3>
+<pre><span class="kw">def</span> <span class="var">period</span> = input(<span class="str">"Period"</span>, <span class="num">50</span>, <span class="num">5</span>, <span class="num">200</span>)
+<span class="kw">def</span> <span class="var">ma</span> = sma(close, <span class="var">period</span>.intValue())
+<span class="kw">def</span> <span class="var">last</span> = barCount - <span class="num">1</span>
+<span class="kw">return</span> close[<span class="var">last</span>] > <span class="var">ma</span>[<span class="var">last</span>]</pre>
+
+<h3>Example: RSI Oversold</h3>
+<pre><span class="kw">def</span> <span class="var">period</span> = input(<span class="str">"RSI Period"</span>, <span class="num">14</span>, <span class="num">2</span>, <span class="num">50</span>)
+<span class="kw">def</span> <span class="var">threshold</span> = input(<span class="str">"Threshold"</span>, <span class="num">30</span>, <span class="num">10</span>, <span class="num">50</span>)
+<span class="kw">def</span> <span class="var">rsiValues</span> = rsi(close, <span class="var">period</span>.intValue())
+<span class="kw">def</span> <span class="var">last</span> = barCount - <span class="num">1</span>
+<span class="kw">return</span> <span class="var">rsiValues</span>[<span class="var">last</span>] &lt; <span class="var">threshold</span>.doubleValue()</pre>
+
+<h3>Example: Golden Cross</h3>
+<pre><span class="kw">def</span> <span class="var">fast</span> = sma(close, <span class="num">50</span>)
+<span class="kw">def</span> <span class="var">slow</span> = sma(close, <span class="num">200</span>)
+<span class="kw">def</span> <span class="var">cross</span> = crossover(<span class="var">fast</span>, <span class="var">slow</span>)
+<span class="cm">// true if golden cross happened in the last 5 bars</span>
+<span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = barCount - <span class="num">5</span>; <span class="var">i</span> &lt; barCount; <span class="var">i</span>++) {
+    <span class="kw">if</span> (<span class="var">i</span> >= <span class="num">0</span> &amp;&amp; <span class="var">cross</span>[<span class="var">i</span>]) <span class="kw">return true</span>
+}
+<span class="kw">return false</span></pre>
+
+<h3>Example: High Volume Breakout</h3>
+<pre><span class="kw">def</span> <span class="var">lookback</span> = input(<span class="str">"Lookback"</span>, <span class="num">20</span>, <span class="num">5</span>, <span class="num">100</span>)
+<span class="kw">def</span> <span class="var">volMult</span> = input(<span class="str">"Volume Multiplier"</span>, <span class="num">2.0</span>, <span class="num">1.0</span>, <span class="num">5.0</span>, <span class="num">0.5</span>)
+<span class="kw">def</span> <span class="var">lb</span> = <span class="var">lookback</span>.intValue()
+<span class="kw">def</span> <span class="var">last</span> = barCount - <span class="num">1</span>
+<span class="kw">if</span> (barCount &lt; <span class="var">lb</span> + <span class="num">1</span>) <span class="kw">return false</span>
+
+<span class="kw">def</span> <span class="var">hi</span> = highest(high, <span class="var">lb</span>)
+<span class="type">long</span> <span class="var">avgVol</span> = <span class="num">0</span>
+<span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="var">last</span> - <span class="var">lb</span>; <span class="var">i</span> &lt; <span class="var">last</span>; <span class="var">i</span>++) <span class="var">avgVol</span> += volume[<span class="var">i</span>]
+<span class="var">avgVol</span> /= <span class="var">lb</span>
+
+<span class="kw">return</span> close[<span class="var">last</span>] > <span class="var">hi</span>[<span class="var">last</span> - <span class="num">1</span>] &amp;&amp; volume[<span class="var">last</span>] > <span class="var">avgVol</span> * <span class="var">volMult</span>.doubleValue()</pre>
+
+<hr>
+
+<h2 id="rankers">Rankers</h2>
+<p>Ranker scripts compute a <strong>numeric score</strong> for each stock. Stocks are then sorted
+by this score. The script must return a <code>Number</code> (e.g., <code>float</code>, <code>double</code>).</p>
+
+<div class="section-note">
+Rankers do <strong>not</strong> support <code>input()</code> parameters. They use only bar data
+and built-in indicator functions.
+</div>
+
+<h3>Example: Rate of Change Ranker</h3>
+<pre><span class="kw">def</span> <span class="var">last</span> = barCount - <span class="num">1</span>
+<span class="kw">if</span> (barCount &lt; <span class="num">21</span>) <span class="kw">return</span> <span class="num">0</span>
+<span class="kw">return</span> (close[<span class="var">last</span>] - close[<span class="var">last</span> - <span class="num">20</span>]) / close[<span class="var">last</span> - <span class="num">20</span>] * <span class="num">100</span></pre>
+
+<h3>Example: RSI Ranker</h3>
+<pre><span class="kw">def</span> <span class="var">rsiValues</span> = rsi(close, <span class="num">14</span>)
+<span class="kw">def</span> <span class="var">last</span> = barCount - <span class="num">1</span>
+<span class="kw">return</span> <span class="var">rsiValues</span>[<span class="var">last</span>]</pre>
+
+<h3>Example: Relative Volume Ranker</h3>
+<pre><span class="kw">def</span> <span class="var">last</span> = barCount - <span class="num">1</span>
+<span class="kw">if</span> (barCount &lt; <span class="num">21</span>) <span class="kw">return</span> <span class="num">0</span>
+<span class="type">long</span> <span class="var">avgVol</span> = <span class="num">0</span>
+<span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="var">last</span> - <span class="num">20</span>; <span class="var">i</span> &lt; <span class="var">last</span>; <span class="var">i</span>++) <span class="var">avgVol</span> += volume[<span class="var">i</span>]
+<span class="var">avgVol</span> /= <span class="num">20</span>
+<span class="kw">if</span> (<span class="var">avgVol</span> == <span class="num">0</span>) <span class="kw">return</span> <span class="num">0</span>
+<span class="kw">return</span> (<span class="type">double</span>) volume[<span class="var">last</span>] / <span class="var">avgVol</span></pre>
+
+<h3>Example: Momentum Score Ranker</h3>
+<pre><span class="kw">def</span> <span class="var">last</span> = barCount - <span class="num">1</span>
+<span class="kw">if</span> (barCount &lt; <span class="num">201</span>) <span class="kw">return</span> <span class="num">0</span>
+
+<span class="kw">def</span> <span class="var">roc20</span>  = (close[<span class="var">last</span>] - close[<span class="var">last</span> - <span class="num">20</span>])  / close[<span class="var">last</span> - <span class="num">20</span>]  * <span class="num">100</span>
+<span class="kw">def</span> <span class="var">roc60</span>  = (close[<span class="var">last</span>] - close[<span class="var">last</span> - <span class="num">60</span>])  / close[<span class="var">last</span> - <span class="num">60</span>]  * <span class="num">100</span>
+<span class="kw">def</span> <span class="var">roc120</span> = (close[<span class="var">last</span>] - close[<span class="var">last</span> - <span class="num">120</span>]) / close[<span class="var">last</span> - <span class="num">120</span>] * <span class="num">100</span>
+<span class="kw">def</span> <span class="var">roc200</span> = (close[<span class="var">last</span>] - close[<span class="var">last</span> - <span class="num">200</span>]) / close[<span class="var">last</span> - <span class="num">200</span>] * <span class="num">100</span>
+
+<span class="kw">return</span> <span class="var">roc20</span> * <span class="num">0.4</span> + <span class="var">roc60</span> * <span class="num">0.3</span> + <span class="var">roc120</span> * <span class="num">0.2</span> + <span class="var">roc200</span> * <span class="num">0.1</span></pre>
+
+<hr>
+
+<h2 id="strategies">Trading Strategies</h2>
+<p>Strategy scripts generate <strong>entry and exit signals</strong> for backtesting.
+The script iterates over bars and emits signals using dedicated functions.
+Strategies can also reference other indicator scripts by name.</p>
+
+<h3>Signal Functions</h3>
+<table>
+<tr><th>Function</th><th>Description</th></tr>
+<tr><td><code>longEntry(barIndex)</code></td><td>Enter a long position at bar</td></tr>
+<tr><td><code>longEntry(barIndex, timing, price)</code></td><td>Enter long with fill control</td></tr>
+<tr><td><code>longExit(barIndex)</code></td><td>Exit a long position at bar</td></tr>
+<tr><td><code>longExit(barIndex, timing, price)</code></td><td>Exit long with fill control</td></tr>
+<tr><td><code>shortEntry(barIndex)</code></td><td>Enter a short position at bar</td></tr>
+<tr><td><code>shortEntry(barIndex, timing, price)</code></td><td>Enter short with fill control</td></tr>
+<tr><td><code>shortExit(barIndex)</code></td><td>Exit a short position at bar</td></tr>
+<tr><td><code>shortExit(barIndex, timing, price)</code></td><td>Exit short with fill control</td></tr>
+</table>
+
+<h3>Fill Timing</h3>
+<table>
+<tr><th>Value</th><th>Description</th></tr>
+<tr><td><code>CURRENT_BAR</code></td><td>Fill on the same bar the signal is generated</td></tr>
+<tr><td><code>NEXT_BAR</code></td><td><strong>Default.</strong> Fill on the next bar after the signal</td></tr>
+</table>
+
+<h3>Fill Price</h3>
+<table>
+<tr><th>Value</th><th>Description</th></tr>
+<tr><td><code>OPEN</code></td><td><strong>Default.</strong> Fill at the bar's open price</td></tr>
+<tr><td><code>HIGH</code></td><td>Fill at the bar's high price</td></tr>
+<tr><td><code>LOW</code></td><td>Fill at the bar's low price</td></tr>
+<tr><td><code>CLOSE</code></td><td>Fill at the bar's close price</td></tr>
+<tr><td><code>TYPICAL_PRICE</code></td><td>Fill at (high + low + close) / 3</td></tr>
+</table>
+
+<h3>Referencing Indicator Scripts</h3>
+<p>Use <code>indicator("ScriptName")</code> to compute a custom indicator script
+and get its output as a <code>float[]</code>. The indicator must exist in the Scripts panel.</p>
+
+<pre><span class="kw">def</span> <span class="var">bollingerWidth</span> = indicator(<span class="str">"Bollinger_Width"</span>)</pre>
+
+<h3>Example: SMA Crossover Strategy</h3>
+<pre><span class="kw">def</span> <span class="var">fastPeriod</span> = input(<span class="str">"Fast"</span>, <span class="num">10</span>, <span class="num">2</span>, <span class="num">50</span>)
+<span class="kw">def</span> <span class="var">slowPeriod</span> = input(<span class="str">"Slow"</span>, <span class="num">30</span>, <span class="num">10</span>, <span class="num">200</span>)
+
+<span class="kw">def</span> <span class="var">fast</span> = sma(close, <span class="var">fastPeriod</span>.intValue())
+<span class="kw">def</span> <span class="var">slow</span> = sma(close, <span class="var">slowPeriod</span>.intValue())
+<span class="kw">def</span> <span class="var">bullCross</span> = crossover(<span class="var">fast</span>, <span class="var">slow</span>)
+<span class="kw">def</span> <span class="var">bearCross</span> = crossunder(<span class="var">fast</span>, <span class="var">slow</span>)
+
+<span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> &lt; barCount; <span class="var">i</span>++) {
+    <span class="kw">if</span> (<span class="var">bullCross</span>[<span class="var">i</span>]) longEntry(<span class="var">i</span>)
+    <span class="kw">if</span> (<span class="var">bearCross</span>[<span class="var">i</span>]) longExit(<span class="var">i</span>)
+}</pre>
+
+<h3>Example: RSI Mean Reversion Strategy</h3>
+<pre><span class="kw">def</span> <span class="var">rsiPeriod</span> = input(<span class="str">"RSI Period"</span>, <span class="num">14</span>, <span class="num">2</span>, <span class="num">50</span>)
+<span class="kw">def</span> <span class="var">oversold</span> = input(<span class="str">"Oversold"</span>, <span class="num">30</span>, <span class="num">10</span>, <span class="num">45</span>)
+<span class="kw">def</span> <span class="var">overbought</span> = input(<span class="str">"Overbought"</span>, <span class="num">70</span>, <span class="num">55</span>, <span class="num">90</span>)
+
+<span class="kw">def</span> <span class="var">rsiValues</span> = rsi(close, <span class="var">rsiPeriod</span>.intValue())
+
+<span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="num">1</span>; <span class="var">i</span> &lt; barCount; <span class="var">i</span>++) {
+    <span class="kw">if</span> (<span class="var">rsiValues</span>[<span class="var">i</span> - <span class="num">1</span>] &lt; <span class="var">oversold</span>.doubleValue() &amp;&amp;
+        <span class="var">rsiValues</span>[<span class="var">i</span>] >= <span class="var">oversold</span>.doubleValue()) {
+        longEntry(<span class="var">i</span>, NEXT_BAR, OPEN)
+    }
+    <span class="kw">if</span> (<span class="var">rsiValues</span>[<span class="var">i</span>] > <span class="var">overbought</span>.doubleValue()) {
+        longExit(<span class="var">i</span>, NEXT_BAR, OPEN)
+    }
+}</pre>
+
+<h3>Example: Breakout Strategy with ATR Stop</h3>
+<pre><span class="kw">def</span> <span class="var">breakoutPeriod</span> = input(<span class="str">"Breakout Period"</span>, <span class="num">20</span>, <span class="num">5</span>, <span class="num">100</span>)
+<span class="kw">def</span> <span class="var">atrPeriod</span> = input(<span class="str">"ATR Period"</span>, <span class="num">14</span>, <span class="num">5</span>, <span class="num">50</span>)
+<span class="kw">def</span> <span class="var">atrMult</span> = input(<span class="str">"ATR Multiplier"</span>, <span class="num">2.0</span>, <span class="num">1.0</span>, <span class="num">5.0</span>, <span class="num">0.5</span>)
+
+<span class="kw">def</span> <span class="var">hi</span> = highest(high, <span class="var">breakoutPeriod</span>.intValue())
+<span class="kw">def</span> <span class="var">atrValues</span> = atr(<span class="var">atrPeriod</span>.intValue())
+<span class="kw">def</span> <span class="var">mult</span> = <span class="var">atrMult</span>.doubleValue()
+
+<span class="type">boolean</span> <span class="var">inTrade</span> = <span class="kw">false</span>
+<span class="type">float</span> <span class="var">stopLoss</span> = <span class="num">0</span>
+
+<span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="num">1</span>; <span class="var">i</span> &lt; barCount; <span class="var">i</span>++) {
+    <span class="kw">if</span> (!<span class="var">inTrade</span> &amp;&amp; close[<span class="var">i</span>] > <span class="var">hi</span>[<span class="var">i</span> - <span class="num">1</span>]) {
+        longEntry(<span class="var">i</span>)
+        <span class="var">stopLoss</span> = close[<span class="var">i</span>] - (<span class="type">float</span>)(<span class="var">atrValues</span>[<span class="var">i</span>] * <span class="var">mult</span>)
+        <span class="var">inTrade</span> = <span class="kw">true</span>
+    } <span class="kw">else if</span> (<span class="var">inTrade</span> &amp;&amp; low[<span class="var">i</span>] &lt; <span class="var">stopLoss</span>) {
+        longExit(<span class="var">i</span>)
+        <span class="var">inTrade</span> = <span class="kw">false</span>
+    }
+}</pre>
+
+<hr>
+
+<h2 id="tips">Tips &amp; Patterns</h2>
+
+<h3>Accessing the Last Bar</h3>
+<pre><span class="kw">def</span> <span class="var">last</span> = barCount - <span class="num">1</span>
+<span class="kw">def</span> <span class="var">currentClose</span> = close[<span class="var">last</span>]</pre>
+
+<h3>Guard Against Insufficient Data</h3>
+<pre><span class="kw">if</span> (barCount &lt; <span class="num">50</span>) <span class="kw">return false</span>  <span class="cm">// screener</span>
+<span class="kw">if</span> (barCount &lt; <span class="num">50</span>) <span class="kw">return</span> <span class="num">0</span>      <span class="cm">// ranker</span></pre>
+
+<h3>Computing Custom Values Per Bar</h3>
+<pre><span class="kw">def</span> <span class="var">result</span> = <span class="kw">new</span> <span class="type">float</span>[barCount]
+<span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> &lt; barCount; <span class="var">i</span>++) {
+    <span class="var">result</span>[<span class="var">i</span>] = (high[<span class="var">i</span>] - low[<span class="var">i</span>]) / close[<span class="var">i</span>] * <span class="num">100</span>  <span class="cm">// bar range %</span>
+}
+<span class="kw">return</span> <span class="var">result</span></pre>
+
+<h3>Using MACD Components</h3>
+<pre><span class="kw">def</span> <span class="var">result</span> = macd(close, <span class="num">12</span>, <span class="num">26</span>, <span class="num">9</span>)
+<span class="kw">def</span> <span class="var">macdLine</span>  = result[<span class="num">0</span>]  <span class="cm">// MACD line</span>
+<span class="kw">def</span> <span class="var">signalLine</span> = result[<span class="num">1</span>]  <span class="cm">// Signal line</span>
+<span class="kw">def</span> <span class="var">histogram</span>  = result[<span class="num">2</span>]  <span class="cm">// Histogram</span></pre>
+
+<h3>Percentage Change</h3>
+<pre><span class="kw">def</span> <span class="var">last</span> = barCount - <span class="num">1</span>
+<span class="kw">def</span> <span class="var">pctChange</span> = (close[<span class="var">last</span>] - close[<span class="var">last</span> - <span class="num">1</span>]) / close[<span class="var">last</span> - <span class="num">1</span>] * <span class="num">100</span></pre>
+
+<h3>Combining Multiple Conditions (Screener)</h3>
+<pre><span class="kw">def</span> <span class="var">last</span> = barCount - <span class="num">1</span>
+<span class="kw">def</span> <span class="var">ma50</span> = sma(close, <span class="num">50</span>)
+<span class="kw">def</span> <span class="var">ma200</span> = sma(close, <span class="num">200</span>)
+<span class="kw">def</span> <span class="var">rsiValues</span> = rsi(close, <span class="num">14</span>)
+
+<span class="kw">def</span> <span class="var">aboveMa50</span> = close[<span class="var">last</span>] > <span class="var">ma50</span>[<span class="var">last</span>]
+<span class="kw">def</span> <span class="var">ma50AboveMa200</span> = <span class="var">ma50</span>[<span class="var">last</span>] > <span class="var">ma200</span>[<span class="var">last</span>]
+<span class="kw">def</span> <span class="var">rsiHealthy</span> = <span class="var">rsiValues</span>[<span class="var">last</span>] > <span class="num">40</span> &amp;&amp; <span class="var">rsiValues</span>[<span class="var">last</span>] &lt; <span class="num">70</span>
+
+<span class="kw">return</span> <span class="var">aboveMa50</span> &amp;&amp; <span class="var">ma50AboveMa200</span> &amp;&amp; <span class="var">rsiHealthy</span></pre>
+
+<hr>
+<p style="color: #555555; font-size: 11px; margin-top: 24px;">
+WhiteOwl Script Reference &mdash; All scripts use Groovy syntax.
+</p>
+
+</body>
+</html>

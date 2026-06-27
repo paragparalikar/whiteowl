@@ -1,0 +1,169 @@
+.group-pane {
+    -fx-padding: 4 0 0 0;
+    -fx-spacing: 0;
+}
+
+.group-toolbar {
+    -fx-padding: 4;
+}
+
+.group-add-button {
+    -fx-background-color: transparent;
+    -fx-padding: 3;
+    -fx-cursor: hand;
+}
+
+.group-add-button:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.group-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.group-add-button:hover .group-icon {
+    -fx-icon-color: #afb8c1;
+}
+
+.group-search-field {
+    -fx-background-color: #1e1f22, #1e1f22, #1e1f22;
+    -fx-background-insets: 0, 0, 0;
+    -fx-background-radius: 0, 0, 0;
+    -fx-text-fill: #bbbbbb;
+    -fx-prompt-text-fill: #555555;
+    -fx-padding: 4 6 4 6;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 0 0 1 0;
+    -fx-font-size: 12px;
+}
+
+.group-search-field:focused {
+    -fx-background-color: #1e1f22, #1e1f22, #1e1f22;
+    -fx-background-insets: 0, 0, 0;
+    -fx-border-color: #4A78C2;
+    -fx-border-width: 0 0 1 0;
+}
+
+.group-section-edit-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-padding: 0 2 0 2;
+    -fx-border-color: #4A78C2;
+    -fx-border-width: 0 0 1 0;
+    -fx-font-size: 11px;
+}
+
+.group-section {
+    -fx-padding: 0;
+}
+
+.group-section-chevron {
+    -fx-icon-color: #6e7681;
+}
+
+.group-section-header {
+    -fx-background-color: rgba(255,255,255,0.04);
+    -fx-padding: 2 4 2 4;
+    -fx-cursor: hand;
+}
+
+.group-section-header:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.group-section-name {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.group-section-delete {
+    -fx-background-color: transparent;
+    -fx-padding: 1;
+    -fx-cursor: hand;
+}
+
+.group-section-delete:hover {
+    -fx-background-color: rgba(255,255,255,0.1);
+}
+
+.group-section-delete .group-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.group-section-delete:hover .group-icon {
+    -fx-icon-color: #f44336;
+}
+
+.group-section-truncate {
+    -fx-background-color: transparent;
+    -fx-padding: 1;
+    -fx-cursor: hand;
+}
+
+.group-section-truncate:hover {
+    -fx-background-color: rgba(255,255,255,0.1);
+}
+
+.group-section-truncate .group-icon {
+    -fx-icon-color: #ffa726;
+}
+
+.group-section-truncate:hover .group-icon {
+    -fx-icon-color: #ffb74d;
+}
+
+.group-list {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.group-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 2 8 2 12;
+}
+
+.group-list .list-cell:filled:selected {
+    -fx-background-color: #2d5c88;
+}
+
+.group-list .list-cell:filled:hover {
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.group-list .list-cell:filled:selected:hover {
+    -fx-background-color: #35689e;
+}
+
+.group-cell-drag-over {
+    -fx-border-color: transparent transparent #4A78C2 transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.group-cell-symbol {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}
+
+.group-list .list-cell:filled:selected .group-cell-symbol {
+    -fx-text-fill: #ffffff;
+}
+
+.group-cell-delete {
+    -fx-background-color: transparent;
+    -fx-padding: 1;
+    -fx-cursor: hand;
+    visibility: hidden;
+}
+
+.group-list .list-cell:filled:hover .group-cell-delete {
+    visibility: visible;
+}
+
+.group-cell-delete .group-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.group-cell-delete:hover .group-icon {
+    -fx-icon-color: #f44336;
+}

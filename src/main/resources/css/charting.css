@@ -1,0 +1,681 @@
+.chart-pane {
+    -fx-background-color: #1e1f22;
+}
+
+.chart-toolbar {
+    -fx-background-color: #1e1f22;
+    -fx-padding: 4 8 4 8;
+    -fx-alignment: center-left;
+    -fx-spacing: 6;
+}
+
+.chart-button-group {
+    -fx-background-color: #252628;
+    -fx-background-radius: 4;
+    -fx-padding: 1;
+    -fx-spacing: 0;
+    -fx-alignment: center-left;
+}
+
+.timeframe-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #868a91;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 2 6 2 6;
+    -fx-background-radius: 3;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-min-height: 20;
+    -fx-min-width: 24;
+}
+
+.timeframe-button:hover {
+    -fx-background-color: #2b2d30;
+    -fx-text-fill: #bbbbbb;
+}
+
+.timeframe-button-active {
+    -fx-background-color: #2b2d30;
+    -fx-text-fill: #bbbbbb;
+}
+
+.chart-no-data {
+    -fx-text-fill: #555555;
+    -fx-font-family: "Montserrat Italic", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 14px;
+}
+
+.indicator-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #868a91;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 3;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-min-height: 20;
+}
+
+.indicator-button:hover {
+    -fx-background-color: #2b2d30;
+    -fx-text-fill: #bbbbbb;
+}
+
+.indicator-popup {
+    -fx-background-color: #2b2d30;
+    -fx-background-radius: 6;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-padding: 6;
+    -fx-min-width: 140;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 8, 0, 0, 2);
+}
+
+.popup-search-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+    -fx-border-color: transparent transparent #3c3f41 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 4 8 4 8;
+    -fx-prompt-text-fill: #555555;
+    -fx-min-height: 24;
+}
+
+.popup-search-field:focused {
+    -fx-border-color: transparent transparent #4A78C2 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.indicator-add-item {
+    -fx-background-color: transparent;
+    -fx-text-fill: #868a91;
+    -fx-font-size: 11px;
+    -fx-padding: 4 8 4 8;
+    -fx-cursor: hand;
+    -fx-alignment: center-left;
+    -fx-background-radius: 3;
+}
+
+.indicator-add-item:hover {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #ffffff;
+}
+
+.indicator-list {
+    -fx-background-color: transparent;
+    -fx-padding: 0 8 0 8;
+    -fx-spacing: 0;
+}
+
+.indicator-tag {
+    -fx-spacing: 1;
+    -fx-alignment: center-left;
+    -fx-padding: 0;
+}
+
+.indicator-tag-name {
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+}
+
+.indicator-tag-value {
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+    -fx-padding: 0 0 0 2;
+}
+
+.indicator-tag-delete {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-min-width: 0;
+    -fx-min-height: 0;
+    -fx-border-width: 0;
+    -fx-icon-color: #ef5350;
+}
+
+.indicator-tag-delete:hover {
+    -fx-opacity: 0.7;
+}
+
+.indicator-tag-edit {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-min-width: 0;
+    -fx-min-height: 0;
+    -fx-border-width: 0;
+    -fx-icon-color: #f0a030;
+}
+
+.indicator-tag-edit:hover {
+    -fx-opacity: 0.7;
+}
+
+.indicator-dialog {
+    -fx-background-color: #2b2d30;
+    -fx-background-radius: 8;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 12, 0, 0, 3);
+}
+
+.indicator-dialog-title {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 13px;
+}
+
+.indicator-dialog-label {
+    -fx-text-fill: #868a91;
+    -fx-font-size: 12px;
+}
+
+.indicator-dialog-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-padding: 4 6 4 6;
+    -fx-background-radius: 3;
+    -fx-border-width: 0;
+    -fx-min-height: 24;
+}
+
+.indicator-dialog-field:focused {
+    -fx-border-color: transparent transparent #4A78C2 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.indicator-dialog-button {
+    -fx-background-color: #4A78C2;
+    -fx-text-fill: #ffffff;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 3;
+    -fx-cursor: hand;
+    -fx-min-height: 24;
+}
+
+.indicator-dialog-button:hover {
+    -fx-background-color: #5888d0;
+}
+
+.indicator-dialog-cancel {
+    -fx-background-color: transparent;
+    -fx-text-fill: #868a91;
+    -fx-font-size: 12px;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 3;
+    -fx-cursor: hand;
+    -fx-min-height: 24;
+}
+
+.indicator-dialog-cancel:hover {
+    -fx-text-fill: #bbbbbb;
+}
+
+.indicator-dialog-combo {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-background-radius: 3;
+    -fx-border-width: 0;
+    -fx-min-height: 24;
+}
+
+.indicator-dialog-combo .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-background-color: #1e1f22;
+    -fx-font-size: 12px;
+}
+
+.indicator-dialog-combo .list-view {
+    -fx-background-color: #2b2d30;
+}
+
+.indicator-dialog-combo .list-view .list-cell:hover {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #ffffff;
+}
+
+.scrip-search-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-border-color: transparent transparent #3c3f41 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 4 6 4 6;
+    -fx-min-height: 24;
+}
+
+.scrip-search-field:focused {
+    -fx-border-color: transparent transparent #4A78C2 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.scrip-search-list {
+    -fx-background-color: #2b2d30;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 1;
+    -fx-background-radius: 0 0 4 4;
+    -fx-border-radius: 0 0 4 4;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 8, 0, 0, 2);
+}
+
+.scrip-search-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+    -fx-padding: 3 6 3 6;
+}
+
+.scrip-search-list .list-cell:hover {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #ffffff;
+}
+
+.scrip-search-list .list-cell:selected {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #ffffff;
+}
+
+.scrip-search-cell-symbol {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+}
+
+.scrip-search-list .list-cell:hover .scrip-search-cell-symbol,
+.scrip-search-list .list-cell:selected .scrip-search-cell-symbol {
+    -fx-text-fill: #ffffff;
+}
+
+.sub-chart-wrapper {
+    -fx-background-color: #1e1f22;
+}
+
+.drawing-button {
+    -fx-background-color: transparent;
+    -fx-padding: 3 5 3 5;
+    -fx-background-radius: 3;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-min-height: 20;
+    -fx-min-width: 20;
+}
+
+.drawing-button:hover {
+    -fx-background-color: #2b2d30;
+}
+
+.drawing-button-active {
+    -fx-background-color: #2b2d30;
+}
+
+.drawing-button:hover .drawing-icon {
+    -fx-stroke: #bbbbbb;
+}
+
+.drawing-button-active .drawing-icon {
+    -fx-stroke: #e0e0e0;
+}
+
+.drawing-clear-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.drawing-button:hover .drawing-clear-icon {
+    -fx-icon-color: #f44336;
+}
+
+.scrip-picker-list {
+    -fx-background-color: #1e1f22;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.scrip-picker-list .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-background-color: #1e1f22;
+    -fx-font-size: 12px;
+    -fx-padding: 4 6 4 6;
+}
+
+.scrip-picker-list .list-cell:filled:hover {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #ffffff;
+}
+
+.scrip-picker-list .list-cell:filled:selected {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #ffffff;
+}
+
+.drawing-text-field {
+    -fx-background-color: #2b2d30;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-font-size: 11px;
+    -fx-padding: 2 4 2 4;
+    -fx-pref-height: 22;
+    -fx-max-height: 22;
+}
+
+.zoom-button {
+    -fx-background-color: rgba(43, 45, 48, 0.5);
+    -fx-background-radius: 50;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+    -fx-min-width: 36;
+    -fx-min-height: 36;
+    -fx-max-width: 36;
+    -fx-max-height: 36;
+    -fx-text-fill: #868a91;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 18px;
+    -fx-alignment: center;
+    -fx-cursor: hand;
+    -fx-opacity: 0.4;
+}
+
+.zoom-button:hover {
+    -fx-background-color: rgba(43, 45, 48, 0.9);
+    -fx-text-fill: #e0e0e0;
+    -fx-opacity: 1.0;
+}
+
+.screen-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #868a91;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 3;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-min-height: 20;
+}
+
+.screen-button:hover {
+    -fx-background-color: #2b2d30;
+    -fx-text-fill: #bbbbbb;
+}
+
+.screen-tag {
+    -fx-spacing: 1;
+    -fx-alignment: center-left;
+    -fx-padding: 0;
+}
+
+.screen-tag-name {
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+    -fx-text-fill: #4caf50;
+}
+
+.screen-tag-delete {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.screen-tag-delete .ikonli-font-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.screen-tag-delete:hover {
+    -fx-opacity: 0.7;
+}
+
+.screen-tag-edit {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.screen-tag-edit .ikonli-font-icon {
+    -fx-icon-color: #f0a030;
+}
+
+.screen-tag-edit:hover {
+    -fx-opacity: 0.7;
+}
+
+.order-book-panel {
+    -fx-background-color: #1e1f22;
+    -fx-background-radius: 8;
+}
+
+.order-book-header-button {
+    -fx-background-color: transparent;
+    -fx-padding: 2 4 2 4;
+    -fx-background-radius: 3;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+}
+
+.order-book-header-button:hover {
+    -fx-background-color: #353739;
+}
+
+.order-book-header-button .ikonli-font-icon {
+    -fx-icon-color: #999999;
+}
+
+.order-book-header-button:hover .ikonli-font-icon {
+    -fx-icon-color: #bbbbbb;
+}
+
+.order-book-tab-pane > .tab-header-area {
+    -fx-padding: 0;
+    -fx-background-color: #1e1f22;
+    -fx-background-insets: 0;
+}
+
+.order-book-tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: #1e1f22;
+    -fx-background-insets: 0;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.order-book-tab-pane > .tab-header-area > .headers-region {
+    -fx-background-color: transparent;
+}
+
+.order-book-tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #1e1f22;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 3 14 3 10;
+    -fx-border-color: transparent;
+}
+
+.order-book-tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #2b2d30;
+    -fx-border-color: transparent transparent #4A78C2 transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.order-book-tab-pane > .tab-header-area > .headers-region > .tab > .tab-container > .tab-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-size: 11px;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+}
+
+.order-book-tab-pane > .tab-header-area > .headers-region > .tab:selected > .tab-container > .tab-label {
+    -fx-text-fill: #bbbbbb;
+}
+
+.order-book-tab-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.order-book-tab-pane > .tab-header-area > .headers-region > .tab:selected .order-book-tab-icon {
+    -fx-icon-color: #bbbbbb;
+}
+
+.order-book-tab-pane > .tab-header-area > .headers-region > .tab > .tab-container {
+    -fx-graphic-text-gap: 5;
+}
+
+.order-book-table {
+    -fx-background-color: #1e1f22;
+    -fx-border-color: transparent;
+    -fx-fixed-cell-size: 24;
+    -color-cell-fg: #bbbbbb;
+    -color-cell-fg-selected: #ffffff;
+    -color-cell-bg: #1e1f22;
+    -color-cell-bg-selected: #2d5c88;
+}
+
+.order-book-table .column-header-background {
+    -fx-background-color: #1e1f22;
+}
+
+.order-book-table .column-header {
+    -fx-background-color: #1e1f22;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-pref-height: 20;
+    -fx-max-height: 20;
+}
+
+.order-book-table .column-header .label {
+    -fx-text-fill: #6e7681;
+    -fx-font-size: 10px;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-text-transform: uppercase;
+    -fx-padding: 0 6 0 6;
+}
+
+.order-book-table .table-row-cell {
+    -fx-background-color: #1e1f22;
+    -fx-border-color: transparent;
+}
+
+.order-book-table .table-row-cell:odd {
+    -fx-background-color: #232427;
+}
+
+.order-book-table .table-row-cell:selected,
+.order-book-table .table-row-cell:filled:selected {
+    -fx-background-color: #2d5c88;
+}
+
+.order-book-table .table-row-cell:selected .table-cell,
+.order-book-table .table-row-cell:filled:selected .table-cell {
+    -fx-text-fill: #ffffff;
+}
+
+.order-book-table .table-row-cell:selected .ikonli-font-icon,
+.order-book-table .table-row-cell:filled:selected .ikonli-font-icon {
+    -fx-icon-color: #bbbbbb;
+}
+
+.order-book-table .table-row-cell:empty {
+    -fx-background-color: #1e1f22;
+}
+
+.order-book-table .table-cell {
+    -fx-text-fill: -color-cell-fg;
+    -fx-padding: 2 6 2 6;
+    -fx-alignment: center-left;
+    -fx-font-size: 11px;
+    -fx-font-family: "Montserrat", "Segoe UI", system;
+}
+
+.order-book-empty {
+    -fx-text-fill: #555555;
+    -fx-font-family: "Montserrat Italic", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+}
+
+.order-book-table .placeholder .label {
+    -fx-text-fill: #555555;
+    -fx-font-family: "Montserrat Italic", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+}
+
+.order-book-action-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 3 0 3;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+}
+
+.order-book-action-button .ikonli-font-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.order-book-action-button:hover .ikonli-font-icon {
+    -fx-icon-color: #bbbbbb;
+}
+
+.order-book-action-delete:hover .ikonli-font-icon {
+    -fx-icon-color: #ff6b68;
+}
+
+.order-book-action-exit .ikonli-font-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.order-book-action-exit:hover .ikonli-font-icon {
+    -fx-icon-color: #ff6b68;
+}
+
+.order-book-table .table-row-cell:selected .order-book-action-button .ikonli-font-icon {
+    -fx-icon-color: #bbbbbb;
+}
+
+.order-book-funds-grid {
+    -fx-background-color: #1e1f22;
+    -fx-padding: 16;
+    -fx-hgap: 24;
+    -fx-vgap: 12;
+}
+
+.order-book-funds-label {
+    -fx-text-fill: #999999;
+    -fx-font-size: 11px;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+}
+
+.order-book-funds-value {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 13px;
+}
+
+.order-action-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #868a91;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+    -fx-padding: 2 6 2 6;
+    -fx-background-radius: 3;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-min-height: 20;
+    -fx-graphic-text-gap: 3;
+}
+
+.order-action-button .ikonli-font-icon {
+    -fx-icon-color: #868a91;
+}
+
+.order-action-button:hover {
+    -fx-background-color: #2b2d30;
+    -fx-text-fill: #bbbbbb;
+}
+
+.order-action-button:hover .ikonli-font-icon {
+    -fx-icon-color: #bbbbbb;
+}

@@ -1,0 +1,343 @@
+.ranker-pane {
+    -fx-padding: 4 0 0 0;
+    -fx-spacing: 0;
+}
+
+.ranker-section {
+    -fx-padding: 12 10 12 10;
+}
+
+.ranker-combo {
+    -fx-font-size: 12px;
+    -fx-pref-height: 28;
+}
+
+.ranker-combo .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-padding: 4;
+}
+
+.ranker-combo .arrow {
+    -fx-background-color: #6e7681;
+}
+
+.ranker-button {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #e0e0e0;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.ranker-button:hover {
+    -fx-background-color: #35689e;
+}
+
+.ranker-button:disabled {
+    -fx-opacity: 0.5;
+}
+
+.ranker-button-icon {
+    -fx-icon-color: #e0e0e0;
+}
+
+.ranker-cancel-button {
+    -fx-background-color: #3c2020;
+    -fx-text-fill: #ef5350;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-border-color: #ef5350;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.ranker-cancel-button:hover {
+    -fx-background-color: #4a2525;
+}
+
+.ranker-cancel-button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.ranker-cancel-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.ranker-sort-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.ranker-sort-button:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.ranker-sort-button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.ranker-sort-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.ranker-sort-button:hover .ranker-sort-icon {
+    -fx-icon-color: #afb8c1;
+}
+
+.ranker-result-header {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 8 10 4 10;
+}
+
+.ranker-list {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.ranker-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 2 8 2 8;
+}
+
+.ranker-list .list-cell:filled:selected {
+    -fx-background-color: #2d5c88;
+}
+
+.ranker-list .list-cell:filled:hover {
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.ranker-list .list-cell:filled:selected:hover {
+    -fx-background-color: #35689e;
+}
+
+.ranker-cell-symbol {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}
+
+.ranker-list .list-cell:filled:selected .ranker-cell-symbol {
+    -fx-text-fill: #ffffff;
+}
+
+.ranker-progress-container {
+    -fx-padding: 8 10 12 10;
+    -fx-spacing: 6;
+}
+
+.ranker-progress-bar {
+    -fx-pref-height: 8;
+}
+
+.ranker-progress-bar > .bar {
+    -fx-background-color: #4ec9b0;
+}
+
+.ranker-progress-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+}
+
+.ranker-row {
+    -fx-alignment: center-left;
+}
+
+.ranker-edit-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.ranker-edit-button:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.ranker-edit-button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.ranker-edit-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.ranker-edit-button:hover .ranker-edit-icon {
+    -fx-icon-color: #afb8c1;
+}
+
+.ranker-offset-label {
+    -fx-text-fill: #868a91;
+    -fx-font-size: 12px;
+}
+
+.ranker-offset-row {
+    -fx-alignment: center-left;
+}
+
+.ranker-offset-spinner {
+    -fx-background-color: #1e1f22;
+    -fx-font-size: 12px;
+    -fx-pref-height: 28;
+    -fx-background-radius: 4;
+}
+
+.ranker-offset-spinner .text-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-background-radius: 4 0 0 4;
+}
+
+.ranker-offset-spinner .increment-arrow-button,
+.ranker-offset-spinner .decrement-arrow-button {
+    -fx-background-color: #2b2d30;
+    -fx-cursor: hand;
+}
+
+.ranker-offset-spinner .increment-arrow-button:hover,
+.ranker-offset-spinner .decrement-arrow-button:hover {
+    -fx-background-color: #3c3f41;
+}
+
+.ranker-offset-spinner .increment-arrow-button .increment-arrow,
+.ranker-offset-spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: #6e7681;
+}
+
+.ranker-dialog-spinner {
+    -fx-background-color: #1e1f22;
+    -fx-font-size: 12px;
+    -fx-min-height: 30;
+    -fx-pref-height: 30;
+    -fx-background-radius: 4;
+}
+
+.ranker-dialog-spinner .text-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-background-radius: 4 0 0 4;
+}
+
+.ranker-dialog-spinner .increment-arrow-button,
+.ranker-dialog-spinner .decrement-arrow-button {
+    -fx-background-color: #2b2d30;
+    -fx-cursor: hand;
+}
+
+.ranker-dialog-spinner .increment-arrow-button:hover,
+.ranker-dialog-spinner .decrement-arrow-button:hover {
+    -fx-background-color: #3c3f41;
+}
+
+.ranker-dialog-spinner .increment-arrow-button .increment-arrow,
+.ranker-dialog-spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: #6e7681;
+}
+
+.ranker-dialog {
+    -fx-background-color: #2b2d30;
+    -fx-background-radius: 8;
+    -fx-border-color: #3c3f41;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 12, 0, 0, 3);
+}
+
+.ranker-dialog-title {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 13px;
+}
+
+.ranker-dialog-label {
+    -fx-text-fill: #868a91;
+    -fx-font-size: 12px;
+}
+
+.ranker-dialog-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-padding: 4 8;
+    -fx-min-height: 28;
+    -fx-pref-height: 28;
+}
+
+.ranker-dialog-field:focused {
+    -fx-border-color: transparent transparent #4A78C2 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.ranker-dialog-button {
+    -fx-background-color: #4A78C2;
+    -fx-text-fill: #ffffff;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-background-radius: 4;
+    -fx-padding: 6 20;
+    -fx-cursor: hand;
+    -fx-min-height: 28;
+}
+
+.ranker-dialog-button:hover {
+    -fx-background-color: #5888d0;
+}
+
+.ranker-dialog-cancel {
+    -fx-background-color: transparent;
+    -fx-text-fill: #868a91;
+    -fx-font-size: 12px;
+    -fx-padding: 6 14;
+    -fx-cursor: hand;
+    -fx-min-height: 28;
+}
+
+.ranker-dialog-cancel:hover {
+    -fx-text-fill: #bbbbbb;
+}
+
+.ranker-dialog-combo {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-background-radius: 4;
+    -fx-min-height: 30;
+    -fx-pref-height: 30;
+}
+
+.ranker-dialog-combo .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-background-color: #1e1f22;
+    -fx-font-size: 12px;
+    -fx-padding: 4 6;
+}
+
+.ranker-dialog-combo .list-view {
+    -fx-background-color: #2b2d30;
+}
+
+.ranker-dialog-combo .list-view .list-cell:hover {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #ffffff;
+}
+
+.ranker-dialog-separator {
+    -fx-padding: 2 0 0 0;
+}
+
+.ranker-dialog-combo .arrow {
+    -fx-background-color: #6e7681;
+}

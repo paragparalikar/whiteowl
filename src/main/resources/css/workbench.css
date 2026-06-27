@@ -1,0 +1,201 @@
+.window-border {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-color: radial-gradient(center 50% 50%, radius 80%, #2d3548, #1e1f22);
+}
+
+.title-bar {
+    -fx-background-color: transparent;
+    -fx-min-height: 28;
+    -fx-max-height: 28;
+    -fx-pref-height: 28;
+}
+
+.title-bar-label {
+    -fx-text-fill: #4d5566;
+    -fx-font-family: "Montserrat ExtraLight", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+}
+
+.window-button {
+    -fx-background-color: transparent;
+    -fx-min-width: 36;
+    -fx-max-width: 36;
+    -fx-min-height: 28;
+    -fx-max-height: 28;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 6;
+    -fx-cursor: hand;
+}
+
+.window-button:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.window-button-close {
+    -fx-background-color: transparent;
+    -fx-min-width: 36;
+    -fx-max-width: 36;
+    -fx-min-height: 28;
+    -fx-max-height: 28;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 6;
+    -fx-cursor: hand;
+}
+
+.window-button-close:hover {
+    -fx-background-color: #ff6b68;
+}
+
+.window-icon {
+    -fx-background-color: #3d444d;
+    -fx-min-width: 10;
+    -fx-min-height: 10;
+    -fx-max-width: 10;
+    -fx-max-height: 10;
+}
+
+.window-button:hover .window-icon {
+    -fx-background-color: #8b949e;
+}
+
+.window-button-close:hover .window-icon {
+    -fx-background-color: #ffffff;
+}
+
+.icon-minimize {
+    -fx-shape: "M0,4 L10,4 L10,5 L0,5 Z";
+    -fx-min-height: 1;
+    -fx-max-height: 1;
+}
+
+.icon-maximize {
+    -fx-shape: "M0,0 L10,0 L10,10 L0,10 Z M1,1 L1,9 L9,9 L9,1 Z";
+}
+
+.icon-restore {
+    -fx-shape: "M3,0 L10,0 L10,7 L9,7 L9,1 L3,1 Z M0,3 L7,3 L7,10 L0,10 Z M1,4 L1,9 L6,9 L6,4 Z";
+}
+
+.icon-close {
+    -fx-shape: "M0,0.7 L0.7,0 L5,4.3 L9.3,0 L10,0.7 L5.7,5 L10,9.3 L9.3,10 L5,5.7 L0.7,10 L0,9.3 L4.3,5 Z";
+}
+
+.workbench-menu-bar {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 0 4;
+}
+
+.workbench-menu-bar .menu-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 4 8 4 8;
+    -fx-cursor: hand;
+}
+
+.workbench-menu-bar .menu-button:hover,
+.workbench-menu-bar .menu-button:showing {
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-text-fill: #afb8c1;
+}
+
+.workbench-menu-bar .menu-button .arrow {
+    -fx-background-color: transparent;
+    -fx-shape: "";
+    -fx-padding: 0;
+}
+
+.left-tab-pane,
+.right-tab-pane {
+    -fx-background-color: transparent;
+}
+
+.left-tab-pane > .tab-header-area,
+.right-tab-pane > .tab-header-area {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.left-tab-pane > .tab-header-area > .headers-region > .tab,
+.right-tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 4 12 4 12;
+    -fx-cursor: hand;
+}
+
+.left-tab-pane > .tab-header-area > .headers-region > .tab .tab-label,
+.right-tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+}
+
+.left-tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label,
+.right-tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: #e6edf3;
+}
+
+.left-tab-pane > .tab-header-area > .headers-region > .tab:selected,
+.right-tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-border-color: transparent transparent #4A78C2 transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.left-tab-pane > .tab-header-area > .headers-region > .tab:hover .tab-label,
+.right-tab-pane > .tab-header-area > .headers-region > .tab:hover .tab-label {
+    -fx-text-fill: #afb8c1;
+}
+
+.view-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.tab-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.left-tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-icon,
+.right-tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-icon {
+    -fx-icon-color: #e6edf3;
+}
+
+.left-tab-pane > .tab-header-area > .headers-region > .tab:hover .tab-icon,
+.right-tab-pane > .tab-header-area > .headers-region > .tab:hover .tab-icon {
+    -fx-icon-color: #afb8c1;
+}
+
+.left-tab-pane > .tab-header-area > .tab-header-background,
+.right-tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: transparent;
+}
+
+.left-tab-pane > .tab-content-area,
+.right-tab-pane > .tab-content-area {
+    -fx-background-color: #1e1f22;
+    -fx-background-radius: 8;
+    -fx-padding: 4;
+}
+
+.left-tab-pane {
+    -fx-min-width: 200;
+}
+
+.split-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 4 4 6 4;
+}
+
+.split-pane > .split-pane-divider {
+    -fx-background-color: transparent;
+    -fx-padding: 0 2 0 2;
+}
+
+.split-pane:vertical > .split-pane-divider {
+    -fx-padding: 2 0 2 0;
+}
+

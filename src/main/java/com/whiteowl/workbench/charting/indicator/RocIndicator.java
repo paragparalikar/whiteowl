@@ -1,0 +1,73 @@
+package com.whiteowl.workbench.charting.indicator;
+
+import com.whiteowl.core.bar.model.Bars;
+import javafx.scene.paint.Color;
+
+import java.util.List;
+import java.util.Map;
+
+public final class RocIndicator implements SubChartIndicator {
+
+    private static final String INDICATOR_NAME = "ROC";
+    private static final String PERIOD_SETTING = "Period";
+    private static final String SOURCE_SETTING = "Source";
+    private static final int DEFAULT_PERIOD = 12;
+    private static final double ZERO_LINE = 0;
+    private static final double HUNDRED = 100.0;
+    private static final Color ROC_COLOR = Color.web("#00bcd4");
+
+    @Override
+    public String getName() {
+        return INDICATOR_NAME;
+    }
+
+    @Override
+    public List<IndicatorSetting> getSettings() {
+        return List.of(
+                new IndicatorSetting(PERIOD_SETTING, Integer.class, DEFAULT_PERIOD),
+                new IndicatorSetting(SOURCE_SETTING, PriceSource.class, PriceSource.CLOSE));
+    }
+
+    @Override
+    public SubChartResult compute(Bars bars, Map<String, Object> settings) {
+        int period = resolveInt(settings, PERIOD_SETTING, DEFAULT_PERIOD);
+        PriceSource source = resolveSource(settings);
+        int size = bars.size();
+        double[] values = new double[size];
+        if (size <= period) {
+            initializeEmpty(values, size);
+        } else {
+            initializeEmpty(values, period);
+            for (int i = period; i < size; i++) {
+                double prev = source.resolve(bars, i - period);
+                if (prev == 0) {
+                    values[i] = 0;
+                } else {
+                    values[i] = ((source.resolve(bars, i) - prev) / prev) * HUNDRED;
+                }
+            }
+        }
+        String label = INDICATOR_NAME + "(" + period + ", " + source.getLabel() + ")";
+        return new SubChartResult(values, ROC_COLOR, label, true, List.of(),
+                null, null, null, ZERO_LINE);
+    }
+
+    private int resolveInt(Map<String, Object> settings, String key, int defaultValue) {
+        Object val = settings.get(key);
+        if (val instanceof Integer) return (Integer) val;
+        return defaultValue;
+    }
+
+    private PriceSource resolveSource(Map<String, Object> settings) {
+        Object val = settings.get(SOURCE_SETTING);
+        if (val instanceof PriceSource) return (PriceSource) val;
+        return PriceSource.CLOSE;
+    }
+
+    private void initializeEmpty(double[] values, int count) {
+        for (int i = 0; i < count; i++) {
+            values[i] = Double.NaN;
+        }
+    }
+
+}

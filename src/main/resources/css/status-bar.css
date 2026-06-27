@@ -1,0 +1,121 @@
+.status-bar {
+    -fx-background-color: #1a1b1e;
+    -fx-min-height: 24;
+    -fx-max-height: 24;
+    -fx-pref-height: 24;
+    -fx-padding: 0 8 0 8;
+    -fx-border-color: #2d2f33 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.status-account-pill {
+    -fx-padding: 2 10 2 10;
+    -fx-background-color: rgba(255,255,255,0.04);
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.status-account-pill:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.status-account-label {
+    -fx-text-fill: #8b949e;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-icon-color: #8b949e;
+}
+
+.status-dot {
+    -fx-stroke: transparent;
+}
+
+.status-dot-connected {
+    -fx-fill: #3fb950;
+}
+
+.status-dot-disconnected {
+    -fx-fill: #6e7681;
+}
+
+.status-dot-connecting {
+    -fx-fill: #d29922;
+}
+
+.status-toast {
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 2 8 2 6;
+    -fx-graphic-text-gap: 4;
+}
+
+.status-toast-info {
+    -fx-text-fill: #8b949e;
+    -fx-icon-color: #8b949e;
+}
+
+.status-toast-success {
+    -fx-text-fill: #3fb950;
+    -fx-icon-color: #3fb950;
+}
+
+.status-toast-error {
+    -fx-text-fill: #f85149;
+    -fx-icon-color: #f85149;
+}
+
+.status-order-book-button {
+    -fx-background-color: transparent;
+    -fx-padding: 2 6 2 6;
+    -fx-cursor: hand;
+    -fx-icon-color: #6e7681;
+}
+
+.status-order-book-button:hover {
+    -fx-icon-color: #afb8c1;
+}
+
+.status-menu-item-row {
+    -fx-padding: 2 4 2 0;
+}
+
+.status-menu-item-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}
+
+.status-menu-active .status-menu-item-label,
+.status-menu-item-label.status-menu-active {
+    -fx-text-fill: #4A78C2;
+}
+
+.status-menu-action-button {
+    -fx-background-color: transparent;
+    -fx-padding: 2 4;
+    -fx-cursor: hand;
+    -fx-opacity: 0.5;
+}
+
+.status-menu-action-button:hover {
+    -fx-opacity: 1.0;
+}
+
+.status-menu-action-edit {
+    -fx-icon-color: #8b949e;
+}
+
+.status-menu-action-button:hover .status-menu-action-edit {
+    -fx-icon-color: #4A78C2;
+}
+
+.status-menu-action-delete {
+    -fx-icon-color: #ef5350;
+}
+
+.status-menu-action-button:hover .status-menu-action-delete {
+    -fx-icon-color: #ff6b68;
+}
+
+.status-menu-create {
+    -fx-icon-color: #8b949e;
+}

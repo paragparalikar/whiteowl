@@ -1,0 +1,330 @@
+.accounts-pane {
+    -fx-padding: 0;
+    -fx-spacing: 0;
+}
+
+.accounts-scroll {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.accounts-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.accounts-scroll > .scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.accounts-content {
+    -fx-padding: 16 24 16 24;
+    -fx-alignment: top-center;
+}
+
+.accounts-card {
+    -fx-background-color: linear-gradient(to bottom, rgba(62, 66, 73, 0.92), rgba(38, 40, 43, 0.80));
+    -fx-background-radius: 6;
+    -fx-border-color: rgba(255, 255, 255, 0.06);
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.55), 16, 0.05, 0, 4);
+}
+
+.accounts-header-bar {
+    -fx-padding: 8 12 6 12;
+    -fx-background-color: rgba(255, 255, 255, 0.03);
+    -fx-background-radius: 6 6 0 0;
+}
+
+.accounts-header-title {
+    -fx-text-fill: #999999;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-icon-color: #999999;
+}
+
+.accounts-header-count {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+    -fx-background-radius: 8;
+    -fx-padding: 1 6 1 6;
+    -fx-min-width: 18;
+    -fx-alignment: center;
+}
+
+.accounts-table {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 12px;
+    -fx-fixed-cell-size: 32;
+}
+
+.accounts-table .column-header-background {
+    -fx-background-color: transparent;
+}
+
+.accounts-table .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent rgba(255, 255, 255, 0.06) transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-pref-height: 28;
+}
+
+.accounts-table .column-header .label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.accounts-table .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.accounts-table .table-row-cell:odd {
+    -fx-background-color: rgba(255, 255, 255, 0.015);
+}
+
+.accounts-table .table-row-cell:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.04);
+}
+
+.accounts-table .table-row-cell:selected {
+    -fx-background-color: rgba(74, 120, 194, 0.15);
+}
+
+.accounts-table .table-row-cell:empty {
+    -fx-background-color: transparent;
+}
+
+.accounts-table .table-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-padding: 2 8 2 8;
+    -fx-alignment: center-left;
+    -fx-font-size: 12px;
+}
+
+.accounts-table .filler {
+    -fx-background-color: transparent;
+}
+
+.accounts-broker-badge {
+    -fx-font-family: "Montserrat Bold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 9px;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 3;
+    -fx-alignment: center;
+    -fx-min-height: 18;
+    -fx-max-height: 18;
+}
+
+.accounts-broker-zerodha {
+    -fx-text-fill: #4ec9b0;
+    -fx-background-color: rgba(78, 201, 176, 0.12);
+}
+
+.accounts-broker-finvasia {
+    -fx-text-fill: #ce9178;
+    -fx-background-color: rgba(206, 145, 120, 0.12);
+}
+
+.accounts-empty-state {
+    -fx-padding: 24;
+}
+
+.accounts-empty-icon {
+    -fx-icon-color: #3c3f41;
+}
+
+.accounts-empty-text {
+    -fx-text-fill: #515151;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.accounts-form-card {
+    -fx-background-color: linear-gradient(to bottom, rgba(62, 66, 73, 0.92), rgba(38, 40, 43, 0.80));
+    -fx-background-radius: 6;
+    -fx-border-color: rgba(255, 255, 255, 0.06);
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.55), 16, 0.05, 0, 4);
+}
+
+.accounts-form {
+    -fx-padding: 12 16 14 16;
+    -fx-spacing: 10;
+}
+
+.accounts-form-header {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+}
+
+.accounts-form-header-icon {
+    -fx-icon-color: #4A78C2;
+}
+
+.accounts-form-label {
+    -fx-text-fill: #999999;
+    -fx-font-family: "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-alignment: center-right;
+    -fx-padding: 0 4 0 0;
+}
+
+.accounts-form-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-pref-height: 34;
+    -fx-min-height: 34;
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-padding: 4 10 4 10;
+}
+
+.accounts-form-field:focused {
+    -fx-border-color: #4A78C2;
+}
+
+.accounts-form-combo {
+    -fx-font-size: 12px;
+    -fx-pref-height: 34;
+    -fx-min-height: 34;
+    -fx-background-radius: 4;
+}
+
+.accounts-form-combo .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}
+
+.accounts-form-message {
+    -fx-font-family: "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 4 0 0 0;
+}
+
+.accounts-form-error {
+    -fx-text-fill: #ef5350;
+}
+
+.accounts-form-success {
+    -fx-text-fill: #6a8759;
+}
+
+.accounts-form-divider {
+    -fx-min-height: 1;
+    -fx-max-height: 1;
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+}
+
+.accounts-form-button-row {
+    -fx-padding: 2 0 0 0;
+}
+
+.accounts-save-button {
+    -fx-background-color: #365880;
+    -fx-text-fill: #ffffff;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 16 5 12;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.accounts-save-button:hover {
+    -fx-background-color: #4A78C2;
+}
+
+.accounts-save-icon {
+    -fx-icon-color: #ffffff;
+}
+
+.accounts-cancel-button {
+    -fx-background-color: #45494a;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 16 5 12;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.accounts-cancel-button:hover {
+    -fx-background-color: #4e5254;
+}
+
+.accounts-cancel-icon {
+    -fx-icon-color: #bbbbbb;
+}
+
+.accounts-add-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.accounts-add-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+}
+
+.accounts-add-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.accounts-add-button:hover .accounts-add-icon {
+    -fx-icon-color: #bbbbbb;
+}
+
+.accounts-edit-button {
+    -fx-background-color: transparent;
+    -fx-padding: 3 5 3 5;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.accounts-edit-button:hover {
+    -fx-background-color: rgba(74, 120, 194, 0.15);
+}
+
+.accounts-edit-icon {
+    -fx-icon-color: #515151;
+}
+
+.accounts-edit-button:hover .accounts-edit-icon {
+    -fx-icon-color: #4A78C2;
+}
+
+.accounts-delete-button {
+    -fx-background-color: transparent;
+    -fx-padding: 3 5 3 5;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.accounts-delete-button:hover {
+    -fx-background-color: rgba(239, 83, 80, 0.1);
+}
+
+.accounts-delete-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.accounts-delete-button:hover .accounts-delete-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.accounts-action-cell {
+    -fx-alignment: center;
+}

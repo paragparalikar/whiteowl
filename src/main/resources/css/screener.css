@@ -1,0 +1,326 @@
+.screener-pane {
+    -fx-padding: 4 0 0 0;
+    -fx-spacing: 0;
+}
+
+.screener-section {
+    -fx-padding: 12 10 12 10;
+}
+
+.screener-section-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.screener-combo {
+    -fx-font-size: 12px;
+    -fx-pref-height: 28;
+}
+
+.screener-combo .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-padding: 4;
+}
+
+.screener-combo .arrow {
+    -fx-background-color: #6e7681;
+}
+
+.screener-button {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #e0e0e0;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.screener-button:hover {
+    -fx-background-color: #35689e;
+}
+
+.screener-button:disabled {
+    -fx-opacity: 0.5;
+}
+
+.screener-button-icon {
+    -fx-icon-color: #e0e0e0;
+}
+
+.screener-cancel-button {
+    -fx-background-color: #3c2020;
+    -fx-text-fill: #ef5350;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-border-color: #ef5350;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.screener-cancel-button:hover {
+    -fx-background-color: #4a2525;
+}
+
+.screener-cancel-button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.screener-cancel-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.screener-result-header {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 8 10 4 10;
+}
+
+.screener-list {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.screener-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 2 8 2 8;
+}
+
+.screener-list .list-cell:filled:selected {
+    -fx-background-color: #2d5c88;
+}
+
+.screener-list .list-cell:filled:hover {
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.screener-list .list-cell:filled:selected:hover {
+    -fx-background-color: #35689e;
+}
+
+.screener-cell-symbol {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}
+
+.screener-list .list-cell:filled:selected .screener-cell-symbol {
+    -fx-text-fill: #ffffff;
+}
+
+.screener-progress-container {
+    -fx-padding: 8 10 12 10;
+    -fx-spacing: 6;
+}
+
+.screener-progress-bar {
+    -fx-pref-height: 8;
+}
+
+.screener-progress-bar > .bar {
+    -fx-background-color: #4ec9b0;
+}
+
+.screener-progress-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+}
+
+.screener-screen-row {
+    -fx-alignment: center-left;
+}
+
+.screener-edit-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.screener-edit-button:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.screener-edit-button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.screener-edit-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.screener-edit-button:hover .screener-edit-icon {
+    -fx-icon-color: #afb8c1;
+}
+
+.screener-offset-label {
+    -fx-text-fill: #868a91;
+    -fx-font-size: 12px;
+}
+
+.screener-offset-row {
+    -fx-alignment: center-left;
+}
+
+.screener-offset-spinner {
+    -fx-background-color: #1e1f22;
+    -fx-font-size: 12px;
+    -fx-pref-height: 28;
+    -fx-background-radius: 4;
+}
+
+.screener-offset-spinner .text-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-background-radius: 4 0 0 4;
+}
+
+.screener-offset-spinner .increment-arrow-button,
+.screener-offset-spinner .decrement-arrow-button {
+    -fx-background-color: #2b2d30;
+    -fx-cursor: hand;
+}
+
+.screener-offset-spinner .increment-arrow-button:hover,
+.screener-offset-spinner .decrement-arrow-button:hover {
+    -fx-background-color: #3c3f41;
+}
+
+.screener-offset-spinner .increment-arrow-button .increment-arrow,
+.screener-offset-spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: #6e7681;
+}
+
+.screener-dialog-spinner {
+    -fx-background-color: #1e1f22;
+    -fx-font-size: 12px;
+    -fx-min-height: 30;
+    -fx-pref-height: 30;
+    -fx-background-radius: 4;
+}
+
+.screener-dialog-spinner .text-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-background-radius: 4 0 0 4;
+}
+
+.screener-dialog-spinner .increment-arrow-button,
+.screener-dialog-spinner .decrement-arrow-button {
+    -fx-background-color: #2b2d30;
+    -fx-cursor: hand;
+}
+
+.screener-dialog-spinner .increment-arrow-button:hover,
+.screener-dialog-spinner .decrement-arrow-button:hover {
+    -fx-background-color: #3c3f41;
+}
+
+.screener-dialog-spinner .increment-arrow-button .increment-arrow,
+.screener-dialog-spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: #6e7681;
+}
+
+.screener-dialog {
+    -fx-background-color: #2b2d30;
+    -fx-background-radius: 8;
+    -fx-border-color: #3c3f41;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 12, 0, 0, 3);
+}
+
+.screener-dialog-title {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 13px;
+}
+
+.screener-dialog-label {
+    -fx-text-fill: #868a91;
+    -fx-font-size: 12px;
+}
+
+.screener-dialog-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-padding: 4 8;
+    -fx-min-height: 28;
+    -fx-pref-height: 28;
+}
+
+.screener-dialog-field:focused {
+    -fx-border-color: transparent transparent #4A78C2 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.screener-dialog-button {
+    -fx-background-color: #4A78C2;
+    -fx-text-fill: #ffffff;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-background-radius: 4;
+    -fx-padding: 6 20;
+    -fx-cursor: hand;
+    -fx-min-height: 28;
+}
+
+.screener-dialog-button:hover {
+    -fx-background-color: #5888d0;
+}
+
+.screener-dialog-cancel {
+    -fx-background-color: transparent;
+    -fx-text-fill: #868a91;
+    -fx-font-size: 12px;
+    -fx-padding: 6 14;
+    -fx-cursor: hand;
+    -fx-min-height: 28;
+}
+
+.screener-dialog-cancel:hover {
+    -fx-text-fill: #bbbbbb;
+}
+
+.screener-dialog-combo {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-background-radius: 4;
+    -fx-min-height: 30;
+    -fx-pref-height: 30;
+}
+
+.screener-dialog-combo .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-background-color: #1e1f22;
+    -fx-font-size: 12px;
+    -fx-padding: 4 6;
+}
+
+.screener-dialog-combo .list-view {
+    -fx-background-color: #2b2d30;
+}
+
+.screener-dialog-combo .list-view .list-cell:hover {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #ffffff;
+}
+
+.screener-dialog-separator {
+    -fx-padding: 2 0 0 0;
+}
+
+.screener-dialog-combo .arrow {
+    -fx-background-color: #6e7681;
+}

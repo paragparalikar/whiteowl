@@ -1,0 +1,131 @@
+.dialog-card {
+    -fx-background-color: #2b2d30, linear-gradient(to bottom, #3e4249, #26282b);
+    -fx-background-radius: 6, 6;
+    -fx-background-insets: 0, 0;
+    -fx-border-color: rgba(255, 255, 255, 0.06);
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.55), 16, 0.05, 0, 4);
+}
+
+.dialog-form {
+    -fx-padding: 12 16 14 16;
+    -fx-spacing: 10;
+}
+
+.dialog-header {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+}
+
+.dialog-header-icon {
+    -fx-icon-color: #4A78C2;
+}
+
+.dialog-label {
+    -fx-text-fill: #999999;
+    -fx-font-family: "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-alignment: center-right;
+    -fx-padding: 0 4 0 0;
+}
+
+.dialog-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-pref-height: 34;
+    -fx-min-height: 34;
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-padding: 4 10 4 10;
+}
+
+.dialog-field:focused {
+    -fx-border-color: #4A78C2;
+}
+
+.dialog-combo {
+    -fx-font-size: 12px;
+    -fx-pref-height: 34;
+    -fx-min-height: 34;
+    -fx-background-radius: 4;
+}
+
+.dialog-combo .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}
+
+.dialog-spinner {
+    -fx-font-size: 12px;
+    -fx-pref-height: 34;
+    -fx-min-height: 34;
+    -fx-background-radius: 4;
+}
+
+.dialog-message {
+    -fx-font-family: "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 4 0 0 0;
+}
+
+.dialog-error {
+    -fx-text-fill: #ef5350;
+}
+
+.dialog-divider {
+    -fx-min-height: 1;
+    -fx-max-height: 1;
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+}
+
+.dialog-button-row {
+    -fx-padding: 2 0 0 0;
+}
+
+.dialog-primary-button {
+    -fx-background-color: #365880;
+    -fx-text-fill: #ffffff;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 16 5 12;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.dialog-primary-button:hover {
+    -fx-background-color: #4A78C2;
+}
+
+.dialog-primary-icon {
+    -fx-icon-color: #ffffff;
+}
+
+.dialog-secondary-button {
+    -fx-background-color: #45494a;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 16 5 12;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.dialog-secondary-button:hover {
+    -fx-background-color: #4e5254;
+}
+
+.dialog-secondary-icon {
+    -fx-icon-color: #bbbbbb;
+}
+
+.dialog-checkbox {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}

@@ -1,0 +1,167 @@
+.root {
+    -color-accent-0: #d6e2f3;
+    -color-accent-1: #c2d4ed;
+    -color-accent-2: #a3bfe3;
+    -color-accent-3: #84aad9;
+    -color-accent-4: #6594cf;
+    -color-accent-5: #4A78C2;
+    -color-accent-6: #3f66a5;
+    -color-accent-7: #345588;
+    -color-accent-8: #29436b;
+    -color-accent-9: #1e324e;
+    -color-accent-fg: #4A78C2;
+    -color-accent-emphasis: #4A78C2;
+    -color-accent-muted: rgba(74,120,194,0.4);
+    -color-accent-subtle: rgba(74,120,194,0.15);
+    -color-border-default: #3c3f41;
+    -color-border-muted: #333536;
+    -color-border-subtle: #2b2d30;
+    -fx-accent: #4A78C2;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-font-family: "Montserrat", "Segoe UI", system;
+    -fx-font-size: 13px;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #2b2d30;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 8, 0, 0, 2);
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #2d5c88;
+}
+
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: #2d5c88;
+}
+
+.combo-box {
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 1;
+    -fx-background-insets: 0;
+}
+
+.combo-box:focused {
+    -fx-border-color: #4A78C2;
+}
+
+.list-view {
+    -fx-border-color: transparent;
+}
+
+.list-view:focused {
+    -fx-border-color: transparent;
+}
+
+.context-menu {
+    -fx-background-color: #2b2d30;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 8, 0, 0, 2);
+}
+
+.context-menu .menu-item:hover,
+.context-menu .menu-item:focused {
+    -fx-background-color: #2d5c88;
+}
+
+.context-menu .menu-item .context-delete-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.context-menu .menu-item:hover .context-delete-icon,
+.context-menu .menu-item:focused .context-delete-icon {
+    -fx-icon-color: #f44336;
+}
+
+.scrip-badge {
+    -fx-font-family: "Montserrat Bold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 9px;
+    -fx-min-width: 16;
+    -fx-min-height: 16;
+    -fx-max-width: 16;
+    -fx-max-height: 16;
+    -fx-alignment: center;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 0;
+}
+
+.scrip-badge-equity {
+    -fx-text-fill: #4ec9b0;
+    -fx-border-color: #4ec9b0;
+    -fx-background-color: transparent;
+}
+
+.scrip-badge-index {
+    -fx-text-fill: #dcdcaa;
+    -fx-border-color: #dcdcaa;
+    -fx-background-color: transparent;
+}
+
+.scrip-badge-futures {
+    -fx-text-fill: #c586c0;
+    -fx-border-color: #c586c0;
+    -fx-background-color: transparent;
+}
+
+.scrip-badge-options {
+    -fx-text-fill: #ce9178;
+    -fx-border-color: #ce9178;
+    -fx-background-color: transparent;
+}
+
+.scrip-badge-etf {
+    -fx-text-fill: #569cd6;
+    -fx-border-color: #569cd6;
+    -fx-background-color: transparent;
+}
+
+.scrip-badge-currency {
+    -fx-text-fill: #d7ba7d;
+    -fx-border-color: #d7ba7d;
+    -fx-background-color: transparent;
+}
+
+.scrip-badge-debt {
+    -fx-text-fill: #9cdcfe;
+    -fx-border-color: #9cdcfe;
+    -fx-background-color: transparent;
+}
+
+.scrip-badge-default {
+    -fx-text-fill: #6e7681;
+    -fx-border-color: #6e7681;
+    -fx-background-color: transparent;
+}
+
+.exchange-badge {
+    -fx-font-family: "Montserrat Bold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 9px;
+    -fx-min-width: 28;
+    -fx-max-width: 28;
+    -fx-min-height: 16;
+    -fx-max-height: 16;
+    -fx-alignment: center;
+    -fx-background-radius: 3;
+    -fx-padding: 0;
+}
+
+.exchange-badge-nse {
+    -fx-text-fill: #ffffff;
+    -fx-background-color: #1A56DB;
+}
+
+.exchange-badge-bse {
+    -fx-text-fill: #ffffff;
+    -fx-background-color: #DC2626;
+}

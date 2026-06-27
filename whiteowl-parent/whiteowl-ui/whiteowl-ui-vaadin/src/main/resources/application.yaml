@@ -1,40 +1,0 @@
-whiteowl:
-  data-provider:
-    kite:
-      credentials: 
-        encrypted: false
-        username: RP3497
-        password: Dark@Horse5
-        pin: TFGKP2YOIGOLEFBHHLJ7QQ6PBOKXARFL
-      
-spring:
-  h2:
-    console:
-      enabled: true
-      path: /h2
-  main:
-    banner-mode: off
-    log-startup-info: false
-  task:    execution:      pool:        max-size: 50
-        core-size: 4
-        allow-core-thread-timeout: true
-      shutdown:        await-termination: true
-        await-termination-period: 1m
-      thread-name-prefix: white-owl-executor-
-    scheduling:
-      shutdown:        await-termination: true
-        await-termination-period: 1m      thread-name-prefix: white-owl-scheduler-
-  jpa:
-    show-sql: false
-    generate-ddl: true
-    hibernate:
-      ddl-auto: update
-  datasource:
-    #url: jdbc:h2:mem:whiteowl
-    url: jdbc:h2:~/.whiteowl/database/entity
-    username: sa
-    password: 
-    driver-class-name: org.h2.Driver
-    hikari:
-      minimum-idle: 1
-      maximum-pool-size: 20

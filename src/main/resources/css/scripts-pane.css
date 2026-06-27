@@ -1,0 +1,71 @@
+.scripts-pane {
+    -fx-padding: 4 0 0 0;
+    -fx-spacing: 0;
+}
+
+.scripts-header {
+    -fx-padding: 8 10 8 10;
+    -fx-alignment: center-left;
+}
+
+.scripts-type-combo {
+    -fx-font-size: 12px;
+    -fx-pref-height: 28;
+}
+
+.scripts-type-combo .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-padding: 4;
+}
+
+.scripts-type-combo .arrow {
+    -fx-background-color: #6e7681;
+}
+
+.scripts-toolbar-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.scripts-toolbar-button:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.scripts-toolbar-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.scripts-toolbar-button:hover .scripts-toolbar-icon {
+    -fx-icon-color: #afb8c1;
+}
+
+.scripts-list {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+
+.scripts-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-padding: 4 10 4 10;
+    -fx-cursor: hand;
+}
+
+.scripts-list .list-cell:hover {
+    -fx-background-color: rgba(255,255,255,0.04);
+}
+
+.scripts-list .list-cell:selected {
+    -fx-background-color: rgba(45, 92, 136, 0.4);
+    -fx-text-fill: #e0e0e0;
+}
+
+.scripts-list .list-cell:empty {
+    -fx-background-color: transparent;
+    -fx-cursor: default;
+}

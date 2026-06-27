@@ -1,0 +1,25 @@
+.splash-root {
+    -fx-background-color: #14151a;
+    -fx-border-color: #2a2b30;
+    -fx-border-width: 1;
+}
+
+.splash-title {
+    -fx-text-fill: #e8ecf2;
+    -fx-font-family: "Montserrat Thin", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 42px;
+    -fx-padding: 0 0 -2 0;
+}
+
+.splash-subtitle {
+    -fx-text-fill: #4a5060;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+}
+
+.splash-divider {
+    -fx-background-color: linear-gradient(to right, #4A78C2, transparent);
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+

@@ -1,0 +1,58 @@
+.collection-picker {
+    -fx-padding: 0;
+}
+
+.collection-picker-header {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.collection-picker-combo {
+    -fx-font-size: 12px;
+    -fx-pref-height: 28;
+}
+
+.collection-picker-combo .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-padding: 4;
+}
+
+.collection-picker-combo .arrow {
+    -fx-background-color: #6e7681;
+}
+
+.collection-picker-items {
+    -fx-padding: 4 0 0 4;
+}
+
+.collection-picker-checkbox {
+    -fx-font-size: 11px;
+    -fx-text-fill: #bbbbbb;
+}
+
+.collection-picker-checkbox .box {
+    -fx-background-color: #1e1f22;
+    -fx-border-color: #4e5157;
+    -fx-border-radius: 2;
+    -fx-background-radius: 2;
+    -fx-pref-width: 14;
+    -fx-pref-height: 14;
+}
+
+.collection-picker-checkbox:selected .box {
+    -fx-background-color: #4A78C2;
+    -fx-border-color: #4A78C2;
+}
+
+.collection-picker-checkbox:selected .box .mark {
+    -fx-background-color: #ffffff;
+}
+
+.collection-picker-hint {
+    -fx-text-fill: #555960;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+    -fx-padding: 0 0 0 4;
+}

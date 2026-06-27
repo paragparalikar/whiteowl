@@ -1,0 +1,111 @@
+.downloader-pane {
+    -fx-padding: 4 0 0 0;
+    -fx-spacing: 0;
+}
+
+.downloader-scroll {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.downloader-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.downloader-section {
+    -fx-padding: 12 10 12 10;
+}
+
+.downloader-combo {
+    -fx-font-size: 12px;
+    -fx-pref-height: 28;
+}
+
+.downloader-exchange-cell {
+    -fx-padding: 2 0 2 0;
+}
+
+.downloader-section-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.downloader-checkbox-grid {
+    -fx-padding: 0;
+}
+
+.downloader-checkbox {
+    -fx-font-size: 11px;
+}
+
+.downloader-button {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #e0e0e0;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.downloader-button:hover {
+    -fx-background-color: #35689e;
+}
+
+.downloader-button:disabled {
+    -fx-opacity: 0.5;
+}
+
+.downloader-button-icon {
+    -fx-icon-color: #e0e0e0;
+}
+
+.downloader-stop-button {
+    -fx-background-color: #3c2020;
+    -fx-text-fill: #ef5350;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-border-color: #ef5350;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.downloader-stop-button:hover {
+    -fx-background-color: #4a2525;
+}
+
+.downloader-stop-button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.downloader-stop-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.downloader-progress-container {
+    -fx-padding: 8 10 12 10;
+    -fx-spacing: 6;
+}
+
+.downloader-progress-bar {
+    -fx-pref-height: 8;
+}
+
+.downloader-progress-bar > .bar {
+    -fx-background-color: #4ec9b0;
+}
+
+.downloader-progress-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+}
+
+.downloader-message-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}

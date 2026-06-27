@@ -1,0 +1,74 @@
+.explorer-pane {
+    -fx-padding: 4 0 0 0;
+    -fx-spacing: 0;
+}
+
+.explorer-search {
+    -fx-background-color: #1e1f22, #1e1f22, #1e1f22;
+    -fx-background-insets: 0, 0, 0;
+    -fx-background-radius: 0, 0, 0;
+    -fx-text-fill: #bbbbbb;
+    -fx-prompt-text-fill: #444444;
+    -fx-border-color: #333536;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 4 8 4 8;
+    -fx-font-size: 12px;
+}
+
+.explorer-search:focused {
+    -fx-background-color: #1e1f22, #1e1f22, #1e1f22;
+    -fx-background-insets: 0, 0, 0;
+    -fx-border-color: #4A78C2;
+    -fx-border-width: 0 0 1 0;
+}
+
+.explorer-filter {
+    -fx-background-color: #1e1f22;
+    -fx-background-radius: 0;
+    -fx-border-color: #333536;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 3 8 3 6;
+    -fx-font-size: 12px;
+    -fx-text-fill: #bbbbbb;
+}
+
+.explorer-filter .arrow {
+    -fx-background-color: #6e7681;
+}
+
+.explorer-filter .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-padding: 4;
+}
+
+.explorer-list {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.explorer-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 2 8 2 8;
+}
+
+.explorer-list .list-cell:filled:selected {
+    -fx-background-color: #2d5c88;
+}
+
+.explorer-list .list-cell:filled:hover {
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.explorer-list .list-cell:filled:selected:hover {
+    -fx-background-color: #35689e;
+}
+
+.explorer-cell-symbol {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}
+
+.explorer-list .list-cell:filled:selected .explorer-cell-symbol {
+    -fx-text-fill: #ffffff;
+}

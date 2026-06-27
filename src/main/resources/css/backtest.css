@@ -1,0 +1,537 @@
+.backtest-pane {
+    -fx-padding: 4 0 0 0;
+    -fx-spacing: 0;
+}
+
+.backtest-section {
+    -fx-padding: 12 10 12 10;
+}
+
+.backtest-combo {
+    -fx-font-size: 12px;
+    -fx-pref-height: 28;
+}
+
+.backtest-combo .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-padding: 4;
+}
+
+.backtest-combo .arrow {
+    -fx-background-color: #6e7681;
+}
+
+.backtest-button {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #e0e0e0;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.backtest-button:hover {
+    -fx-background-color: #35689e;
+}
+
+.backtest-button:disabled {
+    -fx-opacity: 0.5;
+}
+
+.backtest-button-icon {
+    -fx-icon-color: #e0e0e0;
+}
+
+.backtest-cancel-button {
+    -fx-background-color: #3c2020;
+    -fx-text-fill: #ef5350;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-border-color: #ef5350;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.backtest-cancel-button:hover {
+    -fx-background-color: #4a2525;
+}
+
+.backtest-cancel-button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.backtest-cancel-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.backtest-strategy-row {
+    -fx-alignment: center-left;
+}
+
+.backtest-toolbar-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.backtest-toolbar-button:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.backtest-toolbar-button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.backtest-toolbar-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.backtest-toolbar-button:hover .backtest-toolbar-icon {
+    -fx-icon-color: #afb8c1;
+}
+
+.backtest-offset-label {
+    -fx-text-fill: #868a91;
+    -fx-font-size: 12px;
+}
+
+.backtest-offset-row {
+    -fx-alignment: center-left;
+}
+
+.backtest-offset-spinner {
+    -fx-background-color: #1e1f22;
+    -fx-font-size: 12px;
+    -fx-pref-height: 28;
+    -fx-background-radius: 4;
+}
+
+.backtest-offset-spinner .text-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+    -fx-background-radius: 4 0 0 4;
+}
+
+.backtest-offset-spinner .increment-arrow-button,
+.backtest-offset-spinner .decrement-arrow-button {
+    -fx-background-color: #2b2d30;
+    -fx-cursor: hand;
+}
+
+.backtest-offset-spinner .increment-arrow-button:hover,
+.backtest-offset-spinner .decrement-arrow-button:hover {
+    -fx-background-color: #3c3f41;
+}
+
+.backtest-offset-spinner .increment-arrow-button .increment-arrow,
+.backtest-offset-spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: #6e7681;
+}
+
+.backtest-result-header {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 8 10 4 10;
+}
+
+.backtest-list {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.backtest-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 2 8 2 8;
+}
+
+.backtest-list .list-cell:filled:selected {
+    -fx-background-color: #2d5c88;
+}
+
+.backtest-list .list-cell:filled:hover {
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.backtest-list .list-cell:filled:selected:hover {
+    -fx-background-color: #35689e;
+}
+
+.backtest-cell-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}
+
+.backtest-cell-value {
+    -fx-font-size: 12px;
+}
+
+.backtest-cell-positive {
+    -fx-text-fill: #4ec9b0;
+}
+
+.backtest-cell-negative {
+    -fx-text-fill: #ef5350;
+}
+
+.backtest-list .list-cell:filled:selected .backtest-cell-label {
+    -fx-text-fill: #ffffff;
+}
+
+.backtest-progress-container {
+    -fx-padding: 8 10 12 10;
+    -fx-spacing: 6;
+}
+
+.backtest-progress-bar {
+    -fx-pref-height: 8;
+}
+
+.backtest-progress-bar > .bar {
+    -fx-background-color: #4ec9b0;
+}
+
+.backtest-progress-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+}
+
+.backtest-metrics {
+    -fx-padding: 8 10 8 10;
+    -fx-spacing: 2;
+}
+
+.backtest-metric-row {
+    -fx-padding: 1 0 1 0;
+}
+
+.backtest-metric-label {
+    -fx-text-fill: #868a91;
+    -fx-font-size: 11px;
+}
+
+.backtest-metric-value {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+}
+
+.backtest-config-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.backtest-config-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.backtest-config-label {
+    -fx-text-fill: #868a91;
+    -fx-font-size: 11px;
+}
+
+.backtest-config-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-padding: 4 8;
+    -fx-min-height: 26;
+    -fx-pref-height: 26;
+}
+
+.backtest-config-field:focused {
+    -fx-border-color: transparent transparent #4A78C2 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.backtest-config-combo {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+    -fx-background-radius: 4;
+    -fx-min-height: 26;
+    -fx-pref-height: 26;
+}
+
+.backtest-config-combo .list-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-background-color: #1e1f22;
+    -fx-font-size: 11px;
+    -fx-padding: 3 6;
+}
+
+.backtest-config-combo .list-view {
+    -fx-background-color: #2b2d30;
+}
+
+.backtest-config-combo .list-view .list-cell:hover {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #ffffff;
+}
+
+.backtest-config-combo .arrow {
+    -fx-background-color: #6e7681;
+}
+
+.backtest-config-spinner {
+    -fx-background-color: #1e1f22;
+    -fx-font-size: 11px;
+    -fx-min-height: 26;
+    -fx-pref-height: 26;
+    -fx-background-radius: 4;
+}
+
+.backtest-config-spinner .text-field {
+    -fx-background-color: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+    -fx-background-radius: 4 0 0 4;
+}
+
+.backtest-config-spinner .increment-arrow-button,
+.backtest-config-spinner .decrement-arrow-button {
+    -fx-background-color: #2b2d30;
+    -fx-cursor: hand;
+}
+
+.backtest-config-spinner .increment-arrow-button:hover,
+.backtest-config-spinner .decrement-arrow-button:hover {
+    -fx-background-color: #3c3f41;
+}
+
+.backtest-config-spinner .increment-arrow-button .increment-arrow,
+.backtest-config-spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: #6e7681;
+}
+
+.backtest-config-checkbox {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 4 0 0 0;
+    -fx-cursor: hand;
+}
+
+.backtest-config-checkbox .box {
+    -fx-background-color: #1e1f22;
+    -fx-border-color: #3c3f41;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.backtest-config-checkbox:selected .box {
+    -fx-background-color: #4A78C2;
+    -fx-border-color: #4A78C2;
+}
+
+.backtest-config-checkbox .mark {
+    -fx-background-color: #1e1f22;
+}
+
+.backtest-config-checkbox:selected .mark {
+    -fx-background-color: white;
+}
+
+.backtest-config-range-hint {
+    -fx-text-fill: #555860;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 9px;
+}
+
+.backtest-config-tab-pane {
+    -fx-padding: 0;
+}
+
+.backtest-config-tab-pane > .tab-header-area {
+    -fx-padding: 0 8 0 8;
+}
+
+.backtest-config-tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: transparent;
+    -fx-padding: 6 10;
+    -fx-cursor: hand;
+}
+
+.backtest-config-tab-pane > .tab-header-area > .headers-region > .tab > .tab-container > .tab-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+}
+
+.backtest-config-tab-pane > .tab-header-area > .headers-region > .tab:selected > .tab-container > .tab-label {
+    -fx-text-fill: #bbbbbb;
+}
+
+.backtest-config-tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-border-color: transparent transparent #4A78C2 transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.backtest-config-tab-pane > .tab-content-area {
+    -fx-background-color: transparent;
+}
+
+.backtest-result-split {
+    -fx-background-color: transparent;
+}
+
+.backtest-result-split > .split-pane-divider {
+    -fx-background-color: transparent;
+    -fx-padding: 0 2 0 2;
+}
+
+.backtest-result-split .split-pane > .split-pane-divider {
+    -fx-background-color: transparent;
+    -fx-padding: 2 0 2 0;
+}
+
+.backtest-report-scroll {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.backtest-report-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.backtest-report-content {
+    -fx-background-color: transparent;
+}
+
+.backtest-report-card {
+    -fx-background-color: rgba(255, 255, 255, 0.03);
+    -fx-background-radius: 4;
+}
+
+.backtest-report-section-header {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+    -fx-padding: 0 0 0 2;
+}
+
+.backtest-report-metric-label {
+    -fx-text-fill: #7a7f87;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 2 8 2 0;
+}
+
+.backtest-report-metric-value {
+    -fx-font-family: "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 2 0 2 8;
+}
+
+.backtest-report-value-positive {
+    -fx-text-fill: #3fb68b;
+}
+
+.backtest-report-value-negative {
+    -fx-text-fill: #ef5350;
+}
+
+.backtest-report-value-neutral {
+    -fx-text-fill: #9da5b0;
+}
+
+.backtest-report-canvas-container {
+    -fx-padding: 4 0 4 0;
+}
+
+.backtest-trade-toolbar {
+    -fx-padding: 2 6 2 6;
+}
+
+.backtest-trade-table {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.backtest-trade-table .column-header {
+    -fx-background-color: #2b2d30;
+    -fx-border-color: transparent transparent #3c3f41 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.backtest-trade-table .column-header .label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+}
+
+.backtest-trade-table .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #2b2d30 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.backtest-trade-table .table-row-cell:selected {
+    -fx-background-color: #2d5c88;
+}
+
+.backtest-trade-table .table-row-cell:hover {
+    -fx-background-color: rgba(255,255,255,0.04);
+}
+
+.backtest-trade-table .table-row-cell:selected:hover {
+    -fx-background-color: #35689e;
+}
+
+.backtest-trade-table .table-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+    -fx-padding: 3 6;
+}
+
+.backtest-trade-table .table-row-cell:selected .table-cell {
+    -fx-text-fill: #ffffff;
+}
+
+.backtest-trade-table .filler {
+    -fx-background-color: #2b2d30;
+}
+
+.backtest-trade-table .column-header-background {
+    -fx-background-color: #2b2d30;
+}
+
+.backtest-result-pane {
+    -fx-background-color: #1e1f22;
+}
+
+.backtest-result-progress-section {
+    -fx-padding: 40;
+}
+
+.backtest-result-progress-bar {
+    -fx-pref-height: 6;
+}
+
+.backtest-result-progress-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.backtest-result-error-label {
+    -fx-text-fill: #f85149;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 20;
+}
+
+.backtest-equity-curve-pane {
+    -fx-background-color: #1e1f22;
+}
+
+
