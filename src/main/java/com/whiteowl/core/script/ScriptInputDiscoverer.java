@@ -1,6 +1,7 @@
 package com.whiteowl.core.script;
 
 import com.whiteowl.core.indicator.script.IndicatorDsl;
+import com.whiteowl.core.ranker.script.RankerDsl;
 import com.whiteowl.core.screener.script.ScreenerDsl;
 import groovy.lang.Script;
 import lombok.AccessLevel;
@@ -24,6 +25,11 @@ public final class ScriptInputDiscoverer {
         return discoverInputs(scriptSource, ScreenerDsl.class);
     }
 
+    public static List<ScriptInput> discoverRankerInputs(String scriptSource)
+            throws ScriptCompilationException {
+        return discoverInputs(scriptSource, RankerDsl.class);
+    }
+
     public static List<ScriptInput> discoverIndicatorInputs(ScriptDescriptor descriptor,
                                                              ScriptRepository repository)
             throws ScriptCompilationException, IOException {
@@ -37,6 +43,14 @@ public final class ScriptInputDiscoverer {
             throws ScriptCompilationException, IOException {
         Class<? extends Script> clazz = repository.getClassCache()
                 .getOrCompile(descriptor, repository, ScreenerDsl.class);
+        return discoverFromClass(clazz);
+    }
+
+    public static List<ScriptInput> discoverRankerInputs(ScriptDescriptor descriptor,
+                                                          ScriptRepository repository)
+            throws ScriptCompilationException, IOException {
+        Class<? extends Script> clazz = repository.getClassCache()
+                .getOrCompile(descriptor, repository, RankerDsl.class);
         return discoverFromClass(clazz);
     }
 
@@ -62,6 +76,14 @@ public final class ScriptInputDiscoverer {
             return List.copyOf(dsl.getDeclaredInputs());
         }
         if (compiled instanceof ScreenerDsl dsl) {
+            dsl.setDiscoveryMode(true);
+            dsl.clearInputs();
+            try { compiled.run(); } catch (Exception e) {
+                log.debug("Discovery run terminated: {}", e.getMessage());
+            }
+            return List.copyOf(dsl.getDeclaredInputs());
+        }
+        if (compiled instanceof RankerDsl dsl) {
             dsl.setDiscoveryMode(true);
             dsl.clearInputs();
             try { compiled.run(); } catch (Exception e) {

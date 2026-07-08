@@ -446,12 +446,21 @@ public final class KiteHttpApi implements KiteApi {
             Map<String, String> params = new LinkedHashMap<>();
             params.put("condition", JSON.writeValueAsString(condition));
             params.put("orders", JSON.writeValueAsString(orders));
-            params.put("type", type.name().toLowerCase());
+            params.put("type", resolveGttTypeString(type));
             params.put("expires_at", expiresAt);
             return params;
         } catch (IOException e) {
             throw new KiteApiException(0, "Failed to serialize GTT params: " + e.getMessage());
         }
+    }
+
+    private String resolveGttTypeString(KiteGttType type) {
+        return switch (type) {
+            case SINGLE -> "single";
+            case TWO_LEG -> "two-leg";
+            case TRAILING_SINGLE -> "trailing-single";
+            case TRAILING_TWO_LEG -> "trailing-two-leg";
+        };
     }
 
     private static String formEncode(Map<String, String> params) {

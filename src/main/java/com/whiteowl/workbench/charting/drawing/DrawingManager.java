@@ -91,19 +91,29 @@ public final class DrawingManager {
         return null;
     }
 
-    public boolean tryStartDrag(double pixelX, double pixelY, int canvasId,
-                                long timestamp, double value,
-                                CoordinateMapper mapper) {
+    public record HitResult(Drawing drawing, int anchorIndex) {}
+
+    public HitResult findHitAt(double pixelX, double pixelY, int canvasId, CoordinateMapper mapper) {
         for (Drawing d : drawings) {
             if (d.getCanvasId() != canvasId) continue;
             int hitAnchor = hitTestDrawing(d, pixelX, pixelY, mapper);
             if (hitAnchor >= 0) {
-                dragDrawing = d;
-                dragAnchorIndex = hitAnchor;
-                dragStartTimestamp = timestamp;
-                dragStartValue = value;
-                return true;
+                return new HitResult(d, hitAnchor);
             }
+        }
+        return null;
+    }
+
+    public boolean tryStartDrag(double pixelX, double pixelY, int canvasId,
+                                long timestamp, double value,
+                                CoordinateMapper mapper) {
+        HitResult hit = findHitAt(pixelX, pixelY, canvasId, mapper);
+        if (hit != null) {
+            dragDrawing = hit.drawing;
+            dragAnchorIndex = hit.anchorIndex;
+            dragStartTimestamp = timestamp;
+            dragStartValue = value;
+            return true;
         }
         return false;
     }

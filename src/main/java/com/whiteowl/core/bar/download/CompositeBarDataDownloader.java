@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class CompositeBarDataDownloader {
 
     private final AccountService accountService;
-    private final BrokerAdapterFactory adapterFactory;
     private final ScripRepository scripRepository;
     private final BarsRepository barsRepository;
     private final BarDataDownloader primaryDownloader;
@@ -31,12 +30,10 @@ public final class CompositeBarDataDownloader {
     private volatile boolean cancelled;
 
     public CompositeBarDataDownloader(AccountService accountService,
-                                      BrokerAdapterFactory adapterFactory,
                                       ScripRepository scripRepository,
                                       BarsRepository barsRepository,
                                       BarDataDownloader primaryDownloader) {
         this.accountService = accountService;
-        this.adapterFactory = adapterFactory;
         this.scripRepository = scripRepository;
         this.barsRepository = barsRepository;
         this.primaryDownloader = primaryDownloader;
@@ -139,7 +136,7 @@ public final class CompositeBarDataDownloader {
     private List<BarDataDownloader> buildDownloaders(List<Account> accounts) {
         List<BarDataDownloader> downloaders = new ArrayList<>();
         for (Account account : accounts) {
-            KiteBrokerAdapter adapter = adapterFactory.createAdapter(account);
+            KiteBrokerAdapter adapter = BrokerAdapterFactory.getInstance().createAdapter(account);
             BarDataDownloader downloader = BarDataDownloader.builder()
                     .scripRepository(scripRepository)
                     .barsRepository(barsRepository)

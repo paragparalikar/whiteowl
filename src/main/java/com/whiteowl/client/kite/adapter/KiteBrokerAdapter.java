@@ -9,6 +9,7 @@ import com.whiteowl.client.kite.model.KiteInterval;
 import com.whiteowl.client.kite.model.KiteSymbol;
 import com.whiteowl.core.bar.model.Timeframe;
 import com.whiteowl.core.gtt.model.GttOrder;
+import com.whiteowl.core.gtt.model.OcoGttOrder;
 import com.whiteowl.core.order.model.Order;
 import com.whiteowl.core.portfolio.model.Funds;
 import com.whiteowl.core.portfolio.model.Holding;
@@ -120,7 +121,16 @@ public final class KiteBrokerAdapter implements AutoCloseable {
 
     public List<GttOrder> fetchGtts() {
         return kiteApi.getGttTriggers().stream()
+                .filter(t -> t.getType() == KiteGttType.SINGLE || t.getType() == KiteGttType.TRAILING_SINGLE)
                 .map(mapper::toGttOrder)
+                .toList();
+    }
+
+    public List<OcoGttOrder> fetchOcoGtts() {
+        return kiteApi.getGttTriggers().stream()
+                .filter(t -> t.getType() == KiteGttType.TWO_LEG || t.getType() == KiteGttType.TRAILING_TWO_LEG)
+                .map(mapper::toOcoGttOrder)
+                .filter(java.util.Objects::nonNull)
                 .toList();
     }
 
@@ -129,7 +139,8 @@ public final class KiteBrokerAdapter implements AutoCloseable {
         KiteSymbol kiteSymbol = scrip != null ? mapper.getKiteSymbol(scrip) : null;
         KiteGttCondition condition = mapper.toKiteGttCondition(gtt, scrip, kiteSymbol);
         List<KiteGttOrder> orders = List.of(mapper.toKiteGttOrder(gtt, scrip));
-        int triggerId = kiteApi.createGttTrigger(condition, orders, KiteGttType.SINGLE, gtt.getExpiresAt()).getTriggerId();
+        KiteGttType type = gtt.getTrailingPoints() > 0 ? KiteGttType.TRAILING_SINGLE : KiteGttType.SINGLE;
+        int triggerId = kiteApi.createGttTrigger(condition, orders, type, gtt.getExpiresAt()).getTriggerId();
         gtt.setId(triggerId);
         return gtt;
     }
@@ -139,12 +150,34 @@ public final class KiteBrokerAdapter implements AutoCloseable {
         KiteSymbol kiteSymbol = scrip != null ? mapper.getKiteSymbol(scrip) : null;
         KiteGttCondition condition = mapper.toKiteGttCondition(gtt, scrip, kiteSymbol);
         List<KiteGttOrder> orders = List.of(mapper.toKiteGttOrder(gtt, scrip));
-        kiteApi.updateGttTrigger(gtt.getId(), condition, orders, KiteGttType.SINGLE, gtt.getExpiresAt());
+        KiteGttType type = gtt.getTrailingPoints() > 0 ? KiteGttType.TRAILING_SINGLE : KiteGttType.SINGLE;
+        kiteApi.updateGttTrigger(gtt.getId(), condition, orders, type, gtt.getExpiresAt());
         return gtt;
     }
 
     public void cancelGtt(int gttId) {
         kiteApi.deleteGttTrigger(gttId);
+    }
+
+    public OcoGttOrder createOcoGtt(OcoGttOrder oco) {
+        Scrip scrip = resolveScrip(oco.getScripId());
+        KiteSymbol kiteSymbol = scrip != null ? mapper.getKiteSymbol(scrip) : null;
+        KiteGttCondition condition = mapper.toKiteOcoCondition(oco, scrip, kiteSymbol);
+        List<KiteGttOrder> orders = mapper.toKiteOcoOrders(oco, scrip);
+        KiteGttType type = oco.getTrailingPoints() > 0 ? KiteGttType.TRAILING_TWO_LEG : KiteGttType.TWO_LEG;
+        int triggerId = kiteApi.createGttTrigger(condition, orders, type, oco.getExpiresAt()).getTriggerId();
+        oco.setId(triggerId);
+        return oco;
+    }
+
+    public OcoGttOrder updateOcoGtt(OcoGttOrder oco) {
+        Scrip scrip = resolveScrip(oco.getScripId());
+        KiteSymbol kiteSymbol = scrip != null ? mapper.getKiteSymbol(scrip) : null;
+        KiteGttCondition condition = mapper.toKiteOcoCondition(oco, scrip, kiteSymbol);
+        List<KiteGttOrder> orders = mapper.toKiteOcoOrders(oco, scrip);
+        KiteGttType type = oco.getTrailingPoints() > 0 ? KiteGttType.TRAILING_TWO_LEG : KiteGttType.TWO_LEG;
+        kiteApi.updateGttTrigger(oco.getId(), condition, orders, type, oco.getExpiresAt());
+        return oco;
     }
 
     private Scrip resolveScrip(String scripId) {

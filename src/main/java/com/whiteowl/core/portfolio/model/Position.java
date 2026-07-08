@@ -1,6 +1,7 @@
 package com.whiteowl.core.portfolio.model;
 
 import com.whiteowl.core.order.model.Product;
+import com.whiteowl.core.scrip.model.Scrip;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,7 +9,7 @@ import lombok.Getter;
 @Builder
 public final class Position {
 
-    private final String scripId;
+    private final Scrip scrip;
     private final Product product;
     private final int quantity;
     private final int overnightQuantity;

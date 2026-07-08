@@ -54,7 +54,7 @@ public final class AccountService {
     }
 
     public Account create(String name, BrokerType brokerType, String userId, String password, String pin,
-                           int preferredPositionCount) {
+                           double positionSize) {
         Account account = Account.builder()
                 .id(UUID.randomUUID().toString())
                 .name(name.trim())
@@ -62,7 +62,7 @@ public final class AccountService {
                 .userId(userId.trim())
                 .password(password.trim())
                 .pin(pin.trim())
-                .preferredPositionCount(preferredPositionCount)
+                .positionSize(positionSize)
                 .build();
         accounts.add(account);
         persist();
@@ -71,13 +71,13 @@ public final class AccountService {
     }
 
     public void update(Account account, String name, BrokerType brokerType,
-                       String userId, String password, String pin, int preferredPositionCount) {
+                       String userId, String password, String pin, double positionSize) {
         account.setName(name.trim());
         account.setBrokerType(brokerType);
         account.setUserId(userId.trim());
         account.setPassword(password.trim());
         account.setPin(pin.trim());
-        account.setPreferredPositionCount(preferredPositionCount);
+        account.setPositionSize(positionSize);
         persist();
         log.info("Updated account: name={}, broker={}", account.getName(), account.getBrokerType());
     }

@@ -1,0 +1,87 @@
+.note-editor-pane {
+    -fx-padding: 0;
+    -fx-spacing: 0;
+}
+
+.note-editor-header {
+    -fx-padding: 10 12 8 12;
+    -fx-background-color: transparent;
+}
+
+.note-editor-title {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.note-editor-title:hover {
+    -fx-text-fill: #e0e0e0;
+}
+
+.note-editor-title-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 14px;
+    -fx-border-color: #4a4d52;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 4 2 4;
+    -fx-background-radius: 0;
+}
+
+.note-editor-text-area {
+    -fx-background-color: #1e1f22;
+    -fx-control-inner-background: #1e1f22;
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Segoe UI", system;
+    -fx-font-size: 13px;
+    -fx-padding: 4 8 4 8;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+}
+
+.note-editor-text-area .content {
+    -fx-background-color: #1e1f22;
+}
+
+.note-editor-text-area .scroll-bar .thumb {
+    -fx-background-color: #3c3f41;
+}
+
+.note-editor-text-area .scroll-bar .track {
+    -fx-background-color: #1e1f22;
+}
+
+.note-editor-text-area:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.note-editor-save-button {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #e0e0e0;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 4 12 4 8;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.note-editor-save-button:hover {
+    -fx-background-color: #35689e;
+}
+
+.note-editor-save-icon {
+    -fx-icon-color: #e0e0e0;
+}
+
+.note-editor-status {
+    -fx-text-fill: #4ec9b0;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 4 12 2 12;
+}

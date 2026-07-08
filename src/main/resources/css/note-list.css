@@ -1,0 +1,114 @@
+.note-list-pane {
+    -fx-padding: 4 0 0 0;
+    -fx-spacing: 0;
+}
+
+.note-list-toolbar {
+    -fx-padding: 4;
+}
+
+.note-list-search-field {
+    -fx-background-color: #1e1f22, #1e1f22, #1e1f22;
+    -fx-background-insets: 0, 0, 0;
+    -fx-background-radius: 0, 0, 0;
+    -fx-text-fill: #bbbbbb;
+    -fx-prompt-text-fill: #555555;
+    -fx-padding: 4 6 4 6;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 0 0 1 0;
+    -fx-font-size: 12px;
+}
+
+.note-list-search-field:focused {
+    -fx-background-color: #1e1f22, #1e1f22, #1e1f22;
+    -fx-background-insets: 0, 0, 0;
+    -fx-border-color: #4A78C2;
+    -fx-border-width: 0 0 1 0;
+}
+
+.note-list-add-button {
+    -fx-background-color: transparent;
+    -fx-padding: 3;
+    -fx-cursor: hand;
+}
+
+.note-list-add-button:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.note-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.note-list-add-button:hover .note-icon {
+    -fx-icon-color: #afb8c1;
+}
+
+.note-list {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.note-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 2 8 2 12;
+}
+
+.note-list .list-cell:filled:selected {
+    -fx-background-color: #2d5c88;
+}
+
+.note-list .list-cell:filled:hover {
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.note-list .list-cell:filled:selected:hover {
+    -fx-background-color: #35689e;
+}
+
+.note-cell-name {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}
+
+.note-list .list-cell:filled:selected .note-cell-name {
+    -fx-text-fill: #ffffff;
+}
+
+.note-cell-edit {
+    -fx-background-color: transparent;
+    -fx-padding: 1;
+    -fx-cursor: hand;
+    visibility: hidden;
+}
+
+.note-list .list-cell:filled:hover .note-cell-edit {
+    visibility: visible;
+}
+
+.note-cell-edit .note-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.note-cell-edit:hover .note-icon {
+    -fx-icon-color: #afb8c1;
+}
+
+.note-cell-delete {
+    -fx-background-color: transparent;
+    -fx-padding: 1;
+    -fx-cursor: hand;
+    visibility: hidden;
+}
+
+.note-list .list-cell:filled:hover .note-cell-delete {
+    visibility: visible;
+}
+
+.note-cell-delete .note-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.note-cell-delete:hover .note-icon {
+    -fx-icon-color: #f44336;
+}

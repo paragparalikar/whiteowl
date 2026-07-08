@@ -1,6 +1,8 @@
 package com.whiteowl.workbench.ranker;
 
 import com.whiteowl.core.bar.model.Timeframe;
+import com.whiteowl.core.examplegroup.model.ExampleGroup;
+import com.whiteowl.core.examplegroup.repository.ExampleGroupRepository;
 import com.whiteowl.core.ranker.Ranker;
 import com.whiteowl.core.ranker.RankerSetting;
 import com.whiteowl.core.scrip.model.Exchange;
@@ -12,6 +14,7 @@ import com.whiteowl.workbench.common.ScripSearchField;
 import com.whiteowl.workbench.common.ExchangeFilterCombo;
 import com.whiteowl.workbench.common.ScripTypeFilterCombo;
 import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -52,6 +55,7 @@ public final class RankerConfigDialog extends BaseDialog {
     private final Timeframe initialTimeframe;
     private final int initialOffset;
     private final ScripRepository scripRepository;
+    private final ExampleGroupRepository exampleGroupRepository;
     private final Map<String, Node> paramControlMap = new LinkedHashMap<>();
     private ScripTypeFilterCombo scripTypeCombo;
     private ExchangeFilterCombo exchangeCombo;
@@ -61,13 +65,15 @@ public final class RankerConfigDialog extends BaseDialog {
 
     public RankerConfigDialog(Ranker ranker, ScripType scripType, Exchange exchange,
                                Timeframe timeframe, int offset,
-                               ScripRepository scripRepository) {
+                               ScripRepository scripRepository,
+                               ExampleGroupRepository exampleGroupRepository) {
         this.ranker = ranker;
         this.initialScripType = scripType;
         this.initialExchange = exchange;
         this.initialTimeframe = timeframe;
         this.initialOffset = offset;
         this.scripRepository = scripRepository;
+        this.exampleGroupRepository = exampleGroupRepository;
     }
 
     public ScripType getScripType() {
@@ -143,6 +149,7 @@ public final class RankerConfigDialog extends BaseDialog {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onPrimaryAction() {
         List<RankerSetting> settings = ranker.getSettings();
         for (RankerSetting setting : settings) {
@@ -151,6 +158,12 @@ public final class RankerConfigDialog extends BaseDialog {
             try {
                 if (control instanceof ScripSearchField searchField) {
                     ranker.updateSetting(setting.getName(), searchField.getSelectedScripId());
+                } else if (setting.getType() == ExampleGroup.class && control instanceof ComboBox<?> combo) {
+                    ranker.updateSetting(setting.getName(), combo.getValue());
+                } else if (control instanceof CheckBox checkBox) {
+                    ranker.updateSetting(setting.getName(), checkBox.isSelected());
+                } else if (control instanceof ComboBox<?> combo && setting.getType().isEnum()) {
+                    ranker.updateSetting(setting.getName(), combo.getValue());
                 } else if (control instanceof TextField field) {
                     applyFieldValue(setting, field);
                 }
@@ -163,12 +176,44 @@ public final class RankerConfigDialog extends BaseDialog {
         closeDialog();
     }
 
+    @SuppressWarnings("unchecked")
     private Node buildParamControl(RankerSetting setting, Object currentValue) {
         if (setting.getType() == Scrip.class && scripRepository != null) {
             String scripId = currentValue instanceof String s ? s : "";
             return new ScripSearchField(scripRepository, scripId);
         }
+        if (setting.getType() == ExampleGroup.class && exampleGroupRepository != null) {
+            ComboBox<ExampleGroup> combo = createComboBox();
+            List<ExampleGroup> groups = exampleGroupRepository.loadAll();
+            combo.getItems().addAll(groups);
+            combo.setCellFactory(lv -> new ExampleGroupCell());
+            combo.setButtonCell(new ExampleGroupCell());
+            if (currentValue instanceof ExampleGroup selected) {
+                groups.stream()
+                        .filter(g -> g.getName().equals(selected.getName()))
+                        .findFirst()
+                        .ifPresent(combo::setValue);
+            }
+            return combo;
+        }
+        if (setting.getType() == Boolean.class) {
+            return createCheckBox(currentValue instanceof Boolean b && b);
+        }
+        if (setting.getType().isEnum()) {
+            return buildEnumCombo(setting.getType(), currentValue);
+        }
         return createTextField(String.valueOf(currentValue));
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private <E extends Enum<E>> ComboBox<E> buildEnumCombo(Class<?> enumType, Object currentValue) {
+        ComboBox combo = createComboBox();
+        Enum[] constants = ((Class<Enum>) enumType).getEnumConstants();
+        combo.getItems().addAll((Object[]) constants);
+        if (currentValue != null) {
+            combo.setValue(currentValue);
+        }
+        return combo;
     }
 
     private void applyFieldValue(RankerSetting setting, TextField field) {
@@ -212,6 +257,16 @@ public final class RankerConfigDialog extends BaseDialog {
             }
         });
         return combo;
+    }
+
+    private static final class ExampleGroupCell extends ListCell<ExampleGroup> {
+
+        @Override
+        protected void updateItem(ExampleGroup group, boolean empty) {
+            super.updateItem(group, empty);
+            setText(empty || group == null ? null : group.getName());
+        }
+
     }
 
 }

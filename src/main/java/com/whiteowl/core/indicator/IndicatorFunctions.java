@@ -133,4 +133,8 @@ public final class IndicatorFunctions {
         return Vwap.compute(high, low, close, volume, barCount);
     }
 
+    public static float[] beta(float[] source, float[] benchmark, int barCount, int period) {
+        return Beta.compute(source, benchmark, barCount, period);
+    }
+
 }

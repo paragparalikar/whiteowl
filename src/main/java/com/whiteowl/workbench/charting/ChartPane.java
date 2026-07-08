@@ -8,11 +8,12 @@ import com.whiteowl.core.bar.model.Bars;
 import com.whiteowl.core.bar.model.BarsView;
 import com.whiteowl.core.bar.model.Timeframe;
 import com.whiteowl.core.bar.repository.BarsRepository;
-import com.whiteowl.core.examplegroup.repository.ExampleGroupRepository;
 import com.whiteowl.core.gtt.model.GttOrder;
 import com.whiteowl.core.gtt.model.GttStatus;
+import com.whiteowl.core.gtt.model.OcoGttOrder;
 import com.whiteowl.core.order.model.Order;
 import com.whiteowl.core.order.model.OrderSide;
+import com.whiteowl.core.portfolio.service.PortfolioQuantityProvider;
 import com.whiteowl.core.order.model.OrderStatus;
 import com.whiteowl.core.screener.Screen;
 import com.whiteowl.core.screener.ScreenRegistry;
@@ -35,8 +36,10 @@ import com.whiteowl.core.examplegroup.model.Example;
 import com.whiteowl.core.examplegroup.model.ExampleGroup;
 import com.whiteowl.workbench.common.AddToCollectionMenuBuilder;
 import com.whiteowl.workbench.common.ScripNavigable;
+import com.whiteowl.workbench.charting.drawing.Drawing;
 import com.whiteowl.workbench.examplegroup.ExampleGroupPane;
 import com.whiteowl.workbench.group.GroupPane;
+import com.whiteowl.core.watchlist.model.Watchlist;
 import com.whiteowl.workbench.watchlist.WatchlistPane;
 import com.whiteowl.workbench.charting.indicator.ActiveIndicator;
 import com.whiteowl.workbench.charting.indicator.ActiveSubChartIndicator;
@@ -51,6 +54,7 @@ import com.whiteowl.workbench.charting.indicator.volumeprofile.VolumeProfileIndi
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
@@ -67,6 +71,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -123,7 +128,6 @@ public final class ChartPane extends BorderPane {
     private static final int CLEAR_ICON_SIZE = 14;
     private static final String ADD_TO_WATCHLIST_LABEL = "Add to Watchlist";
     private static final String ADD_TO_GROUP_LABEL = "Add to Group";
-    private static final String ADD_TO_EXAMPLE_GROUP_LABEL = "Add to Example Group";
     private static final String NO_EXAMPLE_GROUPS_LABEL = "None available";
     private static final String SCREEN_TAG_STYLE = "screen-tag";
     private static final String SCREEN_TAG_NAME_STYLE = "screen-tag-name";
@@ -164,6 +168,17 @@ public final class ChartPane extends BorderPane {
     private static final String GTT_REFRESHING = "Refreshing GTT orders...";
     private static final String GTT_REFRESHED = "Loaded %d active GTT orders";
     private static final String GTT_REFRESH_FAILED = "Failed to refresh GTTs: %s";
+    private static final String OCO_LABEL = "OCO";
+    private static final String OCO_NO_POSITION = "No open position for OCO";
+    private static final String OCO_CREATING = "Creating OCO GTT...";
+    private static final String OCO_CREATED = "OCO GTT created successfully";
+    private static final String OCO_CREATE_FAILED = "Failed to create OCO GTT: %s";
+    private static final String OCO_UPDATING = "Updating OCO GTT...";
+    private static final String OCO_UPDATED = "OCO GTT updated successfully";
+    private static final String OCO_UPDATE_FAILED = "Failed to update OCO GTT: %s";
+    private static final String OCO_CANCEL_TITLE = "Cancel OCO GTT";
+    private static final String OCO_CANCEL_MESSAGE = "Cancel this OCO GTT (SL %.2f / Target %.2f)?";
+    private static final String OCO_CANCEL_CONFIRM = "Cancel OCO";
     private static final String ORDER_BUY_LABEL = "Buy";
     private static final String ORDER_SELL_LABEL = "Sell";
     private static final String ORDER_NO_ACCOUNT = "Connect an account to place orders";
@@ -185,6 +200,11 @@ public final class ChartPane extends BorderPane {
     private static final String ORDER_BUTTON_STYLE = "order-action-button";
     private static final int ORDER_BUTTON_ICON_SIZE = 14;
     private static final int TOOLBAR_ICON_SIZE = 12;
+    private static final String WATCHLIST_PILLS_STYLE = "watchlist-pills-bar";
+    private static final String WATCHLIST_PILL_STYLE = "watchlist-pill";
+    private static final double WATCHLIST_PILLS_TOP_OFFSET = 6;
+    private static final double WATCHLIST_PILLS_RIGHT_OFFSET = 8;
+    private static final int WATCHLIST_PILLS_GAP = 4;
 
     private final ChartViewport viewport;
     private final BarDataProvider dataProvider;
@@ -199,9 +219,11 @@ public final class ChartPane extends BorderPane {
     private final List<Label> indicatorValueLabels;
     private final List<Label> subChartValueLabels;
     private final VBox indicatorListBar;
+    private final FlowPane watchlistPillsBar;
     private final DrawingManager drawingManager;
     private final DrawingRepository drawingRepository;
     private final ContextMenu chartContextMenu;
+    private final ContextMenu rulerExampleMenu;
     private final BarsRepository barsRepository;
     private final ScripRepository scripRepository;
     private Screen activeScreen;
@@ -221,15 +243,18 @@ public final class ChartPane extends BorderPane {
     private long contextMenuTimestamp = -1;
     private long exampleCutoffTimestamp = -1;
     private ChartOrderService chartOrderService;
-    private int preferredPositionCount;
+    private double positionSize;
     private List<GttOrder> allGttOrders = List.of();
     private List<GttOrder> activeGttOrders = List.of();
     private List<Order> allRegularOrders = List.of();
     private List<Order> activeRegularOrders = List.of();
+    private List<OcoGttOrder> allOcoOrders = List.of();
+    private List<OcoGttOrder> activeOcoOrders = List.of();
+    private float ocoFirstPrice;
+    private Button ocoButton;
     private Runnable onOrderBookRefresh;
 
     public ChartPane(BarsRepository barsRepository, ScripRepository scripRepository,
-                     ExampleGroupRepository exampleGroupRepository,
                      ScriptRepository indicatorScriptRepo, ScriptRepository screenerScriptRepo) {
         getStyleClass().add(CHART_PANE_STYLE);
         this.barsRepository = barsRepository;
@@ -240,17 +265,24 @@ public final class ChartPane extends BorderPane {
         this.canvasContainer = new StackPane();
         this.chartStack = new VBox();
         this.indicatorRegistry = new IndicatorRegistry(barsRepository, indicatorScriptRepo);
-        this.screenRegistry = new ScreenRegistry(barsRepository, exampleGroupRepository, screenerScriptRepo);
+        this.screenRegistry = new ScreenRegistry(screenerScriptRepo);
         this.activeIndicators = new ArrayList<>();
         this.activeSubChartIndicators = new ArrayList<>();
         this.subChartCanvases = new ArrayList<>();
         this.indicatorValueLabels = new ArrayList<>();
         this.subChartValueLabels = new ArrayList<>();
         this.indicatorListBar = new VBox(0);
+        this.watchlistPillsBar = new FlowPane(WATCHLIST_PILLS_GAP, WATCHLIST_PILLS_GAP);
+        this.watchlistPillsBar.getStyleClass().add(WATCHLIST_PILLS_STYLE);
+        this.watchlistPillsBar.setPickOnBounds(false);
+        this.watchlistPillsBar.setMaxHeight(Region.USE_PREF_SIZE);
+        this.watchlistPillsBar.setMaxWidth(Region.USE_PREF_SIZE);
         this.drawingManager = new DrawingManager();
         this.drawingRepository = new FileDrawingRepository();
         this.chartContextMenu = new ContextMenu();
         this.chartContextMenu.setAutoHide(true);
+        this.rulerExampleMenu = new ContextMenu();
+        this.rulerExampleMenu.setAutoHide(true);
         this.activeTimeframe = Timeframe.DAILY;
         drawingManager.setOnChanged(this::saveDrawings);
         canvas.setDrawingManager(drawingManager);
@@ -262,10 +294,13 @@ public final class ChartPane extends BorderPane {
         canvas.setOnProfileRangeChanged(this::onProfileRangeChanged);
         canvas.setOnGttModified(this::handleGttModified);
         canvas.setOnGttCancelled(this::handleGttCancelRequest);
+        canvas.setOnOcoModified(this::handleOcoModified);
+        canvas.setOnOcoCancelled(this::handleOcoCancelRequest);
         canvas.setOnOrderClicked(this::handleOrderClicked);
         canvas.setOnOrderCancelled(this::handleOrderCancelRequest);
         canvas.setOnOrderModified(this::handleOrderModified);
         canvas.setOnPricePicked(this::handlePricePicked);
+        canvas.setOnRulerAddButtonClicked(this::handleRulerAddButton);
         buildLayout();
         showEmptyState();
     }
@@ -278,7 +313,10 @@ public final class ChartPane extends BorderPane {
         resetVolumeProfileIndicators();
         loadData(scrip.getId(), activeTimeframe);
         filterGttOrdersForActiveScrip();
+        filterOcoOrdersForActiveScrip();
         filterRegularOrdersForActiveScrip();
+        updateOcoButtonState();
+        refreshWatchlistPills();
     }
 
     public void showTradeOverlay(Scrip scrip, Timeframe timeframe,
@@ -325,18 +363,22 @@ public final class ChartPane extends BorderPane {
         return lastBars.size() - 1;
     }
 
-    public void showExample(Scrip scrip, Timeframe timeframe, long timestamp) {
-        exampleCutoffTimestamp = timestamp;
+    public void showExample(Scrip scrip, Timeframe timeframe, long startTimestamp, long endTimestamp) {
+        exampleCutoffTimestamp = endTimestamp;
         this.activeScrip = scrip;
         canvas.setScrip(scrip);
         drawingManager.loadDrawings(drawingRepository.loadDrawings(scrip.getId()));
         selectTimeframeButton(timeframe);
         loadData(scrip.getId(), timeframe);
+        refreshWatchlistPills();
     }
 
     public void setWatchlistPane(WatchlistPane pane) {
         this.watchlistPane = pane;
-        pane.setOnWatchlistsChanged(this::rebuildContextMenu);
+        pane.setOnWatchlistsChanged(() -> {
+            rebuildContextMenu();
+            refreshWatchlistPills();
+        });
         rebuildContextMenu();
     }
 
@@ -347,16 +389,15 @@ public final class ChartPane extends BorderPane {
 
     public void setExampleGroupPane(ExampleGroupPane pane) {
         this.exampleGroupPane = pane;
-        rebuildContextMenu();
     }
 
     public void setScripNavigable(ScripNavigable navigable) {
         this.scripNavigable = navigable;
     }
 
-    public void setChartOrderService(ChartOrderService service, int preferredPositionCount) {
+    public void setChartOrderService(ChartOrderService service, double positionSize) {
         this.chartOrderService = service;
-        this.preferredPositionCount = preferredPositionCount;
+        this.positionSize = positionSize;
         rebuildContextMenu();
         if (service == null) {
             allGttOrders = List.of();
@@ -406,6 +447,35 @@ public final class ChartPane extends BorderPane {
 
     public void hideContextMenu() {
         chartContextMenu.hide();
+        rulerExampleMenu.hide();
+    }
+
+    private void handleRulerAddButton(Drawing rulerDrawing, double px, double py) {
+        if (activeScrip == null || exampleGroupPane == null) return;
+        if (rulerDrawing.getAnchor1() == null || rulerDrawing.getAnchor2() == null) return;
+        long ts1 = rulerDrawing.getAnchor1().getTimestamp();
+        long ts2 = rulerDrawing.getAnchor2().getTimestamp();
+        long startTs = Math.min(ts1, ts2);
+        long endTs = Math.max(ts1, ts2);
+        rulerExampleMenu.getItems().clear();
+        List<ExampleGroup> groups = exampleGroupPane.getGroups();
+        if (groups == null || groups.isEmpty()) {
+            MenuItem empty = new MenuItem(NO_EXAMPLE_GROUPS_LABEL);
+            empty.setDisable(true);
+            rulerExampleMenu.getItems().add(empty);
+        } else {
+            for (ExampleGroup group : groups) {
+                MenuItem item = new MenuItem(group.getName());
+                item.setOnAction(ev -> {
+                    Example example = new Example(activeScrip.getId(), activeTimeframe, startTs, endTs);
+                    exampleGroupPane.addExampleToGroup(group, example);
+                    rulerExampleMenu.hide();
+                });
+                rulerExampleMenu.getItems().add(item);
+            }
+        }
+        Point2D screen = canvas.localToScreen(px, py);
+        rulerExampleMenu.show(canvas, screen.getX(), screen.getY());
     }
 
     private void showChartContextMenu(double screenX, double screenY) {
@@ -424,7 +494,7 @@ public final class ChartPane extends BorderPane {
                     FluentUiRegularMZ.STAR_16,
                     () -> watchlistPane.getWatchlists(),
                     () -> activeScrip != null ? List.of(activeScrip.getId()) : List.of(),
-                    () -> { watchlistPane.persist(); watchlistPane.refresh(); hideContextMenu(); }
+                    () -> { watchlistPane.persist(); watchlistPane.syncAllItems(); hideContextMenu(); }
             ));
         }
         if (groupPane != null) {
@@ -435,9 +505,6 @@ public final class ChartPane extends BorderPane {
                     () -> activeScrip != null ? List.of(activeScrip.getId()) : List.of(),
                     () -> { groupPane.persist(); groupPane.refresh(); hideContextMenu(); }
             ));
-        }
-        if (exampleGroupPane != null) {
-            chartContextMenu.getItems().add(buildAddToExampleGroupMenu());
         }
     
     }
@@ -467,7 +534,15 @@ public final class ChartPane extends BorderPane {
         sellIcon.setIconSize(16);
         sellItem.setGraphic(sellIcon);
         sellItem.setOnAction(e -> startPricePicker(PricePickerMode.GTT_SELL));
-        return List.of(buyItem, sellItem);
+        MenuItem ocoItem = new MenuItem(OCO_LABEL);
+        FontIcon ocoIcon = new FontIcon(FluentUiRegularAL.ARROW_SORT_20);
+        ocoIcon.setIconSize(16);
+        ocoItem.setGraphic(ocoIcon);
+        ocoItem.setOnAction(e -> startOcoPricePicker());
+        boolean hasPosition = activeScrip != null
+                && PortfolioQuantityProvider.getInstance().getQuantity(activeScrip.getId()) != 0;
+        ocoItem.setDisable(!hasPosition || chartOrderService == null);
+        return List.of(buyItem, sellItem, ocoItem);
     }
 
     private void startPricePicker(PricePickerMode mode) {
@@ -479,12 +554,25 @@ public final class ChartPane extends BorderPane {
     }
 
     private void handlePricePicked(PricePickerMode mode, float price) {
+        float roundedPrice = roundToTickSize(price);
         switch (mode) {
-            case BUY -> showRegularOrderDialog(OrderSide.BUY, price);
-            case SELL -> showRegularOrderDialog(OrderSide.SELL, price);
-            case GTT_BUY -> showGttOrderDialog(OrderSide.BUY, price);
-            case GTT_SELL -> showGttOrderDialog(OrderSide.SELL, price);
+            case BUY -> showRegularOrderDialog(OrderSide.BUY, roundedPrice);
+            case SELL -> showRegularOrderDialog(OrderSide.SELL, roundedPrice);
+            case GTT_BUY -> showGttOrderDialog(OrderSide.BUY, roundedPrice);
+            case GTT_SELL -> showGttOrderDialog(OrderSide.SELL, roundedPrice);
+            case OCO_FIRST -> {
+                ocoFirstPrice = roundedPrice;
+                canvas.startPricePicker(PricePickerMode.OCO_SECOND);
+            }
+            case OCO_SECOND -> showOcoGttOrderDialog(ocoFirstPrice, roundedPrice);
         }
+    }
+
+    private float roundToTickSize(float price) {
+        if (activeScrip == null) return price;
+        float tickSize = activeScrip.getTickSize();
+        if (tickSize <= 0) return price;
+        return Math.round(price / tickSize) * tickSize;
     }
 
     private void showRegularOrderDialog(OrderSide side, float price) {
@@ -493,7 +581,7 @@ public final class ChartPane extends BorderPane {
             return;
         }
         if (price <= 0) return;
-        int suggestedQty = chartOrderService.suggestQuantity(price, preferredPositionCount);
+        int suggestedQty = resolveQuantity(side, price);
         RegularOrderDialog dialog = new RegularOrderDialog(side, price, activeScrip.getId(), suggestedQty);
         dialog.show(getScene().getWindow());
         Order orderResult = dialog.getResult();
@@ -519,7 +607,7 @@ public final class ChartPane extends BorderPane {
         }
         if (price <= 0) return;
         float lastPrice = getLastClosePrice();
-        int suggestedQty = chartOrderService.suggestQuantity(price, preferredPositionCount);
+        int suggestedQty = resolveQuantity(side, price);
         GttOrderDialog dialog = new GttOrderDialog(side, price, lastPrice, activeScrip.getId(), suggestedQty);
         dialog.show(getScene().getWindow());
         GttOrder result = dialog.getResult();
@@ -536,6 +624,18 @@ public final class ChartPane extends BorderPane {
                 }
             });
         }
+    }
+
+    private int resolveQuantity(OrderSide side, float price) {
+        return chartOrderService.findPortfolioQuantity(activeScrip.getId(), side)
+                .orElseGet(() -> roundToLotSize(chartOrderService.suggestQuantity(price, positionSize)));
+    }
+
+    private int roundToLotSize(int quantity) {
+        if (activeScrip == null) return quantity;
+        int lotSize = (int) activeScrip.getLotSize();
+        if (lotSize <= 1) return quantity;
+        return Math.max(lotSize, (quantity / lotSize) * lotSize);
     }
 
     private void handleGttModified(GttOrder order) {
@@ -585,6 +685,124 @@ public final class ChartPane extends BorderPane {
         }
     }
 
+    private void showOcoGttOrderDialog(float price1, float price2) {
+        if (activeScrip == null || chartOrderService == null) {
+            StatusBar.showError(GTT_NO_ACCOUNT);
+            return;
+        }
+        int qty = PortfolioQuantityProvider.getInstance().getQuantity(activeScrip.getId());
+        if (qty == 0) {
+            StatusBar.showError(OCO_NO_POSITION);
+            return;
+        }
+        OrderSide side = qty > 0 ? OrderSide.SELL : OrderSide.BUY;
+        int absQty = Math.abs(qty);
+        float slPrice = Math.min(price1, price2);
+        float tgtPrice = Math.max(price1, price2);
+        if (side == OrderSide.BUY) {
+            slPrice = Math.max(price1, price2);
+            tgtPrice = Math.min(price1, price2);
+        }
+        float lastPrice = getLastClosePrice();
+        OcoGttOrderDialog dialog = new OcoGttOrderDialog(
+                side, slPrice, tgtPrice, lastPrice, activeScrip.getId(), absQty);
+        dialog.show(getScene().getWindow());
+        OcoGttOrder result = dialog.getResult();
+        if (result != null) {
+            StatusBar.showInfo(OCO_CREATING);
+            CompletableFuture.runAsync(() -> {
+                try {
+                    chartOrderService.createOcoGtt(result);
+                    StatusBar.showSuccess(OCO_CREATED);
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                } catch (Exception ex) {
+                    log.error("Failed to create OCO GTT", ex);
+                    StatusBar.showError(String.format(OCO_CREATE_FAILED, extractMessage(ex)));
+                }
+            });
+        }
+    }
+
+    private void handleOcoModified(OcoGttOrder order) {
+        if (chartOrderService == null) {
+            StatusBar.showError(GTT_NO_ACCOUNT);
+            return;
+        }
+        OcoGttOrderDialog dialog = new OcoGttOrderDialog(order);
+        dialog.show(getScene().getWindow());
+        OcoGttOrder result = dialog.getResult();
+        if (result != null) {
+            StatusBar.showInfo(OCO_UPDATING);
+            CompletableFuture.runAsync(() -> {
+                try {
+                    chartOrderService.updateOcoGtt(result);
+                    StatusBar.showSuccess(OCO_UPDATED);
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                } catch (Exception ex) {
+                    log.error("Failed to update OCO GTT", ex);
+                    StatusBar.showError(String.format(OCO_UPDATE_FAILED, extractMessage(ex)));
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                }
+            });
+        }
+    }
+
+    private void handleOcoCancelRequest(OcoGttOrder order) {
+        if (chartOrderService == null) {
+            StatusBar.showError(GTT_NO_ACCOUNT);
+            return;
+        }
+        String message = String.format(OCO_CANCEL_MESSAGE,
+                order.getStoplossTriggerPrice(), order.getTargetTriggerPrice());
+        ConfirmationDialog dialog = new ConfirmationDialog(
+                OCO_CANCEL_TITLE, message, OCO_CANCEL_CONFIRM);
+        dialog.show(getScene().getWindow());
+        if (dialog.isConfirmed()) {
+            StatusBar.showInfo(GTT_CANCELLING);
+            CompletableFuture.runAsync(() -> {
+                try {
+                    chartOrderService.cancelGtt(order.getId());
+                    StatusBar.showSuccess(GTT_CANCELLED);
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                } catch (Exception ex) {
+                    log.error("Failed to cancel OCO GTT", ex);
+                    StatusBar.showError(String.format(GTT_CANCEL_FAILED, extractMessage(ex)));
+                }
+            });
+        }
+    }
+
+    private void startOcoPricePicker() {
+        if (activeScrip == null || chartOrderService == null) {
+            StatusBar.showError(GTT_NO_ACCOUNT);
+            return;
+        }
+        int qty = PortfolioQuantityProvider.getInstance().getQuantity(activeScrip.getId());
+        if (qty == 0) {
+            StatusBar.showError(OCO_NO_POSITION);
+            return;
+        }
+        ocoFirstPrice = 0;
+        canvas.startPricePicker(PricePickerMode.OCO_FIRST);
+    }
+
+    private void updateOcoButtonState() {
+        if (ocoButton == null) return;
+        boolean hasPosition = activeScrip != null
+                && PortfolioQuantityProvider.getInstance().getQuantity(activeScrip.getId()) != 0;
+        ocoButton.setDisable(!hasPosition || chartOrderService == null);
+    }
+
+    private void filterOcoOrdersForActiveScrip() {
+        String scripId = activeScrip != null ? activeScrip.getId() : null;
+        activeOcoOrders = allOcoOrders.stream()
+                .filter(o -> o.getStatus() == GttStatus.ACTIVE)
+                .filter(o -> scripId == null || scripId.equals(o.getScripId()))
+                .toList();
+        canvas.setOcoOrders(activeOcoOrders);
+        canvas.render();
+    }
+
     public void refreshGttOrders() {
         if (chartOrderService == null) return;
         StatusBar.showInfo(GTT_REFRESHING);
@@ -600,6 +818,17 @@ public final class ChartPane extends BorderPane {
             allGttOrders = orders;
             filterGttOrdersForActiveScrip();
             StatusBar.showSuccess(String.format(GTT_REFRESHED, activeGttOrders.size()));
+        }));
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                return chartOrderService.fetchOcoGtts();
+            } catch (Exception ex) {
+                log.error("Failed to fetch OCO GTTs", ex);
+                return List.<OcoGttOrder>of();
+            }
+        }).thenAccept(orders -> Platform.runLater(() -> {
+            allOcoOrders = orders;
+            filterOcoOrdersForActiveScrip();
         }));
     }
 
@@ -708,37 +937,6 @@ public final class ChartPane extends BorderPane {
     private float getLastClosePrice() {
         if (lastBars == null || lastBars.size() == 0) return 0;
         return lastBars.getClose(lastBars.size() - 1);
-    }
-
-    private Menu buildAddToExampleGroupMenu() {
-        Menu menu = new Menu(ADD_TO_EXAMPLE_GROUP_LABEL);
-        FontIcon icon = new FontIcon(FluentUiRegularAL.BOOK_ADD_20);
-        icon.setIconSize(16);
-        menu.setGraphic(icon);
-        menu.setOnShowing(e -> rebuildExampleGroupMenuItems(menu));
-        rebuildExampleGroupMenuItems(menu);
-        return menu;
-    }
-
-    private void rebuildExampleGroupMenuItems(Menu menu) {
-        menu.getItems().clear();
-        List<ExampleGroup> groups = exampleGroupPane.getGroups();
-        if (groups == null || groups.isEmpty()) {
-            MenuItem empty = new MenuItem(NO_EXAMPLE_GROUPS_LABEL);
-            empty.setDisable(true);
-            menu.getItems().add(empty);
-            return;
-        }
-        for (ExampleGroup group : groups) {
-            MenuItem item = new MenuItem(group.getName());
-            item.setOnAction(ev -> {
-                if (activeScrip == null || contextMenuTimestamp < 0) return;
-                Example example = new Example(activeScrip.getId(), activeTimeframe, contextMenuTimestamp);
-                exampleGroupPane.addExampleToGroup(group, example);
-                hideContextMenu();
-            });
-            menu.getItems().add(item);
-        }
     }
 
     private void loadData(String scripId, Timeframe timeframe) {
@@ -908,20 +1106,37 @@ public final class ChartPane extends BorderPane {
         trendlineBtn.setOnAction(e -> onTrendlineButtonClicked());
         chartGroup.getChildren().addAll(logBtn, indicatorBtn, screenBtn, trendlineBtn);
         HBox orderGroup = buildOrderActionButtons();
+        HBox rulerGroup = buildRulerButton();
         HBox drawingGroup = buildDrawingToolButtons();
         Region s1 = new Region();
         Region s2 = new Region();
         Region s3 = new Region();
+        Region s4 = new Region();
         HBox.setHgrow(s1, Priority.ALWAYS);
         HBox.setHgrow(s2, Priority.ALWAYS);
         HBox.setHgrow(s3, Priority.ALWAYS);
-        toolbar.getChildren().addAll(timeframeGroup, s1, chartGroup, s2, orderGroup, s3, drawingGroup);
+        HBox.setHgrow(s4, Priority.ALWAYS);
+        toolbar.getChildren().addAll(timeframeGroup, s1, chartGroup, s2, orderGroup, s3,
+                rulerGroup, s4, drawingGroup);
         return toolbar;
+    }
+
+    private HBox buildRulerButton() {
+        HBox box = buildButtonGroup();
+        ToggleButton btn = new ToggleButton();
+        btn.setGraphic(DrawingToolIcons.createIcon(DrawingTool.RULER));
+        btn.setTooltip(new Tooltip(DrawingTool.RULER.getLabel()));
+        btn.getStyleClass().add(DRAWING_BUTTON_STYLE);
+        btn.setFocusTraversable(false);
+        btn.setOnAction(e -> onDrawingToolSelected(DrawingTool.RULER, btn));
+        box.getChildren().add(btn);
+        return box;
     }
 
     private HBox buildDrawingToolButtons() {
         HBox box = buildButtonGroup();
         for (DrawingTool tool : DrawingTool.values()) {
+            if (tool == DrawingTool.RULER) continue;
             ToggleButton btn = new ToggleButton();
             btn.setGraphic(DrawingToolIcons.createIcon(tool));
             btn.setTooltip(new Tooltip(tool.getLabel()));
@@ -957,7 +1172,10 @@ public final class ChartPane extends BorderPane {
                 () -> startPricePicker(PricePickerMode.GTT_BUY));
         Button gttSellBtn = createOrderActionButton(GTT_SELL_LABEL, FluentUiRegularAL.ARROW_DOWN_20,
                 () -> startPricePicker(PricePickerMode.GTT_SELL));
-        box.getChildren().addAll(buyBtn, sellBtn, gttBuyBtn, gttSellBtn);
+        ocoButton = createOrderActionButton(OCO_LABEL, FluentUiRegularAL.ARROW_SORT_20,
+                this::startOcoPricePicker);
+        ocoButton.setDisable(true);
+        box.getChildren().addAll(buyBtn, sellBtn, gttBuyBtn, gttSellBtn, ocoButton);
         return box;
     }
 
@@ -1426,6 +1644,19 @@ public final class ChartPane extends BorderPane {
         canvas.render();
     }
 
+    private void refreshWatchlistPills() {
+        watchlistPillsBar.getChildren().clear();
+        if (activeScrip == null || watchlistPane == null) return;
+        String scripId = activeScrip.getId();
+        for (Watchlist wl : watchlistPane.getWatchlists()) {
+            if (wl.containsScrip(scripId)) {
+                Label pill = new Label(wl.getName());
+                pill.getStyleClass().add(WATCHLIST_PILL_STYLE);
+                watchlistPillsBar.getChildren().add(pill);
+            }
+        }
+    }
+
     public void refreshScriptedComponents() {
         computeIndicatorsAsync();
         computeScreenMarkersAsync();
@@ -1569,15 +1800,18 @@ public final class ChartPane extends BorderPane {
         chartStack.getChildren().add(mainWrapper);
         rebuildSubChartPanes();
         HBox zoomControls = buildZoomControls();
-        StackPane overlay = new StackPane(chartStack, indicatorListBar, zoomControls);
+        StackPane overlay = new StackPane(chartStack, indicatorListBar, watchlistPillsBar, zoomControls);
         StackPane.setAlignment(indicatorListBar, Pos.TOP_LEFT);
         StackPane.setMargin(indicatorListBar, new Insets(INDICATOR_LIST_TOP_OFFSET, 0, 0, 0));
+        StackPane.setAlignment(watchlistPillsBar, Pos.TOP_RIGHT);
+        StackPane.setMargin(watchlistPillsBar, new Insets(WATCHLIST_PILLS_TOP_OFFSET, WATCHLIST_PILLS_RIGHT_OFFSET, 0, 0));
         StackPane.setAlignment(zoomControls, Pos.BOTTOM_CENTER);
         StackPane.setMargin(zoomControls, new Insets(0, 0, ZOOM_MARGIN_BOTTOM, 0));
         canvasContainer.getChildren().setAll(overlay);
         refreshIndicatorList();
         refreshScreenTag();
         refreshTrendlineTag();
+        refreshWatchlistPills();
     }
 
     private HBox buildZoomControls() {

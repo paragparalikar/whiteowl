@@ -22,7 +22,7 @@ public final class FileExampleGroupRepository implements ExampleGroupRepository 
     private static final String DIR_NAME = "example-groups";
     private static final String FILE_EXTENSION = ".csv";
     private static final String CSV_SEPARATOR = ",";
-    private static final int EXPECTED_FIELD_COUNT = 3;
+    private static final int EXPECTED_FIELD_COUNT = 4;
 
     private final Path dirPath;
 
@@ -94,8 +94,9 @@ public final class FileExampleGroupRepository implements ExampleGroupRepository 
             if (parts.length < EXPECTED_FIELD_COUNT) return null;
             String scripId = parts[0].trim();
             Timeframe timeframe = Timeframe.valueOf(parts[1].trim());
-            long timestamp = Long.parseLong(parts[2].trim());
-            return new Example(scripId, timeframe, timestamp);
+            long startTimestamp = Long.parseLong(parts[2].trim());
+            long endTimestamp = Long.parseLong(parts[3].trim());
+            return new Example(scripId, timeframe, startTimestamp, endTimestamp);
         } catch (Exception e) {
             log.warn("Skipping malformed example line: {}", line, e);
             return null;
@@ -105,7 +106,8 @@ public final class FileExampleGroupRepository implements ExampleGroupRepository 
     private void saveExampleGroup(ExampleGroup g) throws IOException {
         Path file = dirPath.resolve(toFileName(g.getName()));
         List<String> lines = g.getExamples().stream()
-                .map(e -> e.getScripId() + CSV_SEPARATOR + e.getTimeframe().name() + CSV_SEPARATOR + e.getTimestamp())
+                .map(e -> e.getScripId() + CSV_SEPARATOR + e.getTimeframe().name()
+                        + CSV_SEPARATOR + e.getStartTimestamp() + CSV_SEPARATOR + e.getEndTimestamp())
                 .toList();
         Files.write(file, lines);
     }

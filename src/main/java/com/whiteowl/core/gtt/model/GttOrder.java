@@ -23,6 +23,7 @@ public final class GttOrder {
     private float triggerPrice;
     private float orderPrice;
     private float lastPrice;
+    private float trailingPoints;
     private GttStatus status;
     private String expiresAt;
     private String createdAt;

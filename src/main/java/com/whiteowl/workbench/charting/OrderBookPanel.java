@@ -12,8 +12,10 @@ import com.whiteowl.core.order.model.Variety;
 import com.whiteowl.core.portfolio.model.Funds;
 import com.whiteowl.core.portfolio.model.Holding;
 import com.whiteowl.core.portfolio.model.Position;
+import com.whiteowl.core.scrip.model.Scrip;
 import com.whiteowl.workbench.StatusBar;
 import com.whiteowl.workbench.common.ConfirmationDialog;
+import com.whiteowl.workbench.common.ScripCellGraphic;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -483,8 +485,9 @@ public final class OrderBookPanel extends VBox {
         table.getStyleClass().add(TABLE_STYLE);
         table.setPlaceholder(new Label(EMPTY_NO_ACCOUNT));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        TableColumn<Position, String> scripCol = new TableColumn<>(COL_SCRIP);
-        scripCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getScripId()));
+        TableColumn<Position, Scrip> scripCol = new TableColumn<>(COL_SCRIP);
+        scripCol.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getScrip()));
+        scripCol.setCellFactory(col -> createScripCell());
         scripCol.setPrefWidth(100);
         TableColumn<Position, String> productCol = new TableColumn<>(COL_PRODUCT);
         productCol.setCellValueFactory(c -> new SimpleStringProperty(
@@ -512,12 +515,12 @@ public final class OrderBookPanel extends VBox {
         table.setRowFactory(tv -> {
             TableRow<Position> row = new TableRow<>();
             row.setOnMouseClicked(e -> {
-                if (!row.isEmpty()) navigateToScrip(row.getItem().getScripId());
+                if (!row.isEmpty()) navigateToScrip(row.getItem().getScrip().getId());
             });
             return row;
         });
         table.getSelectionModel().selectedItemProperty().addListener((obs, old, sel) -> {
-            if (sel != null) navigateToScrip(sel.getScripId());
+            if (sel != null) navigateToScrip(sel.getScrip().getId());
         });
         return table;
     }
@@ -528,8 +531,9 @@ public final class OrderBookPanel extends VBox {
         table.getStyleClass().add(TABLE_STYLE);
         table.setPlaceholder(new Label(EMPTY_NO_ACCOUNT));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        TableColumn<Holding, String> scripCol = new TableColumn<>(COL_SCRIP);
-        scripCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getScripId()));
+        TableColumn<Holding, Scrip> scripCol = new TableColumn<>(COL_SCRIP);
+        scripCol.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getScrip()));
+        scripCol.setCellFactory(col -> createScripCell());
         scripCol.setPrefWidth(100);
         TableColumn<Holding, String> exchCol = new TableColumn<>(COL_EXCHANGE);
         exchCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getExchange()));
@@ -577,12 +581,12 @@ public final class OrderBookPanel extends VBox {
         table.setRowFactory(tv -> {
             TableRow<Holding> row = new TableRow<>();
             row.setOnMouseClicked(e -> {
-                if (!row.isEmpty()) navigateToScrip(row.getItem().getScripId());
+                if (!row.isEmpty()) navigateToScrip(row.getItem().getScrip().getId());
             });
             return row;
         });
         table.getSelectionModel().selectedItemProperty().addListener((obs, old, sel) -> {
-            if (sel != null) navigateToScrip(sel.getScripId());
+            if (sel != null) navigateToScrip(sel.getScrip().getId());
         });
         return table;
     }
@@ -619,6 +623,23 @@ public final class OrderBookPanel extends VBox {
         fundsGrid.add(label, 0, row);
         fundsGrid.add(valueLabel, 1, row);
         return row + 1;
+    }
+
+    private <T> TableCell<T, Scrip> createScripCell() {
+        return new TableCell<>() {
+            private final ScripCellGraphic graphic = new ScripCellGraphic();
+
+            @Override
+            protected void updateItem(Scrip scrip, boolean empty) {
+                super.updateItem(scrip, empty);
+                if (empty || scrip == null) {
+                    setGraphic(null);
+                    return;
+                }
+                graphic.updateScrip(scrip);
+                setGraphic(graphic);
+            }
+        };
     }
 
     private TableCell<Order, Order> createOrderActionCell() {
@@ -822,7 +843,7 @@ public final class OrderBookPanel extends VBox {
         if (chartOrderService == null) return;
         Window window = getScene().getWindow();
         int qty = Math.abs(position.getQuantity());
-        String message = String.format(EXIT_POSITION_MESSAGE, position.getScripId(), qty);
+        String message = String.format(EXIT_POSITION_MESSAGE, position.getScrip().getSymbol(), qty);
         ConfirmationDialog dialog = new ConfirmationDialog(EXIT_POSITION_TITLE, message, EXIT_POSITION_CONFIRM);
         dialog.show(window);
         if (dialog.isConfirmed()) {
@@ -830,7 +851,7 @@ public final class OrderBookPanel extends VBox {
             Product product = position.getProduct() != null ? position.getProduct() : Product.MIS;
             Order exitOrder = Order.builder()
                     .id(UUID.randomUUID().toString())
-                    .scripId(position.getScripId())
+                    .scripId(position.getScrip().getId())
                     .side(side)
                     .limitType(LimitType.MARKET)
                     .product(product)
@@ -856,13 +877,13 @@ public final class OrderBookPanel extends VBox {
     private void exitHolding(Holding holding) {
         if (chartOrderService == null) return;
         Window window = getScene().getWindow();
-        String message = String.format(EXIT_HOLDING_MESSAGE, holding.getQuantity(), holding.getScripId());
+        String message = String.format(EXIT_HOLDING_MESSAGE, holding.getQuantity(), holding.getScrip().getSymbol());
         ConfirmationDialog dialog = new ConfirmationDialog(EXIT_HOLDING_TITLE, message, EXIT_HOLDING_CONFIRM);
         dialog.show(window);
         if (dialog.isConfirmed()) {
             Order exitOrder = Order.builder()
                     .id(UUID.randomUUID().toString())
-                    .scripId(holding.getScripId())
+                    .scripId(holding.getScrip().getId())
                     .side(OrderSide.SELL)
                     .limitType(LimitType.MARKET)
                     .product(Product.CNC)

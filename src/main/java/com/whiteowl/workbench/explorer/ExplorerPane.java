@@ -7,6 +7,7 @@ import com.whiteowl.core.scrip.model.ScripType;
 import com.whiteowl.core.scrip.repository.ScripRepository;
 import com.whiteowl.workbench.common.AddToCollectionMenuBuilder;
 import com.whiteowl.workbench.common.ExchangeFilterCombo;
+import com.whiteowl.workbench.common.PortfolioQuantityLabel;
 import com.whiteowl.workbench.common.ScripBadge;
 import com.whiteowl.workbench.common.ScripNavigable;
 import com.whiteowl.workbench.common.ScripTypeFilterCombo;
@@ -25,6 +26,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import java.util.Comparator;
@@ -178,6 +180,7 @@ public final class ExplorerPane extends VBox implements ScripNavigable {
         private static final int BADGE_GAP = 6;
 
         private final Label symbolLabel = new Label();
+        private final PortfolioQuantityLabel portfolioQtyLabel = new PortfolioQuantityLabel();
         private final HBox container = new HBox(BADGE_GAP);
 
         ScripCell() {
@@ -194,7 +197,11 @@ public final class ExplorerPane extends VBox implements ScripNavigable {
                 return;
             }
             symbolLabel.setText(scrip.getSymbol());
-            container.getChildren().setAll(ScripBadge.create(scrip.getScripType()), symbolLabel);
+            portfolioQtyLabel.updateQuantity(scrip.getId());
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            container.getChildren().setAll(ScripBadge.create(scrip.getScripType()),
+                    symbolLabel, spacer, portfolioQtyLabel);
             setGraphic(container);
             ContextMenu ctx = new ContextMenu();
             if (watchlistPane != null) {
@@ -203,7 +210,7 @@ public final class ExplorerPane extends VBox implements ScripNavigable {
                         FluentUiRegularMZ.STAR_16,
                         () -> watchlistPane.getWatchlists(),
                         ExplorerPane.this::getSelectedScripIds,
-                        () -> { watchlistPane.refresh(); watchlistPane.persist(); }
+                        () -> { watchlistPane.syncAllItems(); watchlistPane.persist(); }
                 ));
             }
             if (groupPane != null) {

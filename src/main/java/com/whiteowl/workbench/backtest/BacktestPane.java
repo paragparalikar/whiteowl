@@ -64,9 +64,6 @@ import static com.whiteowl.core.backtest.v2.model.BacktestConfig.DEFAULT_INITIAL
 import static com.whiteowl.core.backtest.v2.model.BacktestConfig.DEFAULT_OFFSET;
 import static com.whiteowl.core.backtest.v2.model.BacktestConfig.DEFAULT_VOLUME_PARTICIPATION_PERCENT;
 import static com.whiteowl.core.backtest.v2.model.BacktestConfig.DEFAULT_SLIPPAGE_PERCENT;
-import static com.whiteowl.core.backtest.StrategyScriptConstants.STRATEGIES_DIR;
-import static com.whiteowl.core.backtest.StrategyScriptConstants.DEFAULT_TEMPLATE;
-import static com.whiteowl.core.script.ScriptType.STRATEGY;
 
 @Slf4j
 public final class BacktestPane extends VBox {
@@ -151,9 +148,10 @@ public final class BacktestPane extends VBox {
     private BiConsumer<ScriptDescriptor, BacktestResultPane> onBacktestStarted;
     private BacktestResultPane activeResultPane;
 
-    public BacktestPane(ScripRepository scripRepository, BarsRepository barsRepository) {
+    public BacktestPane(ScripRepository scripRepository, BarsRepository barsRepository,
+                        ScriptRepository strategyRepository) {
         this.backtestService = new BacktestService(scripRepository, barsRepository);
-        this.strategyRepository = new ScriptRepository(STRATEGY, STRATEGIES_DIR, DEFAULT_TEMPLATE);
+        this.strategyRepository = strategyRepository;
         this.scripRepository = scripRepository;
         this.strategyCombo = buildStrategyCombo();
         this.deleteButton = buildDeleteButton();
@@ -166,6 +164,22 @@ public final class BacktestPane extends VBox {
 
     public void setOnBacktestStarted(BiConsumer<ScriptDescriptor, BacktestResultPane> handler) {
         this.onBacktestStarted = handler;
+    }
+
+    public void refreshStrategies() {
+        ScriptDescriptor selected = strategyCombo.getValue();
+        String selectedName = selected != null ? selected.getName() : null;
+        strategyCombo.getItems().setAll(strategyRepository.findAll());
+        if (selectedName != null) {
+            strategyCombo.getItems().stream()
+                    .filter(s -> s.getName().equals(selectedName))
+                    .findFirst()
+                    .ifPresent(strategyCombo::setValue);
+        }
+        if (strategyCombo.getValue() == null && !strategyCombo.getItems().isEmpty()) {
+            strategyCombo.setValue(strategyCombo.getItems().getFirst());
+        }
+        refreshStrategyInputs();
     }
 
     public void updateRenamedStrategy(ScriptDescriptor oldStrategy, ScriptDescriptor newStrategy) {

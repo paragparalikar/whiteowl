@@ -144,6 +144,29 @@
     -fx-background-color: transparent;
 }
 
+.scrip-cell-symbol {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}
+
+.portfolio-qty {
+    -fx-padding: 0 2 0 0;
+}
+
+.portfolio-qty-icon {
+    -fx-icon-size: 12;
+}
+
+.portfolio-qty-long {
+    -fx-text-fill: #26a69a;
+    -fx-icon-color: #26a69a;
+}
+
+.portfolio-qty-short {
+    -fx-text-fill: #ef5350;
+    -fx-icon-color: #ef5350;
+}
+
 .exchange-badge {
     -fx-font-family: "Montserrat Bold", "Montserrat", "Segoe UI", system;
     -fx-font-size: 9px;

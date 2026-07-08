@@ -49,6 +49,7 @@ public final class IndicatorRegistry {
                 new AdxIndicator(),
                 new StdDevIndicator(),
                 new RocIndicator(),
+                new BetaIndicator(barsRepository),
                 new RatioIndicator(barsRepository)
         );
     }

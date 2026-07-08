@@ -6,6 +6,7 @@ import com.whiteowl.core.order.model.LimitType;
 import com.whiteowl.core.order.model.OrderSide;
 import com.whiteowl.core.order.model.Product;
 import com.whiteowl.workbench.common.BaseDialog;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -29,6 +30,8 @@ public final class GttOrderDialog extends BaseDialog {
     private static final String ORDER_PRICE_LABEL = "Order Price";
     private static final String QUANTITY_LABEL = "Quantity";
     private static final String PRODUCT_LABEL = "Product";
+    private static final String TRAILING_LABEL = "Trailing";
+    private static final String TRAILING_POINTS_LABEL = "Trailing Points";
     private static final int DIALOG_WIDTH = 420;
     private static final int DEFAULT_QUANTITY = 1;
     private static final String EXPIRY_FORMAT = "yyyy-MM-dd HH:mm:ss";
@@ -43,6 +46,8 @@ public final class GttOrderDialog extends BaseDialog {
     private final TextField orderPriceField;
     private final TextField quantityField;
     private final ComboBox<Product> productCombo;
+    private final CheckBox trailingCheckBox;
+    private final TextField trailingPointsField;
     @Getter private GttOrder result;
 
     public GttOrderDialog(OrderSide side, float triggerPrice, float lastPrice, String scripId,
@@ -57,6 +62,10 @@ public final class GttOrderDialog extends BaseDialog {
         int qty = suggestedQuantity > 0 ? suggestedQuantity : DEFAULT_QUANTITY;
         this.quantityField = createTextField(String.valueOf(qty));
         this.productCombo = createProductCombo(Product.CNC);
+        this.trailingPointsField = createTextField("");
+        this.trailingPointsField.setDisable(true);
+        this.trailingCheckBox = new CheckBox();
+        this.trailingCheckBox.setOnAction(e -> trailingPointsField.setDisable(!trailingCheckBox.isSelected()));
     }
 
     public GttOrderDialog(GttOrder gtt) {
@@ -70,6 +79,12 @@ public final class GttOrderDialog extends BaseDialog {
         this.quantityField = createTextField(String.valueOf(gtt.getQuantity()));
         Product defaultProduct = gtt.getProduct() != null ? gtt.getProduct() : Product.CNC;
         this.productCombo = createProductCombo(defaultProduct);
+        boolean hasTrailing = gtt.getTrailingPoints() > 0;
+        this.trailingPointsField = createTextField(hasTrailing ? formatPrice(gtt.getTrailingPoints()) : "");
+        this.trailingPointsField.setDisable(!hasTrailing);
+        this.trailingCheckBox = new CheckBox();
+        this.trailingCheckBox.setSelected(hasTrailing);
+        this.trailingCheckBox.setOnAction(e -> trailingPointsField.setDisable(!trailingCheckBox.isSelected()));
     }
 
     @Override
@@ -93,7 +108,9 @@ public final class GttOrderDialog extends BaseDialog {
         addFormRow(grid, TRIGGER_PRICE_LABEL, triggerPriceField, row++);
         addFormRow(grid, ORDER_PRICE_LABEL, orderPriceField, row++);
         addFormRow(grid, QUANTITY_LABEL, quantityField, row++);
-        addFormRow(grid, PRODUCT_LABEL, productCombo, row);
+        addFormRow(grid, PRODUCT_LABEL, productCombo, row++);
+        addFormRow(grid, TRAILING_LABEL, trailingCheckBox, row++);
+        addFormRow(grid, TRAILING_POINTS_LABEL, trailingPointsField, row);
     }
 
     @Override
@@ -115,6 +132,10 @@ public final class GttOrderDialog extends BaseDialog {
             Product product = productCombo.getValue();
             String expiresAt = LocalDateTime.now().plusYears(EXPIRY_YEARS)
                     .format(DateTimeFormatter.ofPattern(EXPIRY_FORMAT));
+            float trailing = 0;
+            if (trailingCheckBox.isSelected() && !trailingPointsField.getText().isBlank()) {
+                trailing = Float.parseFloat(trailingPointsField.getText());
+            }
             result = GttOrder.builder()
                     .id(existingGtt != null ? existingGtt.getId() : 0)
                     .scripId(scripId)
@@ -125,6 +146,7 @@ public final class GttOrderDialog extends BaseDialog {
                     .triggerPrice(trigger)
                     .orderPrice(orderPrice)
                     .lastPrice(lastPrice)
+                    .trailingPoints(trailing)
                     .status(GttStatus.ACTIVE)
                     .expiresAt(expiresAt)
                     .build();

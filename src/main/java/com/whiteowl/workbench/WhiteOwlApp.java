@@ -42,6 +42,8 @@ public final class WhiteOwlApp extends Application {
     private static final String SCRIPT_EDITOR_CSS = "/css/script-editor.css";
     private static final String STATUS_BAR_CSS = "/css/status-bar.css";
     private static final String DIALOG_CSS = "/css/dialog.css";
+    private static final String NOTE_EDITOR_CSS = "/css/note-editor.css";
+    private static final String NOTE_LIST_CSS = "/css/note-list.css";
     private static final String PORTFOLIO_ID_PROP = "kite.portfolio.id";
     private static final String USERNAME_PROP = "kite.username";
     private static final String PASSWORD_PROP = "kite.password";
@@ -160,7 +162,9 @@ public final class WhiteOwlApp extends Application {
                 resolveStylesheet(SCRIPTS_PANE_CSS),
                 resolveStylesheet(SCRIPT_EDITOR_CSS),
                 resolveStylesheet(STATUS_BAR_CSS),
-                resolveStylesheet(DIALOG_CSS)
+                resolveStylesheet(DIALOG_CSS),
+                resolveStylesheet(NOTE_EDITOR_CSS),
+                resolveStylesheet(NOTE_LIST_CSS)
         );
     }
 

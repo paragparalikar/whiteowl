@@ -2,7 +2,6 @@ package com.whiteowl.workbench.screener;
 
 import com.whiteowl.core.bar.model.Timeframe;
 import com.whiteowl.core.bar.repository.BarsRepository;
-import com.whiteowl.core.examplegroup.repository.ExampleGroupRepository;
 import com.whiteowl.core.screener.Screen;
 import com.whiteowl.core.screener.ScreenRegistry;
 import com.whiteowl.core.collection.CollectionResolver;
@@ -14,6 +13,7 @@ import com.whiteowl.core.scrip.model.ScripType;
 import com.whiteowl.core.scrip.repository.ScripRepository;
 import com.whiteowl.workbench.common.CollectionPickerPane;
 import com.whiteowl.workbench.common.ExchangeFilterCombo;
+import com.whiteowl.workbench.common.PortfolioQuantityLabel;
 import com.whiteowl.workbench.common.ScripBadge;
 import com.whiteowl.workbench.common.ScripNavigable;
 import com.whiteowl.workbench.common.ScripTypeFilterCombo;
@@ -99,11 +99,10 @@ public final class ScreenerPane extends VBox implements ScripNavigable {
     private Timeframe selectedTimeframe = Timeframe.DAILY;
 
     public ScreenerPane(ScripRepository scripRepository, BarsRepository barsRepository,
-                        ExampleGroupRepository exampleGroupRepository,
                         CollectionResolver collectionResolver,
                         com.whiteowl.core.script.ScriptRepository screenerScriptRepo) {
         this.screenerService = new ScreenerService(scripRepository, barsRepository);
-        this.screenRegistry = new ScreenRegistry(barsRepository, exampleGroupRepository, screenerScriptRepo);
+        this.screenRegistry = new ScreenRegistry(screenerScriptRepo);
         this.screenCombo = buildScreenCombo();
         this.editButton = buildEditButton();
         this.scripTypeCombo = buildScripTypeCombo();
@@ -124,6 +123,21 @@ public final class ScreenerPane extends VBox implements ScripNavigable {
 
     public void setOnScripSelected(Consumer<Scrip> handler) {
         this.onScripSelected = handler;
+    }
+
+    public void refreshScreeners() {
+        Screen selected = screenCombo.getValue();
+        String selectedName = selected != null ? selected.getName() : null;
+        screenCombo.getItems().setAll(screenRegistry.getScreens());
+        if (selectedName != null) {
+            screenCombo.getItems().stream()
+                    .filter(s -> s.getName().equals(selectedName))
+                    .findFirst()
+                    .ifPresent(screenCombo::setValue);
+        }
+        if (screenCombo.getValue() == null && !screenCombo.getItems().isEmpty()) {
+            screenCombo.setValue(screenCombo.getItems().getFirst());
+        }
     }
 
     @Override
@@ -177,7 +191,7 @@ public final class ScreenerPane extends VBox implements ScripNavigable {
 
     private ComboBox<Screen> buildScreenCombo() {
         ComboBox<Screen> combo = new ComboBox<>();
-        combo.getItems().addAll(screenRegistry.getBuiltInScreens());
+        combo.getItems().addAll(screenRegistry.getScreens());
         if (!combo.getItems().isEmpty()) {
             combo.setValue(combo.getItems().get(0));
         }
@@ -387,10 +401,13 @@ public final class ScreenerPane extends VBox implements ScripNavigable {
     private final class ResultCell extends ListCell<Scrip> {
 
         private final Label symbolLabel = new Label();
+        private final PortfolioQuantityLabel portfolioQtyLabel = new PortfolioQuantityLabel();
+        private final Region spacer = new Region();
         private final HBox container = new HBox(BADGE_GAP);
 
         ResultCell() {
             symbolLabel.getStyleClass().add(CELL_SYMBOL_STYLE);
+            HBox.setHgrow(spacer, Priority.ALWAYS);
             container.setAlignment(Pos.CENTER_LEFT);
         }
 
@@ -402,7 +419,9 @@ public final class ScreenerPane extends VBox implements ScripNavigable {
                 return;
             }
             symbolLabel.setText(scrip.getSymbol());
-            container.getChildren().setAll(ScripBadge.create(scrip.getScripType()), symbolLabel);
+            portfolioQtyLabel.updateQuantity(scrip.getId());
+            container.getChildren().setAll(ScripBadge.create(scrip.getScripType()),
+                    symbolLabel, spacer, portfolioQtyLabel);
             setGraphic(container);
         }
 

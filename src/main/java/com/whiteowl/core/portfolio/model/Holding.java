@@ -1,5 +1,6 @@
 package com.whiteowl.core.portfolio.model;
 
+import com.whiteowl.core.scrip.model.Scrip;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,7 +9,7 @@ import lombok.Getter;
 public final class Holding {
 
     private final String portfolioId;
-    private final String scripId;
+    private final Scrip scrip;
     private final String exchange;
     private final String isin;
     private final String product;

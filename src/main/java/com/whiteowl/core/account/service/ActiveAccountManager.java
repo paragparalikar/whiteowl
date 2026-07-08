@@ -14,14 +14,12 @@ import java.util.function.Consumer;
 public final class ActiveAccountManager {
 
     private final AccountService accountService;
-    private final BrokerAdapterFactory adapterFactory;
     private final List<Consumer<Optional<KiteBrokerAdapter>>> listeners = new CopyOnWriteArrayList<>();
     private Account activeAccount;
     private KiteBrokerAdapter activeAdapter;
 
-    public ActiveAccountManager(AccountService accountService, BrokerAdapterFactory adapterFactory) {
+    public ActiveAccountManager(AccountService accountService) {
         this.accountService = accountService;
-        this.adapterFactory = adapterFactory;
     }
 
     public Optional<Account> getActiveAccount() {
@@ -53,7 +51,7 @@ public final class ActiveAccountManager {
         log.info("Activating account: {}", account.getName());
         this.activeAccount = account;
         try {
-            this.activeAdapter = adapterFactory.createAdapter(account);
+            this.activeAdapter = BrokerAdapterFactory.getInstance().createAdapter(account);
             activeAdapter.init();
             log.info("Broker adapter initialized for account: {}", account.getName());
             notifyListeners(Optional.of(activeAdapter));

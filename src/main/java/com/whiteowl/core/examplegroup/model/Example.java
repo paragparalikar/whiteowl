@@ -10,6 +10,7 @@ public final class Example {
 
     private final String scripId;
     private final Timeframe timeframe;
-    private final long timestamp;
+    private final long startTimestamp;
+    private final long endTimestamp;
 
 }

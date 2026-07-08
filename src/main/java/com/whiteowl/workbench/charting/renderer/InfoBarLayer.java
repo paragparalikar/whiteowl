@@ -3,6 +3,7 @@ package com.whiteowl.workbench.charting.renderer;
 import static com.whiteowl.workbench.charting.ChartTheme.*;
 
 import com.whiteowl.core.bar.model.Bars;
+import com.whiteowl.core.portfolio.service.PortfolioQuantityProvider;
 import com.whiteowl.core.scrip.model.Scrip;
 import com.whiteowl.workbench.charting.ChartContext;
 import com.whiteowl.workbench.charting.ChartLayer;
@@ -24,6 +25,7 @@ public final class InfoBarLayer implements ChartLayer {
     private static final String LABEL_CLOSE = "C";
     private static final String LABEL_VOLUME = "Vol";
     private static final String PERCENT_FORMAT = "%+.2f%%";
+    private static final String PORTFOLIO_ICON = "\uD83D\uDCBC ";
     private static final DateTimeFormatter INFO_BAR_DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yy HH:mm");
     private static final DateTimeFormatter INFO_BAR_DATE_ONLY_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
     private static final long INTRADAY_THRESHOLD_SECONDS = 86400L;
@@ -39,6 +41,12 @@ public final class InfoBarLayer implements ChartLayer {
         x = drawSegment(gc, scrip.getName(), INFO_VALUE, x, y);
         x += OUTER_GAP;
         x = drawSegment(gc, scrip.getExchange().getCode(), INFO_LABEL, x, y);
+        int portfolioQty = PortfolioQuantityProvider.getInstance().getQuantity(scrip.getId());
+        if (portfolioQty != 0) {
+            x += OUTER_GAP;
+            Color qtyColor = portfolioQty > 0 ? BULLISH : BEARISH;
+            x = drawSegment(gc, PORTFOLIO_ICON + Math.abs(portfolioQty), qtyColor, x, y);
+        }
         Bars bars = ctx.bars();
         if (hoveredIdx < 0 || hoveredIdx >= bars.size()) return;
         float open = bars.getOpen(hoveredIdx);

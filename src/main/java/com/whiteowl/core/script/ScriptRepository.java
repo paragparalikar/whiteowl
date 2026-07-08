@@ -100,18 +100,6 @@ public final class ScriptRepository {
         return name.replaceAll("[^a-zA-Z0-9_\\-]", "_");
     }
 
-    public void seedSamples(String[][] samples) {
-        if (!findAll().isEmpty()) return;
-        for (String[] sample : samples) {
-            try {
-                ScriptDescriptor descriptor = create(sample[0]);
-                saveScript(descriptor, sample[1]);
-            } catch (IOException e) {
-                log.error("Failed to seed sample script '{}': {}", sample[0], e.getMessage());
-            }
-        }
-    }
-
     private void createDirectoryIfNeeded() {
         try {
             Files.createDirectories(scriptsDir);

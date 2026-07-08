@@ -8,7 +8,7 @@ import com.whiteowl.core.scrip.repository.ScripRepository;
 import com.whiteowl.workbench.common.AddToCollectionMenuBuilder;
 import com.whiteowl.workbench.common.ConfirmationDialog;
 import com.whiteowl.workbench.common.NameInputDialog;
-import com.whiteowl.workbench.common.ScripBadge;
+import com.whiteowl.workbench.common.ScripCellGraphic;
 import com.whiteowl.workbench.common.ScripNavigable;
 import com.whiteowl.workbench.watchlist.WatchlistPane;
 import javafx.collections.FXCollections;
@@ -55,7 +55,7 @@ public final class GroupPane extends VBox implements ScripNavigable {
     private static final String TOOLBAR_STYLE = "group-toolbar";
     private static final String ADD_BUTTON_STYLE = "group-add-button";
     private static final String LIST_STYLE = "group-list";
-    private static final String CELL_SYMBOL_STYLE = "group-cell-symbol";
+
     private static final String SECTION_STYLE = "group-section";
     private static final String SECTION_HEADER_STYLE = "group-section-header";
     private static final String SECTION_CHEVRON_STYLE = "group-section-chevron";
@@ -427,17 +427,14 @@ public final class GroupPane extends VBox implements ScripNavigable {
 
     private final class ScripIdCell extends ListCell<String> {
 
-        private static final int BADGE_GAP = 6;
-
-        private final Label symbolLabel = new Label();
-        private final HBox container = new HBox(BADGE_GAP);
+        private final ScripCellGraphic scripGraphic = new ScripCellGraphic();
+        private final HBox container = new HBox(scripGraphic);
         private final Group group;
         private final ListView<String> ownerListView;
 
         ScripIdCell(Group group, ListView<String> ownerListView) {
             this.group = group;
             this.ownerListView = ownerListView;
-            symbolLabel.getStyleClass().add(CELL_SYMBOL_STYLE);
             container.setAlignment(Pos.CENTER_LEFT);
             setupDragHandlers();
         }
@@ -499,8 +496,10 @@ public final class GroupPane extends VBox implements ScripNavigable {
                 return;
             }
             Scrip scrip = scripRepository.findById(scripId).orElse(null);
-            String displayName = scrip != null ? scrip.getSymbol() : scripId;
-            symbolLabel.setText(displayName);
+            scripGraphic.update(
+                    scrip != null ? scrip.getScripType() : null,
+                    scrip != null ? scrip.getSymbol() : scripId,
+                    scripId);
             Region spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
             Button cellDeleteBtn = new Button();
@@ -516,9 +515,8 @@ public final class GroupPane extends VBox implements ScripNavigable {
                 persist();
                 rebuildSections();
             });
-            container.getChildren().setAll(
-                    ScripBadge.create(scrip != null ? scrip.getScripType() : null),
-                    symbolLabel, spacer, cellDeleteBtn);
+            container.getChildren().setAll(scripGraphic, spacer,
+                    scripGraphic.getPortfolioQtyLabel(), cellDeleteBtn);
             setGraphic(container);
             ContextMenu ctx = new ContextMenu();
             if (watchlistPane != null) {
@@ -527,7 +525,7 @@ public final class GroupPane extends VBox implements ScripNavigable {
                         FluentUiRegularMZ.STAR_16,
                         () -> watchlistPane.getWatchlists(),
                         () -> List.copyOf(ownerListView.getSelectionModel().getSelectedItems()),
-                        () -> { watchlistPane.refresh(); watchlistPane.persist(); }
+                        () -> { watchlistPane.syncAllItems(); watchlistPane.persist(); }
                 ));
             }
             FontIcon removeIcon = new FontIcon(FluentUiRegularAL.DELETE_16);

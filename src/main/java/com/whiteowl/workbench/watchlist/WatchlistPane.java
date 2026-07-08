@@ -7,7 +7,7 @@ import com.whiteowl.core.watchlist.repository.WatchlistRepository;
 import com.whiteowl.workbench.common.AddToCollectionMenuBuilder;
 import com.whiteowl.workbench.common.ConfirmationDialog;
 import com.whiteowl.workbench.common.NameInputDialog;
-import com.whiteowl.workbench.common.ScripBadge;
+import com.whiteowl.workbench.common.ScripCellGraphic;
 import com.whiteowl.workbench.common.ScripNavigable;
 import com.whiteowl.workbench.group.GroupPane;
 import javafx.collections.FXCollections;
@@ -40,8 +40,10 @@ import org.kordamp.ikonli.fluentui.FluentUiRegularMZ;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -51,7 +53,7 @@ public final class WatchlistPane extends VBox implements ScripNavigable {
     private static final String TOOLBAR_STYLE = "watchlist-toolbar";
     private static final String ADD_BUTTON_STYLE = "watchlist-add-button";
     private static final String LIST_STYLE = "watchlist-list";
-    private static final String CELL_SYMBOL_STYLE = "watchlist-cell-symbol";
+
     private static final String SECTION_STYLE = "watchlist-section";
     private static final String SECTION_HEADER_STYLE = "watchlist-section-header";
     private static final String SECTION_CHEVRON_STYLE = "watchlist-section-chevron";
@@ -83,12 +85,16 @@ public final class WatchlistPane extends VBox implements ScripNavigable {
     private static final int HEADER_ICON_SIZE = 12;
     private static final String CELL_DELETE_STYLE = "watchlist-cell-delete";
     private static final int CELL_DELETE_ICON_SIZE = 12;
+    private static final String MOVE_TO_TOP_LABEL = "Move To Top";
+    private static final String MOVE_TO_BOTTOM_LABEL = "Move To Bottom";
 
     private final WatchlistRepository repository;
     private final ScripRepository scripRepository;
     private final List<Watchlist> watchlists;
     private final VBox sectionsContainer;
     private final Set<String> expandedWatchlists = new HashSet<>();
+    private final Map<Watchlist, ObservableList<String>> itemsByWatchlist = new HashMap<>();
+    private final Map<Watchlist, ListView<String>> listViewByWatchlist = new HashMap<>();
     private String searchText = "";
     private Consumer<Scrip> onScripSelected;
     private Runnable onWatchlistsChanged;
@@ -148,12 +154,22 @@ public final class WatchlistPane extends VBox implements ScripNavigable {
 
     public void addScripToWatchlist(Watchlist watchlist, String scripId) {
         watchlist.addScrip(scripId);
+        ObservableList<String> items = itemsByWatchlist.get(watchlist);
+        if (items != null) {
+            items.add(scripId);
+            updateListViewHeight(watchlist);
+        }
         persist();
-        rebuildSections();
     }
 
     public void refresh() {
         rebuildSections();
+    }
+
+    public void syncAllItems() {
+        for (Watchlist wl : watchlists) {
+            syncItems(wl);
+        }
     }
 
     private HBox buildToolbar() {
@@ -221,21 +237,50 @@ public final class WatchlistPane extends VBox implements ScripNavigable {
         rebuildSections();
     }
 
-    private void removeScripFromWatchlist(Watchlist watchlist, String scripId) {
-        watchlist.removeScrip(scripId);
-        persist();
-        rebuildSections();
-    }
-
     public void persist() {
         repository.saveAll(watchlists);
         if (onWatchlistsChanged != null) onWatchlistsChanged.run();
     }
 
     private void rebuildSections() {
+        itemsByWatchlist.clear();
+        listViewByWatchlist.clear();
+        lastActiveListView = null;
         sectionsContainer.getChildren().clear();
         for (Watchlist wl : watchlists) {
             sectionsContainer.getChildren().add(buildWatchlistSection(wl));
+        }
+    }
+
+    private void syncItems(Watchlist watchlist) {
+        ObservableList<String> items = itemsByWatchlist.get(watchlist);
+        if (items != null) {
+            items.setAll(watchlist.getScripIds());
+            updateListViewHeight(watchlist);
+        }
+    }
+
+    private void selectAfterRemove(Watchlist watchlist, int removedIndex) {
+        ListView<String> lv = listViewByWatchlist.get(watchlist);
+        if (lv == null || lv.getItems().isEmpty()) return;
+        int selectIndex = Math.min(removedIndex, lv.getItems().size() - 1);
+        lv.getSelectionModel().clearAndSelect(selectIndex);
+        lv.scrollTo(selectIndex);
+    }
+
+    private void selectAfterMove(Watchlist watchlist, int originalIndex) {
+        ListView<String> lv = listViewByWatchlist.get(watchlist);
+        if (lv == null || lv.getItems().isEmpty()) return;
+        int selectIndex = Math.min(originalIndex, lv.getItems().size() - 1);
+        lv.getSelectionModel().clearAndSelect(selectIndex);
+        lv.scrollTo(selectIndex);
+    }
+
+    private void updateListViewHeight(Watchlist watchlist) {
+        ListView<String> lv = listViewByWatchlist.get(watchlist);
+        ObservableList<String> items = itemsByWatchlist.get(watchlist);
+        if (lv != null && items != null) {
+            lv.setPrefHeight(items.size() * FIXED_CELL_HEIGHT + 2);
         }
     }
 
@@ -341,8 +386,10 @@ public final class WatchlistPane extends VBox implements ScripNavigable {
 
     private ListView<String> buildScripListView(Watchlist watchlist) {
         ObservableList<String> items = FXCollections.observableArrayList(watchlist.getScripIds());
+        itemsByWatchlist.put(watchlist, items);
         FilteredList<String> filtered = new FilteredList<>(items, this::matchesSearch);
         ListView<String> listView = new ListView<>(filtered);
+        listViewByWatchlist.put(watchlist, listView);
         listView.getStyleClass().add(LIST_STYLE);
         listView.setFixedCellSize(FIXED_CELL_HEIGHT);
         listView.setPrefHeight(filtered.size() * FIXED_CELL_HEIGHT + 2);
@@ -369,18 +416,16 @@ public final class WatchlistPane extends VBox implements ScripNavigable {
 
     private final class ScripIdCell extends ListCell<String> {
 
-        private static final int BADGE_GAP = 6;
-
-        private final Label symbolLabel = new Label();
-        private final HBox container = new HBox(BADGE_GAP);
+        private final ScripCellGraphic scripGraphic = new ScripCellGraphic();
+        private final HBox container = new HBox(scripGraphic);
         private final Watchlist watchlist;
         private final ListView<String> ownerListView;
 
         ScripIdCell(Watchlist watchlist, ListView<String> ownerListView) {
             this.watchlist = watchlist;
             this.ownerListView = ownerListView;
-            symbolLabel.getStyleClass().add(CELL_SYMBOL_STYLE);
             container.setAlignment(Pos.CENTER_LEFT);
+            setOnMousePressed(e -> ownerListView.requestFocus());
             setupDragHandlers();
         }
 
@@ -420,7 +465,8 @@ public final class WatchlistPane extends VBox implements ScripNavigable {
                     if (fromIndex >= 0 && toIndex >= 0) {
                         watchlist.moveScrip(fromIndex, toIndex);
                         persist();
-                        rebuildSections();
+                        syncItems(watchlist);
+                        selectAfterMove(watchlist, fromIndex);
                     }
                 }
                 e.setDropCompleted(true);
@@ -441,8 +487,10 @@ public final class WatchlistPane extends VBox implements ScripNavigable {
                 return;
             }
             Scrip scrip = scripRepository.findById(scripId).orElse(null);
-            String displayName = scrip != null ? scrip.getSymbol() : scripId;
-            symbolLabel.setText(displayName);
+            scripGraphic.update(
+                    scrip != null ? scrip.getScripType() : null,
+                    scrip != null ? scrip.getSymbol() : scripId,
+                    scripId);
             Region spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
             Button cellDeleteBtn = new Button();
@@ -453,14 +501,15 @@ public final class WatchlistPane extends VBox implements ScripNavigable {
             cellDeleteBtn.getStyleClass().add(CELL_DELETE_STYLE);
             cellDeleteBtn.setFocusTraversable(false);
             cellDeleteBtn.setOnAction(ev -> {
+                int idx = watchlist.getScripIds().indexOf(scripId);
                 List.copyOf(ownerListView.getSelectionModel().getSelectedItems())
                         .forEach(watchlist::removeScrip);
                 persist();
-                rebuildSections();
+                syncItems(watchlist);
+                selectAfterRemove(watchlist, idx);
             });
-            container.getChildren().setAll(
-                    ScripBadge.create(scrip != null ? scrip.getScripType() : null),
-                    symbolLabel, spacer, cellDeleteBtn);
+            container.getChildren().setAll(scripGraphic, spacer,
+                    scripGraphic.getPortfolioQtyLabel(), cellDeleteBtn);
             setGraphic(container);
             ContextMenu ctx = new ContextMenu();
             if (groupPane != null) {
@@ -477,12 +526,41 @@ public final class WatchlistPane extends VBox implements ScripNavigable {
             removeIcon.getStyleClass().add(CONTEXT_DELETE_ICON_STYLE);
             MenuItem removeItem = new MenuItem(REMOVE_LABEL, removeIcon);
             removeItem.setOnAction(e -> {
+                int idx = watchlist.getScripIds().indexOf(scripId);
                 List.copyOf(ownerListView.getSelectionModel().getSelectedItems())
                         .forEach(watchlist::removeScrip);
                 persist();
-                rebuildSections();
+                syncItems(watchlist);
+                selectAfterRemove(watchlist, idx);
             });
             ctx.getItems().add(removeItem);
+            FontIcon moveTopIcon = new FontIcon(FluentUiRegularAL.ARROW_UP_20);
+            moveTopIcon.setIconSize(CONTEXT_ICON_SIZE);
+            MenuItem moveTopItem = new MenuItem(MOVE_TO_TOP_LABEL, moveTopIcon);
+            moveTopItem.setOnAction(e -> {
+                int fromIndex = watchlist.getScripIds().indexOf(scripId);
+                if (fromIndex > 0) {
+                    watchlist.moveScrip(fromIndex, 0);
+                    persist();
+                    syncItems(watchlist);
+                    selectAfterMove(watchlist, fromIndex);
+                }
+            });
+            ctx.getItems().add(moveTopItem);
+            FontIcon moveBottomIcon = new FontIcon(FluentUiRegularAL.ARROW_DOWN_20);
+            moveBottomIcon.setIconSize(CONTEXT_ICON_SIZE);
+            MenuItem moveBottomItem = new MenuItem(MOVE_TO_BOTTOM_LABEL, moveBottomIcon);
+            moveBottomItem.setOnAction(e -> {
+                int fromIndex = watchlist.getScripIds().indexOf(scripId);
+                int lastIndex = watchlist.getScripIds().size() - 1;
+                if (fromIndex < lastIndex) {
+                    watchlist.moveScrip(fromIndex, lastIndex);
+                    persist();
+                    syncItems(watchlist);
+                    selectAfterMove(watchlist, fromIndex);
+                }
+            });
+            ctx.getItems().add(moveBottomItem);
             setContextMenu(ctx);
         }
 

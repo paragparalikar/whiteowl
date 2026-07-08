@@ -193,4 +193,8 @@ public abstract class ScreenerDsl extends Script {
         return IndicatorFunctions.vwap(high, low, close, volume, barCount);
     }
 
+    public float[] beta(float[] source, float[] benchmark, int period) {
+        return IndicatorFunctions.beta(source, benchmark, barCount, period);
+    }
+
 }

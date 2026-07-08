@@ -679,3 +679,17 @@
 .order-action-button:hover .ikonli-font-icon {
     -fx-icon-color: #bbbbbb;
 }
+
+.watchlist-pills-bar {
+    -fx-padding: 0;
+    -fx-alignment: top-right;
+}
+
+.watchlist-pill {
+    -fx-background-color: rgba(45, 92, 136, 0.75);
+    -fx-background-radius: 10;
+    -fx-padding: 2 8 2 8;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+    -fx-text-fill: #c8d6e5;
+}

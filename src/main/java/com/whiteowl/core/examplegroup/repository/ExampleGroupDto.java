@@ -8,14 +8,15 @@ import java.util.List;
 
 public record ExampleGroupDto(String name, List<ExampleDto> examples) {
 
-    public record ExampleDto(String scripId, String timeframe, long timestamp) {
+    public record ExampleDto(String scripId, String timeframe, long startTimestamp, long endTimestamp) {
 
         static ExampleDto fromExample(Example e) {
-            return new ExampleDto(e.getScripId(), e.getTimeframe().name(), e.getTimestamp());
+            return new ExampleDto(e.getScripId(), e.getTimeframe().name(),
+                    e.getStartTimestamp(), e.getEndTimestamp());
         }
 
         Example toExample() {
-            return new Example(scripId, Timeframe.valueOf(timeframe), timestamp);
+            return new Example(scripId, Timeframe.valueOf(timeframe), startTimestamp, endTimestamp);
         }
 
     }

@@ -3,6 +3,7 @@ package com.whiteowl.workbench.ranker;
 import com.whiteowl.core.bar.model.Timeframe;
 import com.whiteowl.core.bar.repository.BarsRepository;
 import com.whiteowl.core.collection.CollectionResolver;
+import com.whiteowl.core.examplegroup.repository.ExampleGroupRepository;
 import com.whiteowl.core.ranker.RankResult;
 import com.whiteowl.core.ranker.Ranker;
 import com.whiteowl.core.ranker.RankerListener;
@@ -12,8 +13,10 @@ import com.whiteowl.core.scrip.model.Exchange;
 import com.whiteowl.core.scrip.model.Scrip;
 import com.whiteowl.core.scrip.model.ScripType;
 import com.whiteowl.core.scrip.repository.ScripRepository;
+import com.whiteowl.core.script.ScriptRepository;
 import com.whiteowl.workbench.common.CollectionPickerPane;
 import com.whiteowl.workbench.common.ExchangeFilterCombo;
+import com.whiteowl.workbench.common.PortfolioQuantityLabel;
 import com.whiteowl.workbench.common.ScripBadge;
 import com.whiteowl.workbench.common.ScripNavigable;
 import com.whiteowl.workbench.common.ScripTypeFilterCombo;
@@ -59,7 +62,9 @@ public final class RankerPane extends VBox implements ScripNavigable {
     private static final String SORT_ICON_STYLE = "ranker-sort-icon";
     private static final String RANKER_ROW_STYLE = "ranker-row";
     private static final String LIST_STYLE = "ranker-list";
+    private static final String CELL_RANK_STYLE = "ranker-cell-rank";
     private static final String CELL_SYMBOL_STYLE = "ranker-cell-symbol";
+    private static final String CELL_SCORE_STYLE = "ranker-cell-score";
     private static final String PROGRESS_CONTAINER_STYLE = "ranker-progress-container";
     private static final String PROGRESS_BAR_STYLE = "ranker-progress-bar";
     private static final String PROGRESS_LABEL_STYLE = "ranker-progress-label";
@@ -75,6 +80,7 @@ public final class RankerPane extends VBox implements ScripNavigable {
     private static final int SORT_ICON_SIZE = 14;
     private static final int FIXED_CELL_HEIGHT = 24;
     private static final int BADGE_GAP = 6;
+    private static final String SCORE_FORMAT = "%.2f";
     private static final int BUTTON_SPACING = 8;
     private static final String OFFSET_LABEL_STYLE = "ranker-offset-label";
     private static final String OFFSET_SPINNER_STYLE = "ranker-offset-spinner";
@@ -89,6 +95,7 @@ public final class RankerPane extends VBox implements ScripNavigable {
     private final RankerService rankerService;
     private final RankerRegistry rankerRegistry;
     private final ScripRepository scripRepository;
+    private final ExampleGroupRepository exampleGroupRepository;
     private final ComboBox<Ranker> rankerCombo;
     private final Button editButton;
     private final ScripTypeFilterCombo scripTypeCombo;
@@ -110,10 +117,12 @@ public final class RankerPane extends VBox implements ScripNavigable {
     private boolean ascending = true;
 
     public RankerPane(ScripRepository scripRepository, BarsRepository barsRepository,
+                      ScriptRepository rankerScriptRepository, ExampleGroupRepository exampleGroupRepository,
                       CollectionResolver collectionResolver) {
         this.scripRepository = scripRepository;
+        this.exampleGroupRepository = exampleGroupRepository;
         this.rankerService = new RankerService(scripRepository, barsRepository);
-        this.rankerRegistry = new RankerRegistry(barsRepository);
+        this.rankerRegistry = new RankerRegistry(rankerScriptRepository, barsRepository, exampleGroupRepository);
         this.rankerCombo = buildRankerCombo();
         this.editButton = buildEditButton();
         this.scripTypeCombo = buildScripTypeCombo();
@@ -136,6 +145,21 @@ public final class RankerPane extends VBox implements ScripNavigable {
 
     public void setOnScripSelected(Consumer<Scrip> handler) {
         this.onScripSelected = handler;
+    }
+
+    public void refreshRankers() {
+        Ranker selected = rankerCombo.getValue();
+        String selectedName = selected != null ? selected.getName() : null;
+        rankerCombo.getItems().setAll(rankerRegistry.getRankers());
+        if (selectedName != null) {
+            rankerCombo.getItems().stream()
+                    .filter(r -> r.getName().equals(selectedName))
+                    .findFirst()
+                    .ifPresent(rankerCombo::setValue);
+        }
+        if (rankerCombo.getValue() == null && !rankerCombo.getItems().isEmpty()) {
+            rankerCombo.setValue(rankerCombo.getItems().getFirst());
+        }
     }
 
     @Override
@@ -307,7 +331,7 @@ public final class RankerPane extends VBox implements ScripNavigable {
     private void openConfigDialog() {
         Ranker ranker = rankerCombo.getValue();
         if (ranker == null) return;
-        RankerConfigDialog dialog = new RankerConfigDialog(ranker, scripTypeCombo.getValue(), exchangeCombo.getValue(), selectedTimeframe, offsetSpinner.getValue(), scripRepository);
+        RankerConfigDialog dialog = new RankerConfigDialog(ranker, scripTypeCombo.getValue(), exchangeCombo.getValue(), selectedTimeframe, offsetSpinner.getValue(), scripRepository, exampleGroupRepository);
         dialog.show(getScene().getWindow());
         if (dialog.isConfirmed()) {
             scripTypeCombo.setValue(dialog.getScripType());
@@ -432,11 +456,20 @@ public final class RankerPane extends VBox implements ScripNavigable {
 
     private final class ResultCell extends ListCell<RankResult> {
 
+        private final Label rankLabel = new Label();
         private final Label symbolLabel = new Label();
+        private final Label scoreLabel = new Label();
+        private final PortfolioQuantityLabel portfolioQtyLabel = new PortfolioQuantityLabel();
+        private final Region spacer = new Region();
         private final HBox container = new HBox(BADGE_GAP);
 
         ResultCell() {
+            rankLabel.getStyleClass().add(CELL_RANK_STYLE);
+            rankLabel.setMinWidth(28);
+            rankLabel.setAlignment(Pos.CENTER_RIGHT);
             symbolLabel.getStyleClass().add(CELL_SYMBOL_STYLE);
+            scoreLabel.getStyleClass().add(CELL_SCORE_STYLE);
+            HBox.setHgrow(spacer, Priority.ALWAYS);
             container.setAlignment(Pos.CENTER_LEFT);
         }
 
@@ -447,8 +480,13 @@ public final class RankerPane extends VBox implements ScripNavigable {
                 setGraphic(null);
                 return;
             }
+            rankLabel.setText(String.valueOf(getIndex() + 1));
             symbolLabel.setText(result.getScrip().getSymbol());
-            container.getChildren().setAll(ScripBadge.create(result.getScrip().getScripType()), symbolLabel);
+            scoreLabel.setText(String.format(SCORE_FORMAT, result.getValue()));
+            portfolioQtyLabel.updateQuantity(result.getScrip().getId());
+            container.getChildren().setAll(rankLabel,
+                    ScripBadge.create(result.getScrip().getScripType()),
+                    symbolLabel, spacer, portfolioQtyLabel, scoreLabel);
             setGraphic(container);
         }
 

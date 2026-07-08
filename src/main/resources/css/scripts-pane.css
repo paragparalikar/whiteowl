@@ -3,9 +3,45 @@
     -fx-spacing: 0;
 }
 
-.scripts-header {
-    -fx-padding: 8 10 8 10;
-    -fx-alignment: center-left;
+.scripts-toolbar {
+    -fx-padding: 4;
+}
+
+.scripts-search-field {
+    -fx-background-color: #1e1f22, #1e1f22, #1e1f22;
+    -fx-background-insets: 0, 0, 0;
+    -fx-background-radius: 0, 0, 0;
+    -fx-text-fill: #bbbbbb;
+    -fx-prompt-text-fill: #555555;
+    -fx-padding: 4 6 4 6;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 0 0 1 0;
+    -fx-font-size: 12px;
+}
+
+.scripts-search-field:focused {
+    -fx-background-color: #1e1f22, #1e1f22, #1e1f22;
+    -fx-background-insets: 0, 0, 0;
+    -fx-border-color: #4A78C2;
+    -fx-border-width: 0 0 1 0;
+}
+
+.scripts-add-button {
+    -fx-background-color: transparent;
+    -fx-padding: 3;
+    -fx-cursor: hand;
+}
+
+.scripts-add-button:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.scripts-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.scripts-add-button:hover .scripts-icon {
+    -fx-icon-color: #afb8c1;
 }
 
 .scripts-type-combo {
@@ -23,49 +59,71 @@
     -fx-background-color: #6e7681;
 }
 
-.scripts-toolbar-button {
-    -fx-background-color: transparent;
-    -fx-padding: 4;
-    -fx-background-radius: 4;
-    -fx-cursor: hand;
-}
-
-.scripts-toolbar-button:hover {
-    -fx-background-color: rgba(255,255,255,0.08);
-}
-
-.scripts-toolbar-icon {
-    -fx-icon-color: #6e7681;
-}
-
-.scripts-toolbar-button:hover .scripts-toolbar-icon {
-    -fx-icon-color: #afb8c1;
-}
-
 .scripts-list {
     -fx-background-color: transparent;
     -fx-padding: 0;
-    -fx-border-width: 0;
 }
 
 .scripts-list .list-cell {
     -fx-background-color: transparent;
+    -fx-padding: 2 8 2 12;
+}
+
+.scripts-list .list-cell:filled:selected {
+    -fx-background-color: #2d5c88;
+}
+
+.scripts-list .list-cell:filled:hover {
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.scripts-list .list-cell:filled:selected:hover {
+    -fx-background-color: #35689e;
+}
+
+.scripts-cell-name {
     -fx-text-fill: #bbbbbb;
     -fx-font-size: 12px;
-    -fx-padding: 4 10 4 10;
-    -fx-cursor: hand;
 }
 
-.scripts-list .list-cell:hover {
-    -fx-background-color: rgba(255,255,255,0.04);
+.scripts-list .list-cell:filled:selected .scripts-cell-name {
+    -fx-text-fill: #ffffff;
 }
 
-.scripts-list .list-cell:selected {
-    -fx-background-color: rgba(45, 92, 136, 0.4);
-    -fx-text-fill: #e0e0e0;
-}
-
-.scripts-list .list-cell:empty {
+.scripts-cell-edit {
     -fx-background-color: transparent;
-    -fx-cursor: default;
+    -fx-padding: 1;
+    -fx-cursor: hand;
+    visibility: hidden;
+}
+
+.scripts-list .list-cell:filled:hover .scripts-cell-edit {
+    visibility: visible;
+}
+
+.scripts-cell-edit .scripts-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.scripts-cell-edit:hover .scripts-icon {
+    -fx-icon-color: #afb8c1;
+}
+
+.scripts-cell-delete {
+    -fx-background-color: transparent;
+    -fx-padding: 1;
+    -fx-cursor: hand;
+    visibility: hidden;
+}
+
+.scripts-list .list-cell:filled:hover .scripts-cell-delete {
+    visibility: visible;
+}
+
+.scripts-cell-delete .scripts-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.scripts-cell-delete:hover .scripts-icon {
+    -fx-icon-color: #f44336;
 }

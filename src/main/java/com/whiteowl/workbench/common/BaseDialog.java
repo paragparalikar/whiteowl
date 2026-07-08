@@ -1,6 +1,7 @@
 package com.whiteowl.workbench.common;
 
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -54,9 +55,19 @@ public abstract class BaseDialog {
     private static final int HEADER_ICON_GAP = 6;
     private static final double LABEL_COL_PERCENT = 22;
     private static final double FIELD_COL_PERCENT = 78;
+    private static final double RESIZE_BORDER = 6;
+    private static final double MIN_WIDTH = 300;
+    private static final double MIN_HEIGHT = 200;
 
     private final Label messageLabel;
     private Stage stage;
+    private double resizeStartX;
+    private double resizeStartY;
+    private double resizeStartW;
+    private double resizeStartH;
+    private double resizeStartStageX;
+    private double resizeStartStageY;
+    private Cursor resizeCursor = Cursor.DEFAULT;
 
     protected BaseDialog() {
         this.messageLabel = createMessageLabel();
@@ -87,6 +98,7 @@ public abstract class BaseDialog {
         scene.getStylesheets().addAll(owner.getScene().getStylesheets());
         stage.setScene(scene);
         stage.setWidth(getDialogWidth());
+        installResizeHandlers(root);
         centerOnOwner(owner);
         stage.showAndWait();
     }
@@ -146,6 +158,14 @@ public abstract class BaseDialog {
 
     protected Spinner<Integer> createSpinner(int min, int max, int initial) {
         Spinner<Integer> spinner = new Spinner<>(min, max, initial);
+        spinner.setEditable(true);
+        spinner.setMaxWidth(Double.MAX_VALUE);
+        spinner.getStyleClass().add(SPINNER_STYLE);
+        return spinner;
+    }
+
+    protected Spinner<Double> createDoubleSpinner(double min, double max, double initial, double step) {
+        Spinner<Double> spinner = new Spinner<>(min, max, initial, step);
         spinner.setEditable(true);
         spinner.setMaxWidth(Double.MAX_VALUE);
         spinner.getStyleClass().add(SPINNER_STYLE);
@@ -241,6 +261,72 @@ public abstract class BaseDialog {
             stage.setX(x);
             stage.setY(y);
         });
+    }
+
+    private void installResizeHandlers(Node root) {
+        root.setOnMouseMoved(e -> {
+            resizeCursor = detectResizeCursor(e.getX(), e.getY());
+            stage.getScene().setCursor(resizeCursor);
+        });
+        root.setOnMousePressed(e -> {
+            resizeCursor = detectResizeCursor(e.getX(), e.getY());
+            if (resizeCursor != Cursor.DEFAULT) {
+                resizeStartX = e.getScreenX();
+                resizeStartY = e.getScreenY();
+                resizeStartW = stage.getWidth();
+                resizeStartH = stage.getHeight();
+                resizeStartStageX = stage.getX();
+                resizeStartStageY = stage.getY();
+                e.consume();
+            }
+        });
+        root.setOnMouseDragged(e -> {
+            if (resizeCursor == Cursor.DEFAULT) return;
+            double dx = e.getScreenX() - resizeStartX;
+            double dy = e.getScreenY() - resizeStartY;
+            if (resizeCursor == Cursor.E_RESIZE || resizeCursor == Cursor.SE_RESIZE || resizeCursor == Cursor.NE_RESIZE) {
+                stage.setWidth(Math.max(MIN_WIDTH, resizeStartW + dx));
+            }
+            if (resizeCursor == Cursor.W_RESIZE || resizeCursor == Cursor.SW_RESIZE || resizeCursor == Cursor.NW_RESIZE) {
+                double newW = Math.max(MIN_WIDTH, resizeStartW - dx);
+                stage.setX(resizeStartStageX + resizeStartW - newW);
+                stage.setWidth(newW);
+            }
+            if (resizeCursor == Cursor.S_RESIZE || resizeCursor == Cursor.SE_RESIZE || resizeCursor == Cursor.SW_RESIZE) {
+                stage.setHeight(Math.max(MIN_HEIGHT, resizeStartH + dy));
+            }
+            if (resizeCursor == Cursor.N_RESIZE || resizeCursor == Cursor.NE_RESIZE || resizeCursor == Cursor.NW_RESIZE) {
+                double newH = Math.max(MIN_HEIGHT, resizeStartH - dy);
+                stage.setY(resizeStartStageY + resizeStartH - newH);
+                stage.setHeight(newH);
+            }
+            e.consume();
+        });
+        root.setOnMouseReleased(e -> {
+            if (resizeCursor != Cursor.DEFAULT) {
+                resizeCursor = Cursor.DEFAULT;
+                stage.getScene().setCursor(Cursor.DEFAULT);
+                e.consume();
+            }
+        });
+    }
+
+    private Cursor detectResizeCursor(double x, double y) {
+        double w = stage.getWidth();
+        double h = stage.getHeight();
+        boolean top = y < RESIZE_BORDER;
+        boolean bottom = y > h - RESIZE_BORDER;
+        boolean left = x < RESIZE_BORDER;
+        boolean right = x > w - RESIZE_BORDER;
+        if (top && left) return Cursor.NW_RESIZE;
+        if (top && right) return Cursor.NE_RESIZE;
+        if (bottom && left) return Cursor.SW_RESIZE;
+        if (bottom && right) return Cursor.SE_RESIZE;
+        if (top) return Cursor.N_RESIZE;
+        if (bottom) return Cursor.S_RESIZE;
+        if (left) return Cursor.W_RESIZE;
+        if (right) return Cursor.E_RESIZE;
+        return Cursor.DEFAULT;
     }
 
 }

@@ -1,12 +1,15 @@
 package com.whiteowl.workbench;
 
 import com.whiteowl.Context;
+import com.whiteowl.core.collection.ActiveTradesResolver;
 import com.whiteowl.core.collection.CollectionResolver;
+import com.whiteowl.core.portfolio.service.PortfolioQuantityProvider;
 import com.whiteowl.client.kite.adapter.KiteBrokerAdapter;
 import com.whiteowl.core.account.service.ActiveAccountManager;
 import com.whiteowl.core.scrip.model.Exchange;
 import com.whiteowl.core.scrip.model.Scrip;
 import com.whiteowl.core.scrip.repository.ScripRepository;
+import com.whiteowl.core.backtest.StrategyScriptConstants;
 import com.whiteowl.core.indicator.script.IndicatorScriptConstants;
 import com.whiteowl.core.ranker.script.RankerScriptConstants;
 import com.whiteowl.core.screener.script.ScreenerScriptConstants;
@@ -26,6 +29,8 @@ import com.whiteowl.workbench.examplegroup.ExampleGroupPane;
 import com.whiteowl.workbench.common.ScripNavigable;
 import com.whiteowl.workbench.explorer.ExplorerPane;
 import com.whiteowl.workbench.group.GroupPane;
+import com.whiteowl.workbench.note.NoteEditorPane;
+import com.whiteowl.workbench.note.NoteListPane;
 import com.whiteowl.workbench.ranker.RankerPane;
 import com.whiteowl.workbench.screener.ScreenerPane;
 import com.whiteowl.workbench.watchlist.WatchlistPane;
@@ -65,6 +70,7 @@ public final class WorkbenchView {
     private static final String TAB_BACKTEST = "Backtest";
     private static final String TAB_CHARTING = "Charting";
     private static final String TAB_SCRIPTS = "Scripts";
+    private static final String TAB_NOTES = "Notes";
     private static final String MENU_FILE = "File";
     private static final String MENU_COLLECTIONS = "Collections";
     private static final String MENU_MODULES = "Modules";
@@ -97,9 +103,11 @@ public final class WorkbenchView {
     private RankerPane rankerPane;
     private BacktestPane backtestPane;
     private ScriptsPane scriptsPane;
+    private NoteListPane noteListPane;
     private final ScriptRepository indicatorScriptRepo;
     private final ScriptRepository screenerScriptRepo;
     private final ScriptRepository rankerScriptRepo;
+    private final ScriptRepository strategyScriptRepo;
     private final ScriptReferenceWindow scriptReferenceWindow = new ScriptReferenceWindow();
 
     public WorkbenchView(Stage stage, Context context) {
@@ -110,6 +118,8 @@ public final class WorkbenchView {
                 ScreenerScriptConstants.SCREENERS_DIR, ScreenerScriptConstants.DEFAULT_TEMPLATE);
         this.rankerScriptRepo = new ScriptRepository(ScriptType.RANKER,
                 RankerScriptConstants.RANKERS_DIR, RankerScriptConstants.DEFAULT_TEMPLATE);
+        this.strategyScriptRepo = new ScriptRepository(ScriptType.STRATEGY,
+                StrategyScriptConstants.STRATEGIES_DIR, StrategyScriptConstants.DEFAULT_TEMPLATE);
         this.leftTabPane = new TabPane();
         this.rightTabPane = new TabPane();
         this.mainSplitPane = new SplitPane();
@@ -118,7 +128,7 @@ public final class WorkbenchView {
         this.root.getStyleClass().add(WINDOW_BORDER_STYLE);
         this.explorerPane = new ExplorerPane(context.getScripRepository());
         this.chartPane = new ChartPane(context.getBarsRepository(), context.getScripRepository(),
-                context.getExampleGroupRepository(), indicatorScriptRepo, screenerScriptRepo);
+                indicatorScriptRepo, screenerScriptRepo);
         explorerPane.setOnScripSelected(scrip -> { ensureChartingTab(); chartPane.showChart(scrip); });
         wireActiveAccountListener();
         buildLayout(stage);
@@ -194,7 +204,8 @@ public final class WorkbenchView {
             exampleGroupPane.setOnExampleSelected(example -> {
                 context.getScripRepository().findById(example.getScripId()).ifPresent(scrip -> {
                     ensureChartingTab();
-                    chartPane.showExample(scrip, example.getTimeframe(), example.getTimestamp());
+                    chartPane.showExample(scrip, example.getTimeframe(),
+                            example.getStartTimestamp(), example.getEndTimestamp());
                 });
             });
             chartPane.setExampleGroupPane(exampleGroupPane);
@@ -214,7 +225,7 @@ public final class WorkbenchView {
     private ScreenerPane ensureScreenerPane() {
         if (screenerPane == null) {
             screenerPane = new ScreenerPane(context.getScripRepository(), context.getBarsRepository(),
-                    context.getExampleGroupRepository(), buildCollectionResolver(), screenerScriptRepo);
+                    buildCollectionResolver(), screenerScriptRepo);
             screenerPane.setOnScripSelected(scrip -> { ensureChartingTab(); chartPane.showChart(scrip); });
         }
         return screenerPane;
@@ -223,7 +234,7 @@ public final class WorkbenchView {
     private RankerPane ensureRankerPane() {
         if (rankerPane == null) {
             rankerPane = new RankerPane(context.getScripRepository(), context.getBarsRepository(),
-                    buildCollectionResolver());
+                    rankerScriptRepo, context.getExampleGroupRepository(), buildCollectionResolver());
             rankerPane.setOnScripSelected(scrip -> { ensureChartingTab(); chartPane.showChart(scrip); });
         }
         return rankerPane;
@@ -231,7 +242,7 @@ public final class WorkbenchView {
 
     private BacktestPane ensureBacktestPane() {
         if (backtestPane == null) {
-            backtestPane = new BacktestPane(context.getScripRepository(), context.getBarsRepository());
+            backtestPane = new BacktestPane(context.getScripRepository(), context.getBarsRepository(), strategyScriptRepo);
             backtestPane.setOnBacktestStarted(this::openBacktestResultTab);
         }
         return backtestPane;
@@ -257,8 +268,12 @@ public final class WorkbenchView {
                 () -> addLeftTab(TAB_GROUPS, FluentUiRegularMZ.PEOPLE_COMMUNITY_16, ensureGroupPane()));
         MenuItem viewExampleGroups = createViewMenuItem(TAB_EXAMPLE_GROUPS, FluentUiRegularAL.BEAKER_16,
                 () -> addLeftTab(TAB_EXAMPLE_GROUPS, FluentUiRegularAL.BEAKER_16, ensureExampleGroupPane()));
+        MenuItem viewNotes = createViewMenuItem(TAB_NOTES, FluentUiRegularMZ.NOTEPAD_20,
+                () -> addLeftTab(TAB_NOTES, FluentUiRegularMZ.NOTEPAD_20, ensureNoteListPane()));
+        MenuItem viewScripts = createViewMenuItem(TAB_SCRIPTS, FluentUiRegularAL.CODE_20,
+                () -> addLeftTab(TAB_SCRIPTS, FluentUiRegularAL.CODE_20, ensureScriptsPane()));
         Menu collectionsMenu = new Menu(MENU_COLLECTIONS, null,
-                viewExplorer, viewWatchlists, viewGroups, viewExampleGroups);
+                viewExplorer, viewWatchlists, viewGroups, viewExampleGroups, viewNotes, viewScripts);
         MenuItem viewCharting = createViewMenuItem(TAB_CHARTING, FluentUiRegularAL.DATA_LINE_24,
                 this::ensureChartingTab);
         MenuItem viewScreener = createViewMenuItem(TAB_SCREENER, FluentUiRegularAL.FILTER_20,
@@ -269,10 +284,8 @@ public final class WorkbenchView {
                 () -> addLeftTab(TAB_DOWNLOADER, FluentUiRegularAL.ARROW_DOWNLOAD_16, ensureDownloaderPane()));
         MenuItem viewBacktest = createViewMenuItem(TAB_BACKTEST, FluentUiRegularAL.DATA_BAR_VERTICAL_20,
                 () -> addLeftTab(TAB_BACKTEST, FluentUiRegularAL.DATA_BAR_VERTICAL_20, ensureBacktestPane()));
-        MenuItem viewScripts = createViewMenuItem(TAB_SCRIPTS, FluentUiRegularAL.CODE_20,
-                () -> addLeftTab(TAB_SCRIPTS, FluentUiRegularAL.CODE_20, ensureScriptsPane()));
         Menu modulesMenu = new Menu(MENU_MODULES, null,
-                viewCharting, viewScreener, viewRanker, viewDownloader, viewBacktest, viewScripts);
+                viewCharting, viewScreener, viewRanker, viewDownloader, viewBacktest);
         MenuItem scriptRefItem = new MenuItem(MENU_SCRIPT_REFERENCE);
         scriptRefItem.setOnAction(e -> scriptReferenceWindow.show());
         Menu helpMenu = new Menu(MENU_HELP, null, scriptRefItem);
@@ -322,10 +335,13 @@ public final class WorkbenchView {
     }
 
     private CollectionResolver buildCollectionResolver() {
+        ActiveTradesResolver activeTradesResolver = new ActiveTradesResolver(
+                context.getActiveAccountManager());
         return new CollectionResolver(
                 context.getWatchlistRepository(),
                 context.getGroupRepository(),
-                context.getExampleGroupRepository());
+                context.getExampleGroupRepository(),
+                activeTradesResolver);
     }
 
     private void updateScripNavigable(Tab tab) {
@@ -341,24 +357,82 @@ public final class WorkbenchView {
         }
     }
 
+    private NoteListPane ensureNoteListPane() {
+        if (noteListPane == null) {
+            noteListPane = new NoteListPane(context.getNoteRepository());
+            noteListPane.setOnEditNote(this::openNoteEditor);
+            noteListPane.setOnNoteDeleted(this::closeNoteEditorTab);
+        }
+        return noteListPane;
+    }
+
+    private void openNoteEditor(com.whiteowl.core.note.model.Note note) {
+        for (Tab tab : rightTabPane.getTabs()) {
+            if (tab.getContent() instanceof NoteEditorPane existingEditor
+                    && existingEditor.getActiveNote() != null
+                    && existingEditor.getActiveNote().getName().equals(note.getName())) {
+                rightTabPane.getSelectionModel().select(tab);
+                return;
+            }
+        }
+        NoteEditorPane editorPane = new NoteEditorPane(context.getNoteRepository());
+        Tab tab = new Tab(note.getName(), editorPane);
+        tab.setGraphic(createTabIcon(FluentUiRegularMZ.NOTEPAD_20));
+        tab.setOnCloseRequest(e -> editorPane.saveCurrentNote());
+        editorPane.setOnNoteRenamed((oldName, newName) -> {
+            tab.setText(newName);
+            if (noteListPane != null) noteListPane.refreshList();
+        });
+        editorPane.openNote(note);
+        rightTabPane.getTabs().add(tab);
+        rightTabPane.getSelectionModel().select(tab);
+    }
+
+    private void closeNoteEditorTab(String noteName) {
+        rightTabPane.getTabs().removeIf(tab ->
+                tab.getContent() instanceof NoteEditorPane editor
+                        && editor.getActiveNote() != null
+                        && editor.getActiveNote().getName().equals(noteName));
+    }
+
     private ScriptsPane ensureScriptsPane() {
         if (scriptsPane == null) {
-            scriptsPane = new ScriptsPane(indicatorScriptRepo, screenerScriptRepo, rankerScriptRepo);
+            scriptsPane = new ScriptsPane(indicatorScriptRepo, screenerScriptRepo, rankerScriptRepo, strategyScriptRepo);
             scriptsPane.setOnEditScript(this::openScriptEditor);
+            scriptsPane.setOnScriptChanged(this::onScriptChanged);
         }
         return scriptsPane;
     }
 
+    private void onScriptChanged(ScriptType type) {
+        switch (type) {
+            case INDICATOR -> chartPane.refreshScriptedComponents();
+            case SCREENER -> {
+                chartPane.refreshScriptedComponents();
+                if (screenerPane != null) screenerPane.refreshScreeners();
+            }
+            case RANKER -> {
+                if (rankerPane != null) rankerPane.refreshRankers();
+            }
+            case STRATEGY -> {
+                if (backtestPane != null) backtestPane.refreshStrategies();
+            }
+            default -> {}
+        }
+    }
+
     private void wireActiveAccountListener() {
         ActiveAccountManager manager = context.getActiveAccountManager();
-        manager.addListener(adapterOpt -> Platform.runLater(() ->
-                adapterOpt.ifPresentOrElse(this::wireChartOrderService, this::clearChartOrderService)
-        ));
+        manager.addListener(adapterOpt -> {
+            PortfolioQuantityProvider.getInstance().onAdapterChanged(adapterOpt);
+            Platform.runLater(() ->
+                    adapterOpt.ifPresentOrElse(this::wireChartOrderService, this::clearChartOrderService));
+        });
     }
 
     private void clearChartOrderService() {
         chartOrderService = null;
-        chartPane.setChartOrderService(null, 0);
+        chartPane.setChartOrderService(null, 0.0);
         if (orderBookPanel != null) orderBookPanel.setChartOrderService(null);
     }
 
@@ -382,6 +456,21 @@ public final class WorkbenchView {
             @Override
             public void cancelGtt(int gttId) {
                 brokerAdapter.cancelGtt(gttId);
+            }
+
+            @Override
+            public java.util.List<com.whiteowl.core.gtt.model.OcoGttOrder> fetchOcoGtts() {
+                return brokerAdapter.fetchOcoGtts();
+            }
+
+            @Override
+            public com.whiteowl.core.gtt.model.OcoGttOrder createOcoGtt(com.whiteowl.core.gtt.model.OcoGttOrder oco) {
+                return brokerAdapter.createOcoGtt(oco);
+            }
+
+            @Override
+            public com.whiteowl.core.gtt.model.OcoGttOrder updateOcoGtt(com.whiteowl.core.gtt.model.OcoGttOrder oco) {
+                return brokerAdapter.updateOcoGtt(oco);
             }
 
             @Override
@@ -419,10 +508,10 @@ public final class WorkbenchView {
                 return brokerAdapter.fetchFunds();
             }
         };
-        int positionCount = context.getActiveAccountManager().getActiveAccount()
-                .map(com.whiteowl.core.account.model.Account::getPreferredPositionCount)
-                .orElse(com.whiteowl.core.account.model.Account.DEFAULT_PREFERRED_POSITION_COUNT);
-        chartPane.setChartOrderService(chartOrderService, positionCount);
+        double positionSize = context.getActiveAccountManager().getActiveAccount()
+                .map(com.whiteowl.core.account.model.Account::getPositionSize)
+                .orElse(com.whiteowl.core.account.model.Account.DEFAULT_POSITION_SIZE);
+        chartPane.setChartOrderService(chartOrderService, positionSize);
         if (orderBookPanel != null) orderBookPanel.setChartOrderService(chartOrderService);
         chartPane.refreshGttOrders();
     }
@@ -518,8 +607,12 @@ public final class WorkbenchView {
         }
         Tab tab = new Tab(descriptor.getName(), editorPane);
         tab.setGraphic(createTabIcon(FluentUiRegularAL.CODE_20));
-        editorPane.setOnScriptRenamed((oldScript, newScript) -> tab.setText(newScript.getName()));
-        editorPane.setOnScriptSaved(saved -> chartPane.refreshScriptedComponents());
+        editorPane.setOnScriptRenamed((oldScript, newScript) -> {
+            tab.setText(newScript.getName());
+            if (scriptsPane != null) scriptsPane.refreshList();
+            onScriptChanged(newScript.getType());
+        });
+        editorPane.setOnScriptSaved(saved -> onScriptChanged(saved.getType()));
         editorPane.openScript(descriptor);
         rightTabPane.getTabs().add(tab);
         rightTabPane.getSelectionModel().select(tab);

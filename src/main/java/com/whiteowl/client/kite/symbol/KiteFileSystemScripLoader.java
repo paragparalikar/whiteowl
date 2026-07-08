@@ -23,7 +23,6 @@ public final class KiteFileSystemScripLoader implements KiteScripLoader {
             System.getProperty("user.home") + File.separator + ".whiteowl");
     private static final String SYMBOL_DIR = "kite" + File.separator + "symbols";
     private static final String FILE_EXTENSION = ".csv";
-    private static final String HYPHEN = "-";
 
     private final KiteScripLoader delegate;
 
@@ -66,7 +65,6 @@ public final class KiteFileSystemScripLoader implements KiteScripLoader {
     @SneakyThrows
     private List<KiteSymbol> loadFromFile(Path path) {
         return Files.lines(path)
-                .filter(line -> !line.contains(HYPHEN))
                 .map(KiteSymbol::parseCsv)
                 .toList();
     }
@@ -76,7 +74,6 @@ public final class KiteFileSystemScripLoader implements KiteScripLoader {
         List<KiteSymbol> symbols = delegate.loadByExchange(exchange);
         ensureDirectoryExists(path);
         List<String> lines = symbols.stream()
-                .filter(symbol -> !symbol.getTradingsymbol().contains(HYPHEN))
                 .map(KiteSymbol::toCsv)
                 .toList();
         Files.write(path, lines);

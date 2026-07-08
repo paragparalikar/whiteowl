@@ -8,7 +8,9 @@ import com.whiteowl.core.scrip.model.Scrip;
 import com.whiteowl.core.scrip.repository.ScripRepository;
 import com.whiteowl.workbench.common.ConfirmationDialog;
 import com.whiteowl.workbench.common.NameInputDialog;
+import com.whiteowl.workbench.common.PortfolioQuantityLabel;
 import com.whiteowl.workbench.common.ScripBadge;
+import com.whiteowl.workbench.common.ScripNavigable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -41,7 +43,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public final class ExampleGroupPane extends VBox {
+public final class ExampleGroupPane extends VBox implements ScripNavigable {
 
     private static final String PANE_STYLE = "example-group-pane";
     private static final String TOOLBAR_STYLE = "example-group-toolbar";
@@ -70,6 +72,7 @@ public final class ExampleGroupPane extends VBox {
     private static final String TRUNCATE_CONFIRM_BUTTON = "Clear";
     private static final String CONTEXT_DELETE_ICON_STYLE = "context-delete-icon";
     private static final String SEPARATOR = " \u00B7 ";
+    private static final String ARROW = " \u2192 ";
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd MMM yy HH:mm");
     private static final int FIXED_CELL_HEIGHT = 36;
     private static final int MIN_NAME_LENGTH = 1;
@@ -88,6 +91,8 @@ public final class ExampleGroupPane extends VBox {
     private final Set<String> expandedGroups = new HashSet<>();
     private String searchText = "";
     private Consumer<Example> onExampleSelected;
+    private ListView<Integer> lastActiveListView;
+    private ExampleGroup lastActiveGroup;
 
     public ExampleGroupPane(ExampleGroupRepository repository, ScripRepository scripRepository) {
         this.repository = repository;
@@ -103,6 +108,30 @@ public final class ExampleGroupPane extends VBox {
 
     public void setOnExampleSelected(Consumer<Example> handler) {
         this.onExampleSelected = handler;
+    }
+
+    @Override
+    public void selectNext() {
+        if (lastActiveListView == null || !lastActiveListView.isVisible()) return;
+        int size = lastActiveListView.getItems().size();
+        if (size == 0) return;
+        int current = lastActiveListView.getSelectionModel().getSelectedIndex();
+        if (current < size - 1) {
+            lastActiveListView.getSelectionModel().clearAndSelect(current + 1);
+            lastActiveListView.scrollTo(current + 1);
+        }
+    }
+
+    @Override
+    public void selectPrevious() {
+        if (lastActiveListView == null || !lastActiveListView.isVisible()) return;
+        int size = lastActiveListView.getItems().size();
+        if (size == 0) return;
+        int current = lastActiveListView.getSelectionModel().getSelectedIndex();
+        if (current > 0) {
+            lastActiveListView.getSelectionModel().clearAndSelect(current - 1);
+            lastActiveListView.scrollTo(current - 1);
+        }
     }
 
     public List<ExampleGroup> getGroups() {
@@ -200,6 +229,8 @@ public final class ExampleGroupPane extends VBox {
     }
 
     private void rebuildSections() {
+        lastActiveListView = null;
+        lastActiveGroup = null;
         sectionsContainer.getChildren().clear();
         for (ExampleGroup g : groups) {
             sectionsContainer.getChildren().add(buildGroupSection(g));
@@ -322,7 +353,16 @@ public final class ExampleGroupPane extends VBox {
         listView.setFixedCellSize(FIXED_CELL_HEIGHT);
         listView.setPrefHeight(indices.size() * FIXED_CELL_HEIGHT + 2);
         listView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-        listView.setCellFactory(lv -> new ExampleCell(group));
+        listView.setCellFactory(lv -> new ExampleCell(group, listView));
+        listView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && onExampleSelected != null) {
+                lastActiveListView = listView;
+                lastActiveGroup = group;
+                if (newVal < group.getExamples().size()) {
+                    onExampleSelected.accept(group.getExamples().get(newVal));
+                }
+            }
+        });
         return listView;
     }
 
@@ -345,17 +385,22 @@ public final class ExampleGroupPane extends VBox {
 
         private final Label symbolLabel = new Label();
         private final Label detailLabel = new Label();
+        private final PortfolioQuantityLabel portfolioQtyLabel = new PortfolioQuantityLabel();
         private final HBox container = new HBox(BADGE_GAP);
         private final VBox textContainer = new VBox(1);
         private final HBox topRow = new HBox(BADGE_GAP);
         private final ExampleGroup group;
 
-        ExampleCell(ExampleGroup group) {
+        private final ListView<Integer> ownerListView;
+
+        ExampleCell(ExampleGroup group, ListView<Integer> ownerListView) {
             this.group = group;
+            this.ownerListView = ownerListView;
             symbolLabel.getStyleClass().add(CELL_SYMBOL_STYLE);
             detailLabel.getStyleClass().add(CELL_DETAIL_STYLE);
             topRow.setAlignment(Pos.CENTER_LEFT);
             container.setAlignment(Pos.CENTER_LEFT);
+            setOnMousePressed(e -> ownerListView.requestFocus());
         }
 
         @Override
@@ -371,7 +416,8 @@ public final class ExampleGroupPane extends VBox {
             String displayName = scrip != null ? scrip.getSymbol() : example.getScripId();
             symbolLabel.setText(displayName);
             String detail = example.getTimeframe().getCode()
-                    + SEPARATOR + formatTimestamp(example.getTimestamp());
+                    + SEPARATOR + formatTimestamp(example.getStartTimestamp())
+                    + ARROW + formatTimestamp(example.getEndTimestamp());
             detailLabel.setText(detail);
             topRow.getChildren().setAll(
                     ScripBadge.create(scrip != null ? scrip.getScripType() : null),
@@ -388,14 +434,9 @@ public final class ExampleGroupPane extends VBox {
             cellDeleteBtn.setFocusTraversable(false);
             final int idx = exampleIndex;
             cellDeleteBtn.setOnAction(ev -> removeExample(group, idx));
-            container.getChildren().setAll(textContainer, spacer, cellDeleteBtn);
+            portfolioQtyLabel.updateQuantity(example.getScripId());
+            container.getChildren().setAll(textContainer, spacer, portfolioQtyLabel, cellDeleteBtn);
             setGraphic(container);
-            setOnMouseClicked(e -> {
-                if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1
-                        && scrip != null && onExampleSelected != null) {
-                    onExampleSelected.accept(example);
-                }
-            });
             ContextMenu ctx = new ContextMenu();
             FontIcon removeIcon = new FontIcon(FluentUiRegularAL.DELETE_16);
             removeIcon.setIconSize(CONTEXT_ICON_SIZE);

@@ -14,6 +14,7 @@ public final class RulerDrawing implements DrawingType {
 
     private static final String LABEL = "Ruler";
     private static final int REQUIRED_CLICKS = 2;
+    public static final int ADD_BUTTON_HIT = 3;
     private static final double LABEL_FONT_SIZE = 10;
     private static final double LABEL_BG_PADDING_H = 6;
     private static final double LABEL_BG_PADDING_V = 4;
@@ -26,6 +27,12 @@ public final class RulerDrawing implements DrawingType {
     private static final String PERCENT_FORMAT = "%+.2f%%";
     private static final String PRICE_FORMAT = "%+.2f";
     private static final Color LABEL_BG_COLOR = Color.web("#1e1f22");
+    private static final Color ADD_BUTTON_BG_COLOR = Color.web("#2d5c88");
+    private static final Color ADD_BUTTON_PLUS_COLOR = Color.web("#e0e0e0");
+    private static final double ADD_BUTTON_RADIUS = 8;
+    private static final double ADD_BUTTON_PLUS_SIZE = 5;
+    private static final double ADD_BUTTON_LINE_WIDTH = 1.5;
+    private static final double ADD_BUTTON_OFFSET_Y = -18;
     private static final long SECONDS_PER_MINUTE = 60;
     private static final long SECONDS_PER_HOUR = 3600;
     private static final long SECONDS_PER_DAY = 86400;
@@ -55,6 +62,7 @@ public final class RulerDrawing implements DrawingType {
         drawAnchorDot(gc, x2, y2);
         if (d.getAnchor2() != null) {
             renderInfoLabel(gc, d, mapper, x1, y1, x2, y2);
+            renderAddButton(gc, x1, y1, x2, y2);
         }
     }
 
@@ -127,12 +135,31 @@ public final class RulerDrawing implements DrawingType {
                 : days + DAY_SUFFIX;
     }
 
+    private void renderAddButton(GraphicsContext gc, double x1, double y1, double x2, double y2) {
+        double midX = (x1 + x2) / 2;
+        double midY = (y1 + y2) / 2 + ADD_BUTTON_OFFSET_Y;
+        gc.setFill(ADD_BUTTON_BG_COLOR);
+        gc.fillOval(midX - ADD_BUTTON_RADIUS, midY - ADD_BUTTON_RADIUS,
+                ADD_BUTTON_RADIUS * 2, ADD_BUTTON_RADIUS * 2);
+        gc.setStroke(ADD_BUTTON_PLUS_COLOR);
+        gc.setLineWidth(ADD_BUTTON_LINE_WIDTH);
+        gc.strokeLine(midX - ADD_BUTTON_PLUS_SIZE, midY, midX + ADD_BUTTON_PLUS_SIZE, midY);
+        gc.strokeLine(midX, midY - ADD_BUTTON_PLUS_SIZE, midX, midY + ADD_BUTTON_PLUS_SIZE);
+        gc.setLineWidth(LINE_WIDTH);
+    }
+
+    public static double[] computeAddButtonCenter(double ax1, double ay1, double ax2, double ay2) {
+        return new double[]{(ax1 + ax2) / 2, (ay1 + ay2) / 2 + ADD_BUTTON_OFFSET_Y};
+    }
+
     @Override
     public int hitTest(Drawing d, double px, double py, CoordinateMapper mapper,
                        double ax1, double ay1) {
         if (d.getAnchor2() == null) return -1;
         double ax2 = mapper.toX(d.getAnchor2().getTimestamp());
         double ay2 = mapper.toY(d.getAnchor2().getValue());
+        double[] addCenter = computeAddButtonCenter(ax1, ay1, ax2, ay2);
+        if (hitTestPoint(px, py, addCenter[0], addCenter[1])) return ADD_BUTTON_HIT;
         if (hitTestPoint(px, py, ax1, ay1)) return 1;
         if (hitTestPoint(px, py, ax2, ay2)) return 2;
         if (hitTestLineSegment(px, py, ax1, ay1, ax2, ay2)) return 0;

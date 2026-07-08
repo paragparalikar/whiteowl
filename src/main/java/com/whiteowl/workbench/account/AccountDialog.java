@@ -1,6 +1,6 @@
 package com.whiteowl.workbench.account;
 
-import static com.whiteowl.core.account.model.Account.DEFAULT_PREFERRED_POSITION_COUNT;
+import static com.whiteowl.core.account.model.Account.DEFAULT_POSITION_SIZE;
 
 import com.whiteowl.core.account.model.Account;
 import com.whiteowl.core.account.service.AccountService;
@@ -27,11 +27,12 @@ public final class AccountDialog extends BaseDialog {
     private static final String LABEL_USER_ID = "User ID";
     private static final String LABEL_PASSWORD = "Password";
     private static final String LABEL_PIN = "PIN";
-    private static final String LABEL_PREFERRED_POSITIONS = "Preferred Positions";
+    private static final String LABEL_POSITION_SIZE = "Position Size";
     private static final String BUTTON_SAVE = "Save";
     private static final int DIALOG_WIDTH = 420;
-    private static final int MIN_POSITION_COUNT = 1;
-    private static final int MAX_POSITION_COUNT = 100;
+    private static final double MIN_POSITION_SIZE = 1;
+    private static final double MAX_POSITION_SIZE = 100000000;
+    private static final double POSITION_SIZE_STEP = 10000;
 
     private final AccountService accountService;
     private final Account editingAccount;
@@ -40,7 +41,7 @@ public final class AccountDialog extends BaseDialog {
     private final TextField userIdField;
     private final PasswordField passwordField;
     private final PasswordField pinField;
-    private final Spinner<Integer> preferredPositionsSpinner;
+    private final Spinner<Double> positionSizeSpinner;
     @Getter private boolean saved;
 
     public AccountDialog(AccountService accountService) {
@@ -55,9 +56,9 @@ public final class AccountDialog extends BaseDialog {
         this.userIdField = createTextField();
         this.passwordField = createPasswordField();
         this.pinField = createPasswordField();
-        int positionCount = editingAccount != null
-                ? editingAccount.getPreferredPositionCount() : DEFAULT_PREFERRED_POSITION_COUNT;
-        this.preferredPositionsSpinner = createSpinner(MIN_POSITION_COUNT, MAX_POSITION_COUNT, positionCount);
+        double positionSize = editingAccount != null
+                ? editingAccount.getPositionSize() : DEFAULT_POSITION_SIZE;
+        this.positionSizeSpinner = createDoubleSpinner(MIN_POSITION_SIZE, MAX_POSITION_SIZE, positionSize, POSITION_SIZE_STEP);
         if (editingAccount != null) {
             nameField.setText(editingAccount.getName());
             brokerCombo.setValue(editingAccount.getBrokerType());
@@ -90,7 +91,7 @@ public final class AccountDialog extends BaseDialog {
         addFormRow(grid, LABEL_USER_ID, userIdField, row++);
         addFormRow(grid, LABEL_PASSWORD, passwordField, row++);
         addFormRow(grid, LABEL_PIN, pinField, row++);
-        addFormRow(grid, LABEL_PREFERRED_POSITIONS, preferredPositionsSpinner, row);
+        addFormRow(grid, LABEL_POSITION_SIZE, positionSizeSpinner, row);
     }
 
     @Override
@@ -116,11 +117,11 @@ public final class AccountDialog extends BaseDialog {
             showError(error.get());
             return;
         }
-        int positionCount = preferredPositionsSpinner.getValue();
+        double positionSize = positionSizeSpinner.getValue();
         if (editingAccount != null) {
-            accountService.update(editingAccount, name, broker, userId, password, pin, positionCount);
+            accountService.update(editingAccount, name, broker, userId, password, pin, positionSize);
         } else {
-            accountService.create(name, broker, userId, password, pin, positionCount);
+            accountService.create(name, broker, userId, password, pin, positionSize);
         }
         saved = true;
         closeDialog();

@@ -6,6 +6,7 @@ import com.whiteowl.core.backtest.v2.model.TradeRecord;
 import com.whiteowl.core.bar.model.Bars;
 import com.whiteowl.core.bar.model.Timeframe;
 import com.whiteowl.core.gtt.model.GttOrder;
+import com.whiteowl.core.gtt.model.OcoGttOrder;
 import com.whiteowl.core.order.model.Order;
 import com.whiteowl.core.scrip.model.Scrip;
 import com.whiteowl.core.trendline.Trendline;
@@ -14,6 +15,7 @@ import com.whiteowl.workbench.charting.drawing.Drawing;
 import com.whiteowl.workbench.charting.drawing.DrawingAnchor;
 import com.whiteowl.workbench.charting.drawing.DrawingManager;
 import com.whiteowl.workbench.charting.drawing.DrawingRenderer;
+import com.whiteowl.workbench.charting.drawing.type.RulerDrawing;
 import com.whiteowl.workbench.charting.indicator.IndicatorResult;
 import com.whiteowl.workbench.charting.indicator.volumeprofile.VolumeProfileData;
 import com.whiteowl.workbench.charting.renderer.CandlestickLayer;
@@ -87,11 +89,17 @@ public final class CandlestickCanvas extends Canvas {
     private float dragOriginalOrderPrice;
     private Consumer<GttOrder> onGttModified;
     private Consumer<GttOrder> onGttCancelled;
+    private Consumer<OcoGttOrder> onOcoModified;
+    private Consumer<OcoGttOrder> onOcoCancelled;
+    private OcoGttOrder draggingOcoOrder;
+    private boolean draggingOcoStoplossLeg;
+    private float dragOriginalOcoPrice;
     private Consumer<Order> onOrderClicked;
     private Consumer<Order> onOrderCancelled;
     private Consumer<Order> onOrderModified;
     private PricePickerMode pricePickerMode;
     private BiConsumer<PricePickerMode, Float> onPricePicked;
+    private RulerAddButtonHandler onRulerAddButtonClicked;
 
     public CandlestickCanvas(ChartViewport viewport, BarDataProvider dataProvider) {
         this.viewport = viewport;
@@ -256,6 +264,18 @@ public final class CandlestickCanvas extends Canvas {
         this.onGttCancelled = callback;
     }
 
+    public void setOcoOrders(List<OcoGttOrder> orders) {
+        orderLineLayer.setOcoOrders(orders);
+    }
+
+    public void setOnOcoModified(Consumer<OcoGttOrder> callback) {
+        this.onOcoModified = callback;
+    }
+
+    public void setOnOcoCancelled(Consumer<OcoGttOrder> callback) {
+        this.onOcoCancelled = callback;
+    }
+
     public void setOnOrderClicked(Consumer<Order> callback) {
         this.onOrderClicked = callback;
     }
@@ -300,6 +320,10 @@ public final class CandlestickCanvas extends Canvas {
 
     public void setOnDrawingComplete(Runnable callback) {
         this.onDrawingComplete = callback;
+    }
+
+    public void setOnRulerAddButtonClicked(RulerAddButtonHandler handler) {
+        this.onRulerAddButtonClicked = handler;
     }
 
     private void setupInteraction() {
@@ -348,6 +372,7 @@ public final class CandlestickCanvas extends Canvas {
             if (pricePickerMode != null) return;
             if (drawingManager != null && drawingManager.getActiveTool() != null) return;
             if (tryHandleOrderLineClick(e.getX(), e.getY())) return;
+            if (tryStartOcoDrag(e.getX(), e.getY())) return;
             if (tryStartGttDrag(e.getX(), e.getY())) return;
             if (tryStartEdgeDrag(e.getX())) return;
             if (tryStartProfileDrag(e.getX(), e.getY())) return;
@@ -358,6 +383,11 @@ public final class CandlestickCanvas extends Canvas {
         setOnMouseDragged(e -> {
             mouseX = e.getX();
             mouseY = e.getY();
+            if (draggingOcoOrder != null) {
+                updateOcoDrag(e.getY());
+                render();
+                return;
+            }
             if (draggingGttOrder != null) {
                 updateGttDrag(e.getY());
                 render();
@@ -394,6 +424,10 @@ public final class CandlestickCanvas extends Canvas {
             notifyViewportChanged();
         });
         setOnMouseReleased(e -> {
+            if (draggingOcoOrder != null) {
+                endOcoDrag();
+                return;
+            }
             if (draggingGttOrder != null) {
                 endGttDrag();
                 return;
@@ -448,6 +482,11 @@ public final class CandlestickCanvas extends Canvas {
     private void handleRightClick(double px, double py, double screenX, double screenY) {
         ChartContext ctx = buildContext(getWidth(), getHeight());
         if (ctx != null) {
+            OcoGttOrder ocoHit = orderLineLayer.hitTestOco(px, py, ctx);
+            if (ocoHit != null && onOcoCancelled != null) {
+                onOcoCancelled.accept(ocoHit);
+                return;
+            }
             GttOrder gttHit = orderLineLayer.hitTestGtt(px, py, ctx);
             if (gttHit != null && onGttCancelled != null) {
                 onGttCancelled.accept(gttHit);
@@ -605,9 +644,17 @@ public final class CandlestickCanvas extends Canvas {
         if (priceRange == null) return false;
         CoordinateMapper mapper = buildMapper(priceRange);
         if (mapper == null) return false;
+        int canvasId = DrawingManager.mainCanvasId();
+        DrawingManager.HitResult hit = drawingManager.findHitAt(px, py, canvasId, mapper);
+        if (hit != null && hit.anchorIndex() == RulerDrawing.ADD_BUTTON_HIT) {
+            if (onRulerAddButtonClicked != null) {
+                Drawing d = hit.drawing();
+                onRulerAddButtonClicked.handle(d, px, py);
+            }
+            return true;
+        }
         double value = yToPrice(py, priceRange);
-        return drawingManager.tryStartDrag(px, py, DrawingManager.mainCanvasId(),
-                timestamp, value, mapper);
+        return drawingManager.tryStartDrag(px, py, canvasId, timestamp, value, mapper);
     }
 
     private void updateDrawingDrag() {
@@ -772,10 +819,82 @@ public final class CandlestickCanvas extends Canvas {
                     .triggerPrice(newPrice)
                     .orderPrice(newPrice)
                     .lastPrice(order.getLastPrice())
+                    .trailingPoints(order.getTrailingPoints())
                     .status(order.getStatus())
                     .expiresAt(order.getExpiresAt())
                     .build();
             if (onGttModified != null) onGttModified.accept(modified);
+        }
+    }
+
+    private boolean tryStartOcoDrag(double px, double py) {
+        ChartContext ctx = buildContext(getWidth(), getHeight());
+        if (ctx == null) return false;
+        OcoGttOrder hit = orderLineLayer.hitTestOco(px, py, ctx);
+        if (hit == null) return false;
+        draggingOcoStoplossLeg = orderLineLayer.isOcoStoplossLeg(hit, py, ctx);
+        float legPrice = draggingOcoStoplossLeg
+                ? hit.getStoplossTriggerPrice() : hit.getTargetTriggerPrice();
+        if (orderLineLayer.hitTestCancelAt(px, py, ctx, legPrice)) {
+            if (onOcoCancelled != null) onOcoCancelled.accept(hit);
+            return true;
+        }
+        draggingOcoOrder = hit;
+        dragOriginalOcoPrice = legPrice;
+        return true;
+    }
+
+    private void updateOcoDrag(double py) {
+        if (draggingOcoOrder == null) return;
+        float[] priceRange = getCurrentPriceRange();
+        if (priceRange == null) return;
+        float newPrice = (float) yToPrice(py, priceRange);
+        if (newPrice > 0) {
+            if (draggingOcoStoplossLeg) {
+                draggingOcoOrder.setStoplossTriggerPrice(newPrice);
+                draggingOcoOrder.setStoplossOrderPrice(newPrice);
+            } else {
+                draggingOcoOrder.setTargetTriggerPrice(newPrice);
+                draggingOcoOrder.setTargetOrderPrice(newPrice);
+            }
+        }
+    }
+
+    private void endOcoDrag() {
+        if (draggingOcoOrder == null) return;
+        OcoGttOrder oco = draggingOcoOrder;
+        draggingOcoOrder = null;
+        float newSlTrigger = oco.getStoplossTriggerPrice();
+        float newTgtTrigger = oco.getTargetTriggerPrice();
+        if (draggingOcoStoplossLeg) {
+            oco.setStoplossTriggerPrice(dragOriginalOcoPrice);
+            oco.setStoplossOrderPrice(dragOriginalOcoPrice);
+        } else {
+            oco.setTargetTriggerPrice(dragOriginalOcoPrice);
+            oco.setTargetOrderPrice(dragOriginalOcoPrice);
+        }
+        render();
+        float currentLegPrice = draggingOcoStoplossLeg ? newSlTrigger : newTgtTrigger;
+        if (Math.abs(currentLegPrice - dragOriginalOcoPrice) > 0.001f) {
+            OcoGttOrder modified = OcoGttOrder.builder()
+                    .id(oco.getId())
+                    .scripId(oco.getScripId())
+                    .side(oco.getSide())
+                    .limitType(oco.getLimitType())
+                    .product(oco.getProduct())
+                    .quantity(oco.getQuantity())
+                    .stoplossTriggerPrice(draggingOcoStoplossLeg ? currentLegPrice : oco.getStoplossTriggerPrice())
+                    .stoplossOrderPrice(draggingOcoStoplossLeg ? currentLegPrice : oco.getStoplossOrderPrice())
+                    .targetTriggerPrice(draggingOcoStoplossLeg ? oco.getTargetTriggerPrice() : currentLegPrice)
+                    .targetOrderPrice(draggingOcoStoplossLeg ? oco.getTargetOrderPrice() : currentLegPrice)
+                    .lastPrice(oco.getLastPrice())
+                    .trailingPoints(oco.getTrailingPoints())
+                    .status(oco.getStatus())
+                    .expiresAt(oco.getExpiresAt())
+                    .build();
+            if (onOcoModified != null) onOcoModified.accept(modified);
+        } else {
+            if (onOcoModified != null) onOcoModified.accept(oco);
         }
     }
 
@@ -857,6 +976,7 @@ public final class CandlestickCanvas extends Canvas {
             case SELL -> ORDER_LINE_SELL;
             case GTT_BUY -> GTT_LINE_BUY;
             case GTT_SELL -> GTT_LINE_SELL;
+            case OCO_FIRST, OCO_SECOND -> GTT_LINE_SELL;
         };
     }
 

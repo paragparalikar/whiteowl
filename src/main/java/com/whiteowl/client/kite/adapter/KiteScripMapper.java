@@ -46,6 +46,20 @@ final class KiteScripMapper {
         return kiteKeyScripCache.getOrDefault(kiteExchange, Collections.emptyMap()).get(tradingsymbol);
     }
 
+    public Scrip resolve(int instrumentToken, KiteExchange kiteExchange, String tradingsymbol) {
+        Scrip scrip = getScrip(instrumentToken);
+        if (scrip != null) return scrip;
+        scrip = getScrip(kiteExchange, tradingsymbol);
+        if (scrip != null) return scrip;
+        return resolveByStrippingSuffix(kiteExchange, tradingsymbol);
+    }
+
+    private Scrip resolveByStrippingSuffix(KiteExchange kiteExchange, String tradingsymbol) {
+        if (tradingsymbol == null || !tradingsymbol.matches(TRADING_SYMBOL_SUFFIX_PATTERN)) return null;
+        String stripped = tradingsymbol.replaceAll(SUFFIX_PATTERN, "");
+        return getScrip(kiteExchange, stripped);
+    }
+
     public KiteSymbol getKiteSymbol(Exchange exchange, String symbol) {
         return exchangeKeySymbolCache.getOrDefault(exchange, Collections.emptyMap()).get(symbol);
     }
@@ -78,6 +92,8 @@ final class KiteScripMapper {
     private static final String GOLD_MARKER = "GOLD";
     private static final String LIQUID_MARKER = "LIQUID";
     private static final String NIFTYBEES_MARKER = "NIFTYBEES";
+    private static final String SUFFIX_PATTERN = "-[A-Z]{2}$";
+    private static final String TRADING_SYMBOL_SUFFIX_PATTERN = ".*" + SUFFIX_PATTERN;
     private static final String SUFFIX_SG = "-SG";
     private static final String SUFFIX_GS = "-GS";
     private static final String SUFFIX_TB = "-TB";

@@ -1,6 +1,6 @@
 package com.whiteowl.workbench.account;
 
-import static com.whiteowl.core.account.model.Account.DEFAULT_PREFERRED_POSITION_COUNT;
+import static com.whiteowl.core.account.model.Account.DEFAULT_POSITION_SIZE;
 
 import com.whiteowl.core.account.model.Account;
 import com.whiteowl.core.account.service.AccountService;
@@ -83,10 +83,11 @@ public final class AccountsPane extends VBox {
     private static final String LABEL_USER_ID = "User ID";
     private static final String LABEL_PASSWORD = "Password";
     private static final String LABEL_PIN = "PIN";
-    private static final String LABEL_PREFERRED_POSITIONS = "Preferred Positions";
+    private static final String LABEL_POSITION_SIZE = "Position Size";
     private static final String BUTTON_SAVE = "Save";
-    private static final int MIN_POSITION_COUNT = 1;
-    private static final int MAX_POSITION_COUNT = 100;
+    private static final double MIN_POSITION_SIZE = 1;
+    private static final double MAX_POSITION_SIZE = 100000000;
+    private static final double POSITION_SIZE_STEP = 10000;
     private static final String BUTTON_CANCEL = "Cancel";
     private static final String TOOLTIP_ADD = "Add new account";
     private static final String TOOLTIP_EDIT = "Edit account";
@@ -117,7 +118,7 @@ public final class AccountsPane extends VBox {
     private final TextField userIdField;
     private final PasswordField passwordField;
     private final PasswordField pinField;
-    private final Spinner<Integer> preferredPositionsSpinner;
+    private final Spinner<Double> positionSizeSpinner;
     private final Label messageLabel;
     private final VBox formCard;
     private Account editingAccount;
@@ -133,7 +134,7 @@ public final class AccountsPane extends VBox {
         this.userIdField = buildTextField();
         this.passwordField = buildPasswordField();
         this.pinField = buildPasswordField();
-        this.preferredPositionsSpinner = buildPositionsSpinner();
+        this.positionSizeSpinner = buildPositionSizeSpinner();
         this.messageLabel = buildMessageLabel();
         this.formCard = buildFormCard();
         getStyleClass().add(PANE_STYLE);
@@ -287,8 +288,8 @@ public final class AccountsPane extends VBox {
         grid.add(passwordField, 1, row++);
         grid.add(buildLabel(LABEL_PIN), 0, row);
         grid.add(pinField, 1, row++);
-        grid.add(buildLabel(LABEL_PREFERRED_POSITIONS), 0, row);
-        grid.add(preferredPositionsSpinner, 1, row);
+        grid.add(buildLabel(LABEL_POSITION_SIZE), 0, row);
+        grid.add(positionSizeSpinner, 1, row);
         Region divider = new Region();
         divider.getStyleClass().add(FORM_DIVIDER_STYLE);
         HBox buttonRow = buildFormButtons();
@@ -349,9 +350,9 @@ public final class AccountsPane extends VBox {
         return field;
     }
 
-    private Spinner<Integer> buildPositionsSpinner() {
-        Spinner<Integer> spinner = new Spinner<>(MIN_POSITION_COUNT, MAX_POSITION_COUNT,
-                DEFAULT_PREFERRED_POSITION_COUNT);
+    private Spinner<Double> buildPositionSizeSpinner() {
+        Spinner<Double> spinner = new Spinner<>(MIN_POSITION_SIZE, MAX_POSITION_SIZE,
+                DEFAULT_POSITION_SIZE, POSITION_SIZE_STEP);
         spinner.setEditable(true);
         spinner.setMaxWidth(Double.MAX_VALUE);
         return spinner;
@@ -390,7 +391,7 @@ public final class AccountsPane extends VBox {
         userIdField.setText(account.getUserId());
         passwordField.setText(account.getPassword());
         pinField.setText(account.getPin());
-        preferredPositionsSpinner.getValueFactory().setValue(account.getPreferredPositionCount());
+        positionSizeSpinner.getValueFactory().setValue(account.getPositionSize());
         clearMessage();
         showForm();
     }
@@ -414,7 +415,7 @@ public final class AccountsPane extends VBox {
         userIdField.clear();
         passwordField.clear();
         pinField.clear();
-        preferredPositionsSpinner.getValueFactory().setValue(DEFAULT_PREFERRED_POSITION_COUNT);
+        positionSizeSpinner.getValueFactory().setValue(DEFAULT_POSITION_SIZE);
         clearMessage();
     }
 
@@ -430,12 +431,12 @@ public final class AccountsPane extends VBox {
             showError(error.get());
             return;
         }
-        int positionCount = preferredPositionsSpinner.getValue();
+        double positionSize = positionSizeSpinner.getValue();
         if (editingAccount != null) {
-            accountService.update(editingAccount, name, broker, userId, password, pin, positionCount);
+            accountService.update(editingAccount, name, broker, userId, password, pin, positionSize);
             showSuccess(MSG_UPDATED);
         } else {
-            accountService.create(name, broker, userId, password, pin, positionCount);
+            accountService.create(name, broker, userId, password, pin, positionSize);
             showSuccess(MSG_CREATED);
         }
         refreshTable();

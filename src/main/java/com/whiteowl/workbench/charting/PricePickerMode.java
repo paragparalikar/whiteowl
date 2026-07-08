@@ -7,11 +7,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PricePickerMode {
 
-    BUY(false),
-    SELL(false),
-    GTT_BUY(true),
-    GTT_SELL(true);
+    BUY(false, false),
+    SELL(false, false),
+    GTT_BUY(true, false),
+    GTT_SELL(true, false),
+    OCO_FIRST(true, true),
+    OCO_SECOND(true, true);
 
     private final boolean gtt;
+    private final boolean oco;
 
 }

@@ -147,6 +147,27 @@ arrays of the same length (with <code>NaN</code> for warmup periods).</p>
 <tr><td><code>crossunder(a, b)</code></td><td><code>boolean[]</code></td><td><code>true</code> where series <code>a</code> crosses below <code>b</code></td></tr>
 <tr><td><code>highest(source, period)</code></td><td><code>float[]</code></td><td>Highest value in the last <code>period</code> bars</td></tr>
 <tr><td><code>lowest(source, period)</code></td><td><code>float[]</code></td><td>Lowest value in the last <code>period</code> bars</td></tr>
+<tr><td><code>stochastics(kPeriod, dPeriod)</code></td><td><code>float[][]</code></td><td>Stochastic Oscillator. Returns <code>[%K, %D]</code></td></tr>
+<tr><td><code>obv()</code></td><td><code>float[]</code></td><td>On-Balance Volume</td></tr>
+<tr><td><code>stddev(source, period)</code></td><td><code>float[]</code></td><td>Standard Deviation</td></tr>
+<tr><td><code>roc(source, period)</code></td><td><code>float[]</code></td><td>Rate of Change</td></tr>
+<tr><td><code>adx(period)</code></td><td><code>float[][]</code></td><td>ADX. Returns <code>[adx, +DI, -DI]</code></td></tr>
+<tr><td><code>supertrend(period, multiplier)</code></td><td><code>float[][]</code></td><td>Supertrend indicator</td></tr>
+<tr><td><code>bollingerBands(source, period, multiplier)</code></td><td><code>float[][]</code></td><td>Bollinger Bands. Returns <code>[middle, upper, lower]</code></td></tr>
+<tr><td><code>cci(period)</code></td><td><code>float[]</code></td><td>Commodity Channel Index</td></tr>
+<tr><td><code>williamsR(period)</code></td><td><code>float[]</code></td><td>Williams %R</td></tr>
+<tr><td><code>stochRsi(rsiPeriod, stochPeriod, kSmooth, dSmooth)</code></td><td><code>float[][]</code></td><td>Stochastic RSI. Returns <code>[%K, %D]</code></td></tr>
+<tr><td><code>ultimateOscillator(period1, period2, period3)</code></td><td><code>float[]</code></td><td>Ultimate Oscillator</td></tr>
+<tr><td><code>parabolicSar(afStart, afStep, afMax)</code></td><td><code>float[][]</code></td><td>Parabolic SAR</td></tr>
+<tr><td><code>ichimoku(tenkan, kijun, senkouB, displacement)</code></td><td><code>float[][]</code></td><td>Ichimoku Cloud</td></tr>
+<tr><td><code>aroon(period)</code></td><td><code>float[][]</code></td><td>Aroon. Returns <code>[aroonUp, aroonDown]</code></td></tr>
+<tr><td><code>keltnerChannels(emaPeriod, atrPeriod, multiplier)</code></td><td><code>float[][]</code></td><td>Keltner Channels</td></tr>
+<tr><td><code>donchianChannels(period)</code></td><td><code>float[][]</code></td><td>Donchian Channels</td></tr>
+<tr><td><code>accumulationDistribution()</code></td><td><code>float[]</code></td><td>Accumulation/Distribution Line</td></tr>
+<tr><td><code>cmf(period)</code></td><td><code>float[]</code></td><td>Chaikin Money Flow</td></tr>
+<tr><td><code>mfi(period)</code></td><td><code>float[]</code></td><td>Money Flow Index</td></tr>
+<tr><td><code>vwap()</code></td><td><code>float[]</code></td><td>Volume Weighted Average Price</td></tr>
+<tr><td><code>beta(source, benchmark, period)</code></td><td><code>float[]</code></td><td>Beta. Measures stock volatility relative to a benchmark</td></tr>
 </table>
 
 <pre><span class="kw">def</span> <span class="var">ma</span> = sma(close, <span class="num">20</span>)
@@ -268,8 +289,8 @@ The script is evaluated once per stock using its most recent bar data.</p>
 by this score. The script must return a <code>Number</code> (e.g., <code>float</code>, <code>double</code>).</p>
 
 <div class="section-note">
-Rankers do <strong>not</strong> support <code>input()</code> parameters. They use only bar data
-and built-in indicator functions.
+Rankers support <code>input()</code> parameters just like Indicators and Screeners.
+Declare configurable parameters the same way using <code>input(name, defaultValue)</code>.
 </div>
 
 <h3>Example: Rate of Change Ranker</h3>

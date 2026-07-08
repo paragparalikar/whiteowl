@@ -12,7 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public final class Account {
 
-    public static final int DEFAULT_PREFERRED_POSITION_COUNT = 10;
+    public static final double DEFAULT_POSITION_SIZE = 100000;
 
     private final String id;
     private String name;
@@ -20,6 +20,6 @@ public final class Account {
     private String userId;
     private String password;
     private String pin;
-    @Builder.Default private int preferredPositionCount = DEFAULT_PREFERRED_POSITION_COUNT;
+    @Builder.Default private double positionSize = DEFAULT_POSITION_SIZE;
 
 }

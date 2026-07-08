@@ -12,10 +12,14 @@ final class KiteHoldingMapper {
 
     public Holding toHolding(String portfolioId, KiteHolding kiteHolding) {
         if (kiteHolding == null) return null;
-        Scrip scrip = scripMapper.getScrip(kiteHolding.getExchange(), kiteHolding.getTradingsymbol());
+        Scrip scrip = scripMapper.resolve(
+                kiteHolding.getInstrumentToken(),
+                kiteHolding.getExchange(),
+                kiteHolding.getTradingsymbol());
+        if (scrip == null) scrip = buildFallbackScrip(kiteHolding);
         return Holding.builder()
                 .portfolioId(portfolioId)
-                .scripId(scrip != null ? scrip.getId() : buildFallbackScripId(kiteHolding))
+                .scrip(scrip)
                 .exchange(kiteHolding.getExchange() != null ? kiteHolding.getExchange().name() : "")
                 .isin(kiteHolding.getIsin())
                 .product(kiteHolding.getProduct() != null ? kiteHolding.getProduct().name() : "")
@@ -38,11 +42,13 @@ final class KiteHoldingMapper {
                 .build();
     }
 
-    private String buildFallbackScripId(KiteHolding kiteHolding) {
-        if (kiteHolding.getExchange() != null) {
-            return kiteHolding.getExchange().name() + ":" + kiteHolding.getTradingsymbol();
-        }
-        return kiteHolding.getTradingsymbol();
+    private Scrip buildFallbackScrip(KiteHolding kiteHolding) {
+        String tradingsymbol = kiteHolding.getTradingsymbol();
+        return Scrip.builder()
+                .id(tradingsymbol)
+                .symbol(tradingsymbol)
+                .name(tradingsymbol)
+                .build();
     }
 
 }

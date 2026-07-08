@@ -13,9 +13,13 @@ final class KitePositionMapper {
 
     public Position toPosition(KitePosition kp) {
         if (kp == null) return null;
-        Scrip scrip = scripMapper.getScrip(kp.getExchange(), kp.getTradingsymbol());
+        Scrip scrip = scripMapper.resolve(
+                kp.getInstrumentToken(),
+                kp.getExchange(),
+                kp.getTradingsymbol());
+        if (scrip == null) scrip = buildFallbackScrip(kp);
         return Position.builder()
-                .scripId(scrip != null ? scrip.getId() : buildFallbackScripId(kp))
+                .scrip(scrip)
                 .product(productMapper.toProduct(kp.getProduct()))
                 .quantity(kp.getQuantity())
                 .overnightQuantity(kp.getOvernightQuantity())
@@ -31,11 +35,13 @@ final class KitePositionMapper {
                 .build();
     }
 
-    private String buildFallbackScripId(KitePosition kp) {
-        if (kp.getExchange() != null) {
-            return kp.getExchange().name() + ":" + kp.getTradingsymbol();
-        }
-        return kp.getTradingsymbol();
+    private Scrip buildFallbackScrip(KitePosition kp) {
+        String tradingsymbol = kp.getTradingsymbol();
+        return Scrip.builder()
+                .id(tradingsymbol)
+                .symbol(tradingsymbol)
+                .name(tradingsymbol)
+                .build();
     }
 
 }

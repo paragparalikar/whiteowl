@@ -3,7 +3,13 @@ package com.whiteowl.core.ranker.script;
 import com.whiteowl.core.bar.model.Bars;
 import com.whiteowl.core.bar.model.BarsArrays;
 import com.whiteowl.core.indicator.IndicatorFunctions;
+import com.whiteowl.core.script.ScriptInput;
 import groovy.lang.Script;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public abstract class RankerDsl extends Script {
 
@@ -14,6 +20,51 @@ public abstract class RankerDsl extends Script {
     protected long[] volume;
     protected long[] timestamps;
     protected int barCount;
+    private final List<ScriptInput> declaredInputs = new ArrayList<>();
+    private Map<String, Number> inputOverrides = Map.of();
+    private boolean discoveryMode;
+
+    public void setDiscoveryMode(boolean discoveryMode) {
+        this.discoveryMode = discoveryMode;
+    }
+
+    public void setInputOverrides(Map<String, Number> overrides) {
+        this.inputOverrides = overrides != null ? overrides : Map.of();
+    }
+
+    public List<ScriptInput> getDeclaredInputs() {
+        return Collections.unmodifiableList(declaredInputs);
+    }
+
+    public void clearInputs() {
+        declaredInputs.clear();
+    }
+
+    public Number input(String name, Number defaultValue) {
+        declaredInputs.add(new ScriptInput(name, defaultValue));
+        if (discoveryMode) return defaultValue;
+        return inputOverrides.getOrDefault(name, defaultValue);
+    }
+
+    public Number input(String name, Number defaultValue, Number minValue, Number maxValue) {
+        declaredInputs.add(new ScriptInput(name, defaultValue, minValue, maxValue));
+        if (discoveryMode) return defaultValue;
+        return clamp(inputOverrides.getOrDefault(name, defaultValue), minValue, maxValue);
+    }
+
+    public Number input(String name, Number defaultValue, Number minValue, Number maxValue, Number step) {
+        declaredInputs.add(new ScriptInput(name, defaultValue, minValue, maxValue, step));
+        if (discoveryMode) return defaultValue;
+        return clamp(inputOverrides.getOrDefault(name, defaultValue), minValue, maxValue);
+    }
+
+    private static Number clamp(Number value, Number min, Number max) {
+        double v = value.doubleValue();
+        if (min != null && v < min.doubleValue()) v = min.doubleValue();
+        if (max != null && v > max.doubleValue()) v = max.doubleValue();
+        if (value instanceof Integer) return (int) v;
+        return v;
+    }
 
     public void bind(Bars bars) {
         BarsArrays arrays = bars.arrays();
@@ -140,6 +191,10 @@ public abstract class RankerDsl extends Script {
 
     public float[] vwap() {
         return IndicatorFunctions.vwap(high, low, close, volume, barCount);
+    }
+
+    public float[] beta(float[] source, float[] benchmark, int period) {
+        return IndicatorFunctions.beta(source, benchmark, barCount, period);
     }
 
 }
