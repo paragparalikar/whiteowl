@@ -54,7 +54,10 @@ public final class AccountService {
     }
 
     public Account create(String name, BrokerType brokerType, String userId, String password, String pin,
-                           double positionSize) {
+                           double positionSize, double stopLossPercentage, double wideStopLossPercentage,
+                           double tightStopLossPercentage, double maxConcentrationPercentage,
+                           int staleHoldingDays, int gttExpiryWarningDays,
+                           double minRiskRewardRatio) {
         Account account = Account.builder()
                 .id(UUID.randomUUID().toString())
                 .name(name.trim())
@@ -63,6 +66,13 @@ public final class AccountService {
                 .password(password.trim())
                 .pin(pin.trim())
                 .positionSize(positionSize)
+                .stopLossPercentage(stopLossPercentage)
+                .wideStopLossPercentage(wideStopLossPercentage)
+                .tightStopLossPercentage(tightStopLossPercentage)
+                .maxConcentrationPercentage(maxConcentrationPercentage)
+                .staleHoldingDays(staleHoldingDays)
+                .gttExpiryWarningDays(gttExpiryWarningDays)
+                .minRiskRewardRatio(minRiskRewardRatio)
                 .build();
         accounts.add(account);
         persist();
@@ -71,13 +81,24 @@ public final class AccountService {
     }
 
     public void update(Account account, String name, BrokerType brokerType,
-                       String userId, String password, String pin, double positionSize) {
+                       String userId, String password, String pin,
+                       double positionSize, double stopLossPercentage, double wideStopLossPercentage,
+                       double tightStopLossPercentage, double maxConcentrationPercentage,
+                       int staleHoldingDays, int gttExpiryWarningDays,
+                       double minRiskRewardRatio) {
         account.setName(name.trim());
         account.setBrokerType(brokerType);
         account.setUserId(userId.trim());
         account.setPassword(password.trim());
         account.setPin(pin.trim());
         account.setPositionSize(positionSize);
+        account.setStopLossPercentage(stopLossPercentage);
+        account.setWideStopLossPercentage(wideStopLossPercentage);
+        account.setTightStopLossPercentage(tightStopLossPercentage);
+        account.setMaxConcentrationPercentage(maxConcentrationPercentage);
+        account.setStaleHoldingDays(staleHoldingDays);
+        account.setGttExpiryWarningDays(gttExpiryWarningDays);
+        account.setMinRiskRewardRatio(minRiskRewardRatio);
         persist();
         log.info("Updated account: name={}, broker={}", account.getName(), account.getBrokerType());
     }

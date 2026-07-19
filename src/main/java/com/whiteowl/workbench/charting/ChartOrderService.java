@@ -7,6 +7,7 @@ import com.whiteowl.core.order.model.OrderSide;
 import com.whiteowl.core.portfolio.model.Funds;
 import com.whiteowl.core.portfolio.model.Holding;
 import com.whiteowl.core.portfolio.model.Position;
+import com.whiteowl.core.portfolio.service.EffectiveQuantityCalculator;
 
 import java.util.List;
 import java.util.OptionalInt;
@@ -62,18 +63,10 @@ public interface ChartOrderService {
     }
 
     default OptionalInt findPortfolioQuantity(String scripId, OrderSide side) {
-        int positionQty = fetchPositions().stream()
-                .filter(p -> p.getScrip() != null && scripId.equals(p.getScrip().getId()))
-                .mapToInt(Position::getQuantity)
-                .sum();
-        if (positionQty > 0 && side == OrderSide.SELL) return OptionalInt.of(positionQty);
-        if (positionQty < 0 && side == OrderSide.BUY) return OptionalInt.of(Math.abs(positionQty));
-        int holdingQty = fetchHoldings().stream()
-                .filter(h -> h.getScrip() != null && scripId.equals(h.getScrip().getId()))
-                .mapToInt(Holding::getQuantity)
-                .sum();
-        if (holdingQty > 0 && side == OrderSide.SELL) return OptionalInt.of(holdingQty);
-        return OptionalInt.empty();
+        if (side != OrderSide.SELL) return OptionalInt.empty();
+        int effectiveQty = EffectiveQuantityCalculator.computeForScrip(
+                scripId, fetchHoldings(), fetchPositions());
+        return effectiveQty > 0 ? OptionalInt.of(effectiveQty) : OptionalInt.empty();
     }
 
 }

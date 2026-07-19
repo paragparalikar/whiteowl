@@ -90,6 +90,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 @Slf4j
 public final class ChartPane extends BorderPane {
@@ -252,7 +253,7 @@ public final class ChartPane extends BorderPane {
     private List<OcoGttOrder> activeOcoOrders = List.of();
     private float ocoFirstPrice;
     private Button ocoButton;
-    private Runnable onOrderBookRefresh;
+    private Consumer<OrderBookTab> onOrderBookRefresh;
 
     public ChartPane(BarsRepository barsRepository, ScripRepository scripRepository,
                      ScriptRepository indicatorScriptRepo, ScriptRepository screenerScriptRepo) {
@@ -410,7 +411,7 @@ public final class ChartPane extends BorderPane {
         }
     }
 
-    public void setOnOrderBookRefresh(Runnable handler) {
+    public void setOnOrderBookRefresh(Consumer<OrderBookTab> handler) {
         this.onOrderBookRefresh = handler;
     }
 
@@ -591,7 +592,7 @@ public final class ChartPane extends BorderPane {
                 try {
                     chartOrderService.createOrder(orderResult);
                     StatusBar.showSuccess(ORDER_PLACED);
-                    Platform.runLater(this::fireOrderBookRefresh);
+                    Platform.runLater(() -> { refreshRegularOrders(); fireOrderBookRefresh(OrderBookTab.ORDERS); });
                 } catch (Exception ex) {
                     log.error("Failed to place order", ex);
                     StatusBar.showError(String.format(ORDER_PLACE_FAILED, extractMessage(ex)));
@@ -617,7 +618,7 @@ public final class ChartPane extends BorderPane {
                 try {
                     chartOrderService.createGtt(result);
                     StatusBar.showSuccess(GTT_CREATED);
-                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(OrderBookTab.GTTS); });
                 } catch (Exception ex) {
                     log.error("Failed to create GTT", ex);
                     StatusBar.showError(String.format(GTT_CREATE_FAILED, extractMessage(ex)));
@@ -652,11 +653,11 @@ public final class ChartPane extends BorderPane {
                 try {
                     chartOrderService.updateGtt(result);
                     StatusBar.showSuccess(GTT_UPDATED);
-                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(OrderBookTab.GTTS); });
                 } catch (Exception ex) {
                     log.error("Failed to update GTT", ex);
                     StatusBar.showError(String.format(GTT_UPDATE_FAILED, extractMessage(ex)));
-                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(OrderBookTab.GTTS); });
                 }
             });
         }
@@ -676,7 +677,7 @@ public final class ChartPane extends BorderPane {
                 try {
                     chartOrderService.cancelGtt(order.getId());
                     StatusBar.showSuccess(GTT_CANCELLED);
-                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(OrderBookTab.GTTS); });
                 } catch (Exception ex) {
                     log.error("Failed to cancel GTT", ex);
                     StatusBar.showError(String.format(GTT_CANCEL_FAILED, extractMessage(ex)));
@@ -714,7 +715,7 @@ public final class ChartPane extends BorderPane {
                 try {
                     chartOrderService.createOcoGtt(result);
                     StatusBar.showSuccess(OCO_CREATED);
-                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(OrderBookTab.GTTS); });
                 } catch (Exception ex) {
                     log.error("Failed to create OCO GTT", ex);
                     StatusBar.showError(String.format(OCO_CREATE_FAILED, extractMessage(ex)));
@@ -737,11 +738,11 @@ public final class ChartPane extends BorderPane {
                 try {
                     chartOrderService.updateOcoGtt(result);
                     StatusBar.showSuccess(OCO_UPDATED);
-                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(OrderBookTab.GTTS); });
                 } catch (Exception ex) {
                     log.error("Failed to update OCO GTT", ex);
                     StatusBar.showError(String.format(OCO_UPDATE_FAILED, extractMessage(ex)));
-                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(OrderBookTab.GTTS); });
                 }
             });
         }
@@ -763,7 +764,7 @@ public final class ChartPane extends BorderPane {
                 try {
                     chartOrderService.cancelGtt(order.getId());
                     StatusBar.showSuccess(GTT_CANCELLED);
-                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(); });
+                    Platform.runLater(() -> { refreshGttOrders(); fireOrderBookRefresh(OrderBookTab.GTTS); });
                 } catch (Exception ex) {
                     log.error("Failed to cancel OCO GTT", ex);
                     StatusBar.showError(String.format(GTT_CANCEL_FAILED, extractMessage(ex)));
@@ -853,7 +854,7 @@ public final class ChartPane extends BorderPane {
                 try {
                     chartOrderService.updateOrder(updated);
                     StatusBar.showSuccess(ORDER_UPDATED);
-                    Platform.runLater(() -> { refreshRegularOrders(); fireOrderBookRefresh(); });
+                    Platform.runLater(() -> { refreshRegularOrders(); fireOrderBookRefresh(OrderBookTab.ORDERS); });
                 } catch (Exception ex) {
                     log.error("Failed to update order", ex);
                     StatusBar.showError(String.format(ORDER_UPDATE_FAILED, extractMessage(ex)));
@@ -881,7 +882,7 @@ public final class ChartPane extends BorderPane {
                 try {
                     chartOrderService.cancelOrder(order);
                     StatusBar.showSuccess(ORDER_CANCELLED);
-                    Platform.runLater(() -> { refreshRegularOrders(); fireOrderBookRefresh(); });
+                    Platform.runLater(() -> { refreshRegularOrders(); fireOrderBookRefresh(OrderBookTab.ORDERS); });
                 } catch (Exception ex) {
                     log.error("Failed to cancel order", ex);
                     StatusBar.showError(String.format(ORDER_CANCEL_FAILED, extractMessage(ex)));
@@ -918,8 +919,8 @@ public final class ChartPane extends BorderPane {
         canvas.render();
     }
 
-    private void fireOrderBookRefresh() {
-        if (onOrderBookRefresh != null) onOrderBookRefresh.run();
+    private void fireOrderBookRefresh(OrderBookTab tab) {
+        if (onOrderBookRefresh != null) onOrderBookRefresh.accept(tab);
     }
 
     private String extractMessage(Exception ex) {

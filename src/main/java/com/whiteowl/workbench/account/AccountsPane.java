@@ -1,6 +1,14 @@
 package com.whiteowl.workbench.account;
 
+import static com.whiteowl.core.account.model.Account.DEFAULT_GTT_EXPIRY_WARNING_DAYS;
+import static com.whiteowl.core.account.model.Account.DEFAULT_MAX_CONCENTRATION_PERCENTAGE;
 import static com.whiteowl.core.account.model.Account.DEFAULT_POSITION_SIZE;
+import static com.whiteowl.core.account.model.Account.DEFAULT_STALE_HOLDING_DAYS;
+import static com.whiteowl.core.account.model.Account.DEFAULT_STOP_LOSS_PERCENTAGE;
+import static com.whiteowl.core.account.model.Account.DEFAULT_TIGHT_STOP_LOSS_PERCENTAGE;
+import static com.whiteowl.core.account.model.Account.DEFAULT_MIN_RISK_REWARD_RATIO;
+import static com.whiteowl.core.account.model.Account.DEFAULT_WIDE_STOP_LOSS_PERCENTAGE;
+import static com.whiteowl.core.collection.ObservableListMerger.merge;
 
 import com.whiteowl.core.account.model.Account;
 import com.whiteowl.core.account.service.AccountService;
@@ -84,10 +92,26 @@ public final class AccountsPane extends VBox {
     private static final String LABEL_PASSWORD = "Password";
     private static final String LABEL_PIN = "PIN";
     private static final String LABEL_POSITION_SIZE = "Position Size";
+    private static final String LABEL_STOP_LOSS_PCT = "Stop Loss %";
+    private static final String LABEL_WIDE_SL_PCT = "Wide SL %";
+    private static final String LABEL_TIGHT_SL_PCT = "Tight SL %";
+    private static final String LABEL_MAX_CONCENTRATION = "Max Concentration %";
+    private static final String LABEL_STALE_DAYS = "Stale Holding Days";
+    private static final String LABEL_GTT_EXPIRY_DAYS = "GTT Expiry Warning Days";
+    private static final String LABEL_MIN_RR_RATIO = "Min Risk:Reward Ratio";
     private static final String BUTTON_SAVE = "Save";
     private static final double MIN_POSITION_SIZE = 1;
     private static final double MAX_POSITION_SIZE = 100000000;
     private static final double POSITION_SIZE_STEP = 10000;
+    private static final double MIN_STOP_LOSS_PCT = 0.5;
+    private static final double MAX_STOP_LOSS_PCT = 50.0;
+    private static final double STOP_LOSS_PCT_STEP = 0.5;
+    private static final int MIN_DAYS = 1;
+    private static final int MAX_STALE_DAYS = 365;
+    private static final int MAX_EXPIRY_DAYS = 90;
+    private static final double MIN_RR_RATIO = 0.5;
+    private static final double MAX_RR_RATIO = 10.0;
+    private static final double RR_RATIO_STEP = 0.5;
     private static final String BUTTON_CANCEL = "Cancel";
     private static final String TOOLTIP_ADD = "Add new account";
     private static final String TOOLTIP_EDIT = "Edit account";
@@ -119,6 +143,13 @@ public final class AccountsPane extends VBox {
     private final PasswordField passwordField;
     private final PasswordField pinField;
     private final Spinner<Double> positionSizeSpinner;
+    private final Spinner<Double> stopLossPctSpinner;
+    private final Spinner<Double> wideSlPctSpinner;
+    private final Spinner<Double> tightSlPctSpinner;
+    private final Spinner<Double> maxConcentrationSpinner;
+    private final Spinner<Integer> staleDaysSpinner;
+    private final Spinner<Integer> gttExpiryDaysSpinner;
+    private final Spinner<Double> minRrRatioSpinner;
     private final Label messageLabel;
     private final VBox formCard;
     private Account editingAccount;
@@ -135,6 +166,13 @@ public final class AccountsPane extends VBox {
         this.passwordField = buildPasswordField();
         this.pinField = buildPasswordField();
         this.positionSizeSpinner = buildPositionSizeSpinner();
+        this.stopLossPctSpinner = buildStopLossPctSpinner();
+        this.wideSlPctSpinner = buildDoubleSpinner(MIN_STOP_LOSS_PCT, MAX_STOP_LOSS_PCT, DEFAULT_WIDE_STOP_LOSS_PERCENTAGE, STOP_LOSS_PCT_STEP);
+        this.tightSlPctSpinner = buildDoubleSpinner(MIN_STOP_LOSS_PCT, MAX_STOP_LOSS_PCT, DEFAULT_TIGHT_STOP_LOSS_PERCENTAGE, STOP_LOSS_PCT_STEP);
+        this.maxConcentrationSpinner = buildDoubleSpinner(MIN_STOP_LOSS_PCT, 100.0, DEFAULT_MAX_CONCENTRATION_PERCENTAGE, 1.0);
+        this.staleDaysSpinner = buildIntSpinner(MIN_DAYS, MAX_STALE_DAYS, DEFAULT_STALE_HOLDING_DAYS);
+        this.gttExpiryDaysSpinner = buildIntSpinner(MIN_DAYS, MAX_EXPIRY_DAYS, DEFAULT_GTT_EXPIRY_WARNING_DAYS);
+        this.minRrRatioSpinner = buildDoubleSpinner(MIN_RR_RATIO, MAX_RR_RATIO, DEFAULT_MIN_RISK_REWARD_RATIO, RR_RATIO_STEP);
         this.messageLabel = buildMessageLabel();
         this.formCard = buildFormCard();
         getStyleClass().add(PANE_STYLE);
@@ -289,7 +327,21 @@ public final class AccountsPane extends VBox {
         grid.add(buildLabel(LABEL_PIN), 0, row);
         grid.add(pinField, 1, row++);
         grid.add(buildLabel(LABEL_POSITION_SIZE), 0, row);
-        grid.add(positionSizeSpinner, 1, row);
+        grid.add(positionSizeSpinner, 1, row++);
+        grid.add(buildLabel(LABEL_STOP_LOSS_PCT), 0, row);
+        grid.add(stopLossPctSpinner, 1, row++);
+        grid.add(buildLabel(LABEL_WIDE_SL_PCT), 0, row);
+        grid.add(wideSlPctSpinner, 1, row++);
+        grid.add(buildLabel(LABEL_TIGHT_SL_PCT), 0, row);
+        grid.add(tightSlPctSpinner, 1, row++);
+        grid.add(buildLabel(LABEL_MAX_CONCENTRATION), 0, row);
+        grid.add(maxConcentrationSpinner, 1, row++);
+        grid.add(buildLabel(LABEL_STALE_DAYS), 0, row);
+        grid.add(staleDaysSpinner, 1, row++);
+        grid.add(buildLabel(LABEL_GTT_EXPIRY_DAYS), 0, row);
+        grid.add(gttExpiryDaysSpinner, 1, row++);
+        grid.add(buildLabel(LABEL_MIN_RR_RATIO), 0, row);
+        grid.add(minRrRatioSpinner, 1, row);
         Region divider = new Region();
         divider.getStyleClass().add(FORM_DIVIDER_STYLE);
         HBox buttonRow = buildFormButtons();
@@ -358,6 +410,28 @@ public final class AccountsPane extends VBox {
         return spinner;
     }
 
+    private Spinner<Double> buildStopLossPctSpinner() {
+        Spinner<Double> spinner = new Spinner<>(MIN_STOP_LOSS_PCT, MAX_STOP_LOSS_PCT,
+                DEFAULT_STOP_LOSS_PERCENTAGE, STOP_LOSS_PCT_STEP);
+        spinner.setEditable(true);
+        spinner.setMaxWidth(Double.MAX_VALUE);
+        return spinner;
+    }
+
+    private Spinner<Double> buildDoubleSpinner(double min, double max, double initial, double step) {
+        Spinner<Double> spinner = new Spinner<>(min, max, initial, step);
+        spinner.setEditable(true);
+        spinner.setMaxWidth(Double.MAX_VALUE);
+        return spinner;
+    }
+
+    private Spinner<Integer> buildIntSpinner(int min, int max, int initial) {
+        Spinner<Integer> spinner = new Spinner<>(min, max, initial);
+        spinner.setEditable(true);
+        spinner.setMaxWidth(Double.MAX_VALUE);
+        return spinner;
+    }
+
     private ComboBox<BrokerType> buildBrokerCombo() {
         ComboBox<BrokerType> combo = new ComboBox<>();
         combo.getItems().addAll(BrokerType.values());
@@ -392,6 +466,13 @@ public final class AccountsPane extends VBox {
         passwordField.setText(account.getPassword());
         pinField.setText(account.getPin());
         positionSizeSpinner.getValueFactory().setValue(account.getPositionSize());
+        stopLossPctSpinner.getValueFactory().setValue(account.getStopLossPercentage());
+        wideSlPctSpinner.getValueFactory().setValue(account.getWideStopLossPercentage());
+        tightSlPctSpinner.getValueFactory().setValue(account.getTightStopLossPercentage());
+        maxConcentrationSpinner.getValueFactory().setValue(account.getMaxConcentrationPercentage());
+        staleDaysSpinner.getValueFactory().setValue(account.getStaleHoldingDays());
+        gttExpiryDaysSpinner.getValueFactory().setValue(account.getGttExpiryWarningDays());
+        minRrRatioSpinner.getValueFactory().setValue(account.getMinRiskRewardRatio());
         clearMessage();
         showForm();
     }
@@ -416,6 +497,13 @@ public final class AccountsPane extends VBox {
         passwordField.clear();
         pinField.clear();
         positionSizeSpinner.getValueFactory().setValue(DEFAULT_POSITION_SIZE);
+        stopLossPctSpinner.getValueFactory().setValue(DEFAULT_STOP_LOSS_PERCENTAGE);
+        wideSlPctSpinner.getValueFactory().setValue(DEFAULT_WIDE_STOP_LOSS_PERCENTAGE);
+        tightSlPctSpinner.getValueFactory().setValue(DEFAULT_TIGHT_STOP_LOSS_PERCENTAGE);
+        maxConcentrationSpinner.getValueFactory().setValue(DEFAULT_MAX_CONCENTRATION_PERCENTAGE);
+        staleDaysSpinner.getValueFactory().setValue(DEFAULT_STALE_HOLDING_DAYS);
+        gttExpiryDaysSpinner.getValueFactory().setValue(DEFAULT_GTT_EXPIRY_WARNING_DAYS);
+        minRrRatioSpinner.getValueFactory().setValue(DEFAULT_MIN_RISK_REWARD_RATIO);
         clearMessage();
     }
 
@@ -432,11 +520,20 @@ public final class AccountsPane extends VBox {
             return;
         }
         double positionSize = positionSizeSpinner.getValue();
+        double stopLossPct = stopLossPctSpinner.getValue();
+        double wideSlPct = wideSlPctSpinner.getValue();
+        double tightSlPct = tightSlPctSpinner.getValue();
+        double maxConcentration = maxConcentrationSpinner.getValue();
+        int staleDays = staleDaysSpinner.getValue();
+        int gttExpiryDays = gttExpiryDaysSpinner.getValue();
+        double minRrRatio = minRrRatioSpinner.getValue();
         if (editingAccount != null) {
-            accountService.update(editingAccount, name, broker, userId, password, pin, positionSize);
+            accountService.update(editingAccount, name, broker, userId, password, pin,
+                    positionSize, stopLossPct, wideSlPct, tightSlPct, maxConcentration, staleDays, gttExpiryDays, minRrRatio);
             showSuccess(MSG_UPDATED);
         } else {
-            accountService.create(name, broker, userId, password, pin, positionSize);
+            accountService.create(name, broker, userId, password, pin,
+                    positionSize, stopLossPct, wideSlPct, tightSlPct, maxConcentration, staleDays, gttExpiryDays, minRrRatio);
             showSuccess(MSG_CREATED);
         }
         refreshTable();
@@ -453,7 +550,7 @@ public final class AccountsPane extends VBox {
     }
 
     private void refreshTable() {
-        tableData.setAll(accountService.getAccounts());
+        merge(tableData, accountService.getAccounts(), Account::getId);
         countLabel.setText(String.valueOf(tableData.size()));
     }
 

@@ -1,15 +1,11 @@
 package com.whiteowl.core.portfolio.service;
 
 import com.whiteowl.client.kite.adapter.KiteBrokerAdapter;
-import com.whiteowl.core.portfolio.model.Holding;
-import com.whiteowl.core.portfolio.model.Position;
-import com.whiteowl.core.scrip.model.Scrip;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyLongProperty;
 import javafx.beans.property.ReadOnlyLongWrapper;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -53,24 +49,13 @@ public final class PortfolioQuantityProvider {
         if (current == null) return;
         CompletableFuture.runAsync(() -> {
             try {
-                Map<String, Integer> map = new HashMap<>();
-                for (Holding h : current.fetchHoldings()) {
-                    addScripQuantity(map, h.getScrip(), h.getQuantity());
-                }
-                for (Position p : current.fetchPositions()) {
-                    addScripQuantity(map, p.getScrip(), p.getQuantity());
-                }
-                quantityMap = Map.copyOf(map);
+                quantityMap = Map.copyOf(EffectiveQuantityCalculator.computeAll(
+                        current.fetchHoldings(), current.fetchPositions()));
                 Platform.runLater(() -> revision.set(revision.get() + 1));
             } catch (Exception e) {
                 log.warn("Failed to refresh portfolio quantities", e);
             }
         });
-    }
-
-    private void addScripQuantity(Map<String, Integer> map, Scrip scrip, int quantity) {
-        if (scrip == null || scrip.getId() == null || quantity == 0) return;
-        map.merge(scrip.getId(), quantity, Integer::sum);
     }
 
 }

@@ -19,7 +19,8 @@ public final class KiteMapper {
             System.getProperty("user.home") + File.separator + ".whiteowl");
     private static final String SYMBOL_DIR = "kite" + File.separator + "symbols";
     private static final String FILE_EXTENSION = ".csv";
-    private static final String HYPHEN = "-";
+    private static final String TYPE_EQ = "EQ";
+    private static final int TYPE_COLUMN_INDEX = 9;
 
     private KiteMapper() {}
 
@@ -30,7 +31,7 @@ public final class KiteMapper {
             if (!Files.exists(path)) continue;
             try (var lines = Files.lines(path)) {
                 int count = (int) lines
-                        .filter(line -> !line.contains(HYPHEN))
+                        .filter(KiteMapper::isEquityLine)
                         .map(KiteSymbol::parseCsv)
                         .peek(this::toScrip)
                         .count();
@@ -40,6 +41,11 @@ public final class KiteMapper {
             }
         }
         log.info("Warmed instrument cache with {} symbols from local files", total);
+    }
+
+    private static boolean isEquityLine(String line) {
+        String[] tokens = line.split(",");
+        return tokens.length > TYPE_COLUMN_INDEX && TYPE_EQ.equals(tokens[TYPE_COLUMN_INDEX]);
     }
 
     @Delegate private final KiteExchangeMapper exchangeMapper = new KiteExchangeMapper();

@@ -693,3 +693,46 @@
     -fx-font-size: 10px;
     -fx-text-fill: #c8d6e5;
 }
+
+.review-table {
+    -fx-fixed-cell-size: -1;
+}
+
+.review-table .column-header {
+    -fx-pref-height: -1;
+    -fx-max-height: -1;
+    -fx-padding: 3 0 3 0;
+}
+
+.review-table .table-row-cell {
+    -fx-padding: 3 0 3 0;
+}
+
+.review-run-button,
+.review-clear-button,
+.review-remove-button,
+.review-autofix-button {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #c8d6e5;
+    -fx-padding: 3 10 3 6;
+    -fx-background-radius: 4;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-graphic-text-gap: 4;
+}
+
+.review-run-button:hover,
+.review-clear-button:hover,
+.review-remove-button:hover,
+.review-autofix-button:hover {
+    -fx-background-color: #3a6fa0;
+}
+
+.review-run-button .ikonli-font-icon,
+.review-clear-button .ikonli-font-icon,
+.review-remove-button .ikonli-font-icon,
+.review-autofix-button .ikonli-font-icon {
+    -fx-icon-color: #c8d6e5;
+}

@@ -1,0 +1,49 @@
+.log-viewer-pane {
+    -fx-background-color: #1e1f22;
+    -fx-padding: 0;
+    -fx-spacing: 0;
+}
+
+.log-viewer-header {
+    -fx-padding: 10 12 8 12;
+    -fx-background-color: transparent;
+}
+
+.log-viewer-reload-button {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #e0e0e0;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 4 12 4 8;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.log-viewer-reload-button:hover {
+    -fx-background-color: #35689e;
+}
+
+.log-viewer-reload-icon {
+    -fx-icon-color: #e0e0e0;
+}
+
+.log-viewer-text-area {
+    -fx-background-color: #1e1f22;
+    -fx-control-inner-background: #1e1f22;
+    -fx-text-fill: #a9b7c6;
+    -fx-font-family: "JetBrains Mono", "Consolas", "Courier New", monospace;
+    -fx-font-size: 12px;
+    -fx-border-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-highlight-fill: #214283;
+    -fx-highlight-text-fill: #a9b7c6;
+}
+
+.log-viewer-text-area .content {
+    -fx-background-color: #1e1f22;
+}
+
+.log-viewer-text-area .scroll-pane {
+    -fx-background-color: #1e1f22;
+}

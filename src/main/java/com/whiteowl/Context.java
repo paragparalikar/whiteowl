@@ -20,6 +20,7 @@ import com.whiteowl.core.group.repository.GroupRepository;
 import com.whiteowl.core.note.repository.FileNoteRepository;
 import com.whiteowl.core.note.repository.NoteRepository;
 import com.whiteowl.core.scrip.download.ScripDataDownloader;
+import com.whiteowl.core.scrip.migration.ScripMigrationService;
 import com.whiteowl.core.scrip.repository.FileScripRepository;
 import com.whiteowl.core.scrip.repository.ScripRepository;
 import com.whiteowl.core.watchlist.repository.FileWatchlistRepository;
@@ -66,6 +67,8 @@ public final class Context implements AutoCloseable {
         this.activeAccountManager = new ActiveAccountManager(accountService);
         KiteMapper.INSTANCE.warmCache();
         this.scripDataDownloader = new ScripDataDownloader(scripRepository);
+        this.scripDataDownloader.setMigrationService(new ScripMigrationService(
+                watchlistRepository, groupRepository, exampleGroupRepository, barsRepository));
         this.barDataDownloader = BarDataDownloader.builder()
                 .scripRepository(scripRepository)
                 .barsRepository(barsRepository)

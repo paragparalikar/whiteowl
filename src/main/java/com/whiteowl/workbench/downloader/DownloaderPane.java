@@ -9,7 +9,6 @@ import com.whiteowl.core.scrip.download.ScripDataDownloader;
 import com.whiteowl.core.scrip.model.Exchange;
 import com.whiteowl.core.scrip.model.Scrip;
 import com.whiteowl.core.scrip.model.ScripType;
-import com.whiteowl.core.scrip.repository.ScripRepository;
 import com.whiteowl.workbench.common.CollectionPickerPane;
 import com.whiteowl.workbench.common.ExchangeFilterCombo;
 import com.whiteowl.workbench.common.ScripBadge;
@@ -103,10 +102,10 @@ public final class DownloaderPane extends VBox {
     private final VBox progressContainer;
     private ExplorerPane explorerPane;
 
-    public DownloaderPane(ScripRepository scripRepository,
+    public DownloaderPane(ScripDataDownloader scripDataDownloader,
                           CompositeBarDataDownloader compositeBarDataDownloader,
                           CollectionResolver collectionResolver) {
-        this.scripDownloader = new ScripDataDownloader(scripRepository);
+        this.scripDownloader = scripDataDownloader;
         this.barDownloader = compositeBarDataDownloader;
         this.exchangeCombo = buildExchangeCombo();
         this.forceDownloadCheck = buildCheckBox(FORCE_DOWNLOAD_LABEL, false);

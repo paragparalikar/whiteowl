@@ -11,10 +11,10 @@ import com.whiteowl.client.kite.model.KiteGttTriggerId;
 import com.whiteowl.client.kite.model.KiteGttType;
 import com.whiteowl.client.kite.model.KiteHolding;
 import com.whiteowl.client.kite.model.KiteInterval;
-import com.whiteowl.client.kite.model.KiteLimitType;
 import com.whiteowl.client.kite.model.KiteMargin;
 import com.whiteowl.client.kite.model.KiteOrder;
 import com.whiteowl.client.kite.model.KiteOrderId;
+import com.whiteowl.client.kite.model.KiteOrderVariety;
 import com.whiteowl.client.kite.model.KitePosition;
 import com.whiteowl.client.kite.model.KitePositions;
 import com.whiteowl.client.kite.model.KiteProfile;
@@ -70,7 +70,7 @@ public final class KiteHttpApi implements KiteApi {
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
                 .cookieHandler(cookieManager)
-                .followRedirects(HttpClient.Redirect.NORMAL)
+                .followRedirects(HttpClient.Redirect.ALWAYS)
                 .build();
         log.info("KiteHttpApi initialized for user={}", credentials.getUsername());
     }
@@ -132,21 +132,21 @@ public final class KiteHttpApi implements KiteApi {
 
     @Override
     public KiteOrderId createOrder(KiteOrder order) {
-        String url = URL_BASE + URL_ORDERS + "/" + order.getVariety().name();
+        String url = URL_BASE + URL_ORDERS + "/" + resolveVariety(order.getVariety());
         Map<String, String> params = buildOrderParams(order);
         return executePost(url, params, new TypeReference<KiteResponse<KiteOrderId>>() {});
     }
 
     @Override
     public KiteOrderId updateOrder(KiteOrder order) {
-        String url = URL_BASE + URL_ORDERS + "/" + order.getVariety().name() + "/" + order.getOrderId();
+        String url = URL_BASE + URL_ORDERS + "/" + resolveVariety(order.getVariety()) + "/" + order.getOrderId();
         Map<String, String> params = buildOrderParams(order);
         return executePut(url, params, new TypeReference<KiteResponse<KiteOrderId>>() {});
     }
 
     @Override
     public KiteOrderId cancelOrder(KiteOrder order) {
-        String url = URL_BASE + URL_ORDERS + "/" + order.getVariety().name() + "/" + order.getOrderId();
+        String url = URL_BASE + URL_ORDERS + "/" + resolveVariety(order.getVariety()) + "/" + order.getOrderId();
         return executeDelete(url, new TypeReference<KiteResponse<KiteOrderId>>() {});
     }
 
@@ -258,22 +258,30 @@ public final class KiteHttpApi implements KiteApi {
     private <T> T executeGet(String url, TypeReference<KiteResponse<T>> typeRef) {
         ensureLoggedIn();
         HttpResponse<String> response = sendGet(url);
+        if (isAuthFailure(response, url)) {
+            response = sendGet(url);
+        }
         return handleResponse(response, typeRef, url);
     }
 
     private <T> T executePost(String url, Map<String, String> params, TypeReference<KiteResponse<T>> typeRef) {
         ensureLoggedIn();
-        HttpResponse<String> response = sendPost(url, formEncode(params));
+        String body = formEncode(params);
+        HttpResponse<String> response = sendPost(url, body);
+        if (isAuthFailure(response, url)) {
+            response = sendPost(url, body);
+        }
         return handleResponse(response, typeRef, url);
     }
 
     private <T> T executePut(String url, Map<String, String> params, TypeReference<KiteResponse<T>> typeRef) {
         ensureLoggedIn();
-        HttpRequest request = buildRequest(url)
-                .PUT(HttpRequest.BodyPublishers.ofString(formEncode(params)))
-                .header("Content-Type", CONTENT_TYPE_FORM)
-                .build();
+        String body = formEncode(params);
+        HttpRequest request = buildPutRequest(url, body);
         HttpResponse<String> response = send(request);
+        if (isAuthFailure(response, url)) {
+            response = send(buildPutRequest(url, body));
+        }
         return handleResponse(response, typeRef, url);
     }
 
@@ -281,22 +289,36 @@ public final class KiteHttpApi implements KiteApi {
         ensureLoggedIn();
         HttpRequest request = buildRequest(url).DELETE().build();
         HttpResponse<String> response = send(request);
+        if (isAuthFailure(response, url)) {
+            response = send(buildRequest(url).DELETE().build());
+        }
         return handleResponse(response, typeRef, url);
     }
 
-    private <T> T handleResponse(HttpResponse<String> response, TypeReference<KiteResponse<T>> typeRef, String url) {
+    private HttpRequest buildPutRequest(String url, String body) {
+        return buildRequest(url)
+                .PUT(HttpRequest.BodyPublishers.ofString(body))
+                .header("Content-Type", CONTENT_TYPE_FORM)
+                .build();
+    }
+
+    private boolean isAuthFailure(HttpResponse<String> response, String url) {
         int statusCode = response.statusCode();
         if (statusCode == HTTP_UNAUTHORIZED || statusCode == HTTP_FORBIDDEN) {
-            log.warn("Auth failure status={} url={} headers={} body={}",
-                    statusCode, url, response.headers().map(), response.body());
+            log.warn("Auth failure status={} url={}, re-logging in", statusCode, url);
             enctoken = null;
             if (sessionStore != null) {
                 sessionStore.clear();
             }
             login();
-            return executeGet(url, typeRef);
+            return true;
         }
-        if (statusCode >= HTTP_REDIRECT_THRESHOLD) {
+        return false;
+    }
+
+    private <T> T handleResponse(HttpResponse<String> response, TypeReference<KiteResponse<T>> typeRef, String url) {
+        int statusCode = response.statusCode();
+        if (statusCode >= HTTP_ERROR_THRESHOLD) {
             log.error("HTTP error status={} url={} headers={} body={}",
                     statusCode, url, response.headers().map(), response.body());
             throw new KiteApiException(statusCode, response.body());
@@ -347,15 +369,13 @@ public final class KiteHttpApi implements KiteApi {
                 .header("Accept", "application/json, text/plain, */*")
                 .header("Accept-Encoding", "gzip, deflate")
                 .header("Accept-Language", "en-US,en;q=0.9")
-                .header("Upgrade-Insecure-Requests", "1")
-                .header("sec-fetch-user", "?1")
-                .header("sec-fetch-site", "none")
+                .header("sec-fetch-dest", "empty")
+                .header("sec-fetch-mode", "cors")
+                .header("sec-fetch-site", "same-origin")
                 .header("sec-ch-ua-mobile", "?0")
-                .header("sec-fetch-dest", "document")
-                .header("sec-fetch-mode", "navigate")
                 .header("sec-ch-ua-platform", "\"Windows\"")
-                .header("sec-ch-ua", "\"Google Chrome\";v=\"117\", \"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"117\"")
-                .header("x-kite-version", "3.0.7")
+                .header("sec-ch-ua", SEC_CH_UA)
+                .header("x-kite-version", KITE_VERSION)
                 .header("x-kite-app-uuid", uuid.toString())
                 .header("x-kite-userid", credentials.getUsername());
         if (enctoken != null) {
@@ -414,31 +434,26 @@ public final class KiteHttpApi implements KiteApi {
 
     private Map<String, String> buildOrderParams(KiteOrder order) {
         Map<String, String> params = new LinkedHashMap<>();
-        params.put("user_id", credentials.getUsername());
-        params.put("tradingsymbol", order.getTradingsymbol());
+        params.put("variety", resolveVariety(order.getVariety()));
         params.put("exchange", order.getExchange().name());
+        params.put("tradingsymbol", order.getTradingsymbol());
         params.put("transaction_type", order.getTransactionType().name());
         params.put("order_type", order.getLimitType().name());
         params.put("quantity", String.valueOf(order.getQuantity()));
+        params.put("price", String.valueOf(order.getPrice()));
         params.put("product", order.getProduct().name());
         params.put("validity", order.getValidity().name());
         params.put("disclosed_quantity", String.valueOf(order.getDisclosedQuantity()));
-        if (KiteLimitType.LIMIT == order.getLimitType() || KiteLimitType.SL == order.getLimitType()) {
-            params.put("price", String.valueOf(order.getPrice()));
-        }
-        if (KiteLimitType.SL == order.getLimitType() || KiteLimitType.SLM == order.getLimitType()) {
-            params.put("trigger_price", String.valueOf(order.getTriggerPrice()));
-        }
-        if (order.getStoploss() > 0) {
-            params.put("stoploss", String.valueOf(order.getStoploss()));
-        }
-        if (order.getSquareoff() > 0) {
-            params.put("squareoff", String.valueOf(order.getSquareoff()));
-        }
-        if (order.getTrailingStoploss() > 0) {
-            params.put("trailing_stoploss", String.valueOf(order.getTrailingStoploss()));
-        }
+        params.put("trigger_price", String.valueOf(order.getTriggerPrice()));
+        params.put("squareoff", String.valueOf(order.getSquareoff()));
+        params.put("stoploss", String.valueOf(order.getStoploss()));
+        params.put("trailing_stoploss", String.valueOf(order.getTrailingStoploss()));
+        params.put("user_id", credentials.getUsername());
         return params;
+    }
+
+    private String resolveVariety(KiteOrderVariety variety) {
+        return variety.name().toLowerCase();
     }
 
     private Map<String, String> buildGttParams(KiteGttCondition condition, List<KiteGttOrder> orders, KiteGttType type, String expiresAt) {

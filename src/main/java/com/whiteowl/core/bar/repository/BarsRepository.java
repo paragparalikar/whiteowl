@@ -28,4 +28,6 @@ public interface BarsRepository {
 
     void delete(String scripId, Timeframe timeframe) throws IOException;
 
+    void rename(String oldScripId, String newScripId) throws IOException;
+
 }

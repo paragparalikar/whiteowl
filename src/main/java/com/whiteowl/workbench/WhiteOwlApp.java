@@ -13,9 +13,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.InputStream;
 import java.util.function.Supplier;
-import java.util.logging.LogManager;
 
 @Slf4j
 public final class WhiteOwlApp extends Application {
@@ -44,6 +42,7 @@ public final class WhiteOwlApp extends Application {
     private static final String DIALOG_CSS = "/css/dialog.css";
     private static final String NOTE_EDITOR_CSS = "/css/note-editor.css";
     private static final String NOTE_LIST_CSS = "/css/note-list.css";
+    private static final String LOG_VIEWER_CSS = "/css/log-viewer.css";
     private static final String PORTFOLIO_ID_PROP = "kite.portfolio.id";
     private static final String USERNAME_PROP = "kite.username";
     private static final String PASSWORD_PROP = "kite.password";
@@ -164,7 +163,8 @@ public final class WhiteOwlApp extends Application {
                 resolveStylesheet(STATUS_BAR_CSS),
                 resolveStylesheet(DIALOG_CSS),
                 resolveStylesheet(NOTE_EDITOR_CSS),
-                resolveStylesheet(NOTE_LIST_CSS)
+                resolveStylesheet(NOTE_LIST_CSS),
+                resolveStylesheet(LOG_VIEWER_CSS)
         );
     }
 
@@ -190,13 +190,7 @@ public final class WhiteOwlApp extends Application {
     }
 
     private void configureLogging() {
-        try (InputStream stream = getClass().getClassLoader().getResourceAsStream("logging.properties")) {
-            if (stream != null) {
-                LogManager.getLogManager().readConfiguration(stream);
-            }
-        } catch (Exception e) {
-            log.warn("Failed to load logging configuration");
-        }
+        log.debug(INIT_LOGGING);
     }
 
     public static void main(String[] args) {

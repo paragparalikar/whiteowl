@@ -188,3 +188,44 @@
     -fx-text-fill: #ffffff;
     -fx-background-color: #DC2626;
 }
+
+.toggle-group-container {
+    -fx-spacing: 0;
+}
+
+.toggle-btn {
+    -fx-background-color: linear-gradient(to bottom, #3a3d40, #2b2d30);
+    -fx-text-fill: #868a91;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 0;
+    -fx-border-color: #4a4d52 #3c3f41 #2b2d30 #3c3f41;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-cursor: hand;
+}
+
+.toggle-btn:first-child {
+    -fx-background-radius: 4 0 0 4;
+    -fx-border-radius: 4 0 0 4;
+}
+
+.toggle-btn:last-child {
+    -fx-background-radius: 0 4 4 0;
+    -fx-border-radius: 0 4 4 0;
+}
+
+.toggle-btn:hover {
+    -fx-background-color: linear-gradient(to bottom, #454850, #3c3f41);
+}
+
+.toggle-btn:selected {
+    -fx-background-color: linear-gradient(to bottom, #3a6fad, #2d5c88);
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: #4a8ac7 #2d5c88 #1e4570 #2d5c88;
+}
+
+.toggle-btn:selected:hover {
+    -fx-background-color: linear-gradient(to bottom, #4580c0, #35689e);
+}

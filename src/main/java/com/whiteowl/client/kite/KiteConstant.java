@@ -15,7 +15,9 @@ public final class KiteConstant {
     public static final ObjectMapper JSON = createObjectMapper();
 
     public static final String API_KEY = "kitefront";
-    public static final String USER_AGENT_CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36";
+    public static final String USER_AGENT_CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36";
+    public static final String SEC_CH_UA = "\"Google Chrome\";v=\"149\", \"Chromium\";v=\"149\", \"Not)A;Brand\";v=\"24\"";
+    public static final String KITE_VERSION = "3.0.0";
     public static final String USER_AGENT_KITE = "kite3-web";
     public static final String WS_VERSION = "3.0.13";
 
@@ -41,7 +43,7 @@ public final class KiteConstant {
 
     public static final int HTTP_UNAUTHORIZED = 401;
     public static final int HTTP_FORBIDDEN = 403;
-    public static final int HTTP_REDIRECT_THRESHOLD = 300;
+    public static final int HTTP_ERROR_THRESHOLD = 400;
     public static final String STATUS_SUCCESS = "success";
     public static final String CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
     public static final String HEADER_AUTHORIZATION = "Authorization";

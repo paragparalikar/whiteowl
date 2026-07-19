@@ -4,6 +4,7 @@ import com.whiteowl.Context;
 import com.whiteowl.core.collection.ActiveTradesResolver;
 import com.whiteowl.core.collection.CollectionResolver;
 import com.whiteowl.core.portfolio.service.PortfolioQuantityProvider;
+import com.whiteowl.core.review.model.ReviewConfig;
 import com.whiteowl.client.kite.adapter.KiteBrokerAdapter;
 import com.whiteowl.core.account.service.ActiveAccountManager;
 import com.whiteowl.core.scrip.model.Exchange;
@@ -18,10 +19,12 @@ import com.whiteowl.core.script.ScriptRepository;
 import com.whiteowl.core.script.ScriptType;
 import com.whiteowl.workbench.backtest.BacktestPane;
 import com.whiteowl.workbench.help.ScriptReferenceWindow;
+import com.whiteowl.workbench.log.LogViewerPane;
 import com.whiteowl.workbench.backtest.BacktestResultPane;
 import com.whiteowl.workbench.charting.ChartPane;
 import com.whiteowl.workbench.charting.ChartOrderService;
 import com.whiteowl.workbench.charting.OrderBookPanel;
+import com.whiteowl.workbench.charting.OrderBookTab;
 import com.whiteowl.workbench.script.ScriptEditorPane;
 import com.whiteowl.workbench.script.ScriptsPane;
 import com.whiteowl.workbench.downloader.DownloaderPane;
@@ -76,6 +79,7 @@ public final class WorkbenchView {
     private static final String MENU_MODULES = "Modules";
     private static final String MENU_HELP = "Help";
     private static final String MENU_SCRIPT_REFERENCE = "Script Reference";
+    private static final String MENU_LOGS = "Logs";
     private static final String MENU_EXIT = "Exit";
     private static final String VIEW_ICON_STYLE = "view-icon";
     private static final String TAB_ICON_STYLE = "tab-icon";
@@ -109,6 +113,7 @@ public final class WorkbenchView {
     private final ScriptRepository rankerScriptRepo;
     private final ScriptRepository strategyScriptRepo;
     private final ScriptReferenceWindow scriptReferenceWindow = new ScriptReferenceWindow();
+    private LogViewerPane logViewerPane;
 
     public WorkbenchView(Stage stage, Context context) {
         this.context = context;
@@ -215,7 +220,7 @@ public final class WorkbenchView {
 
     private DownloaderPane ensureDownloaderPane() {
         if (downloaderPane == null) {
-            downloaderPane = new DownloaderPane(context.getScripRepository(),
+            downloaderPane = new DownloaderPane(context.getScripDataDownloader(),
                     context.getCompositeBarDataDownloader(), buildCollectionResolver());
             downloaderPane.setExplorerPane(explorerPane);
         }
@@ -288,7 +293,9 @@ public final class WorkbenchView {
                 viewCharting, viewScreener, viewRanker, viewDownloader, viewBacktest);
         MenuItem scriptRefItem = new MenuItem(MENU_SCRIPT_REFERENCE);
         scriptRefItem.setOnAction(e -> scriptReferenceWindow.show());
-        Menu helpMenu = new Menu(MENU_HELP, null, scriptRefItem);
+        MenuItem viewLogs = createViewMenuItem(MENU_LOGS, FluentUiRegularAL.CLIPBOARD_TEXT_20,
+                this::showLogViewer);
+        Menu helpMenu = new Menu(MENU_HELP, null, scriptRefItem, viewLogs);
         return new MenuBar(fileMenu, collectionsMenu, modulesMenu, helpMenu);
     }
 
@@ -512,8 +519,37 @@ public final class WorkbenchView {
                 .map(com.whiteowl.core.account.model.Account::getPositionSize)
                 .orElse(com.whiteowl.core.account.model.Account.DEFAULT_POSITION_SIZE);
         chartPane.setChartOrderService(chartOrderService, positionSize);
-        if (orderBookPanel != null) orderBookPanel.setChartOrderService(chartOrderService);
+        if (orderBookPanel != null) {
+            orderBookPanel.setChartOrderService(chartOrderService);
+            orderBookPanel.setStopLossPercentage(resolveStopLossPercentage());
+            orderBookPanel.setReviewConfig(resolveReviewConfig());
+        }
         chartPane.refreshGttOrders();
+        chartPane.refreshRegularOrders();
+    }
+
+    private double resolveStopLossPercentage() {
+        return context.getActiveAccountManager().getActiveAccount()
+                .map(com.whiteowl.core.account.model.Account::getStopLossPercentage)
+                .orElse(com.whiteowl.core.account.model.Account.DEFAULT_STOP_LOSS_PERCENTAGE);
+    }
+
+    private ReviewConfig resolveReviewConfig() {
+        return context.getActiveAccountManager().getActiveAccount()
+                .map(a -> new ReviewConfig(
+                        a.getWideStopLossPercentage(),
+                        a.getTightStopLossPercentage(),
+                        a.getMaxConcentrationPercentage(),
+                        a.getStaleHoldingDays(),
+                        a.getGttExpiryWarningDays(),
+                        a.getMinRiskRewardRatio()))
+                .orElseGet(() -> new ReviewConfig(
+                        com.whiteowl.core.account.model.Account.DEFAULT_WIDE_STOP_LOSS_PERCENTAGE,
+                        com.whiteowl.core.account.model.Account.DEFAULT_TIGHT_STOP_LOSS_PERCENTAGE,
+                        com.whiteowl.core.account.model.Account.DEFAULT_MAX_CONCENTRATION_PERCENTAGE,
+                        com.whiteowl.core.account.model.Account.DEFAULT_STALE_HOLDING_DAYS,
+                        com.whiteowl.core.account.model.Account.DEFAULT_GTT_EXPIRY_WARNING_DAYS,
+                        com.whiteowl.core.account.model.Account.DEFAULT_MIN_RISK_REWARD_RATIO));
     }
 
     private void toggleOrderBook() {
@@ -526,14 +562,17 @@ public final class WorkbenchView {
 
     private void showOrderBook() {
         if (orderBookPanel == null) {
-            orderBookPanel = new OrderBookPanel();
+            orderBookPanel = new OrderBookPanel(context.getScripRepository());
             orderBookPanel.setChartOrderService(chartOrderService);
+            orderBookPanel.setStopLossPercentage(resolveStopLossPercentage());
+            orderBookPanel.setReviewConfig(resolveReviewConfig());
             orderBookPanel.setOnCloseRequested(this::hideOrderBook);
             orderBookPanel.setOnNavigateToScrip(scripId ->
                     resolveScrip(scripId).ifPresent(scrip -> {
                         ensureChartingTab();
                         chartPane.showChart(scrip);
                     }));
+            orderBookPanel.setOnGttChanged(() -> chartPane.refreshGttOrders());
         }
         if (mainSplitPane.getItems().size() < 2) {
             mainSplitPane.getItems().add(orderBookPanel);
@@ -549,9 +588,16 @@ public final class WorkbenchView {
         orderBookVisible = false;
     }
 
-    private void refreshOrderBook() {
-        if (orderBookPanel != null && orderBookVisible) {
-            orderBookPanel.refreshAll();
+    private void refreshOrderBook(OrderBookTab tab) {
+        if (orderBookPanel == null || !orderBookVisible) return;
+        switch (tab) {
+            case ORDERS -> orderBookPanel.refreshOrders();
+            case GTTS -> orderBookPanel.refreshGtts();
+            case POSITIONS -> orderBookPanel.refreshPositions();
+            case HOLDINGS -> orderBookPanel.refreshHoldings();
+            case FUNDS -> orderBookPanel.refreshFunds();
+            case REVIEW -> {}
+            case ALL -> orderBookPanel.refreshAll();
         }
     }
 
@@ -594,6 +640,22 @@ public final class WorkbenchView {
         loader.setDaemon(true);
         loader.setName("collection-preloader");
         loader.start();
+    }
+
+    private void showLogViewer() {
+        for (Tab tab : rightTabPane.getTabs()) {
+            if (MENU_LOGS.equals(tab.getText())) {
+                rightTabPane.getSelectionModel().select(tab);
+                return;
+            }
+        }
+        if (logViewerPane == null) {
+            logViewerPane = new LogViewerPane();
+        }
+        Tab tab = new Tab(MENU_LOGS, logViewerPane);
+        tab.setGraphic(createTabIcon(FluentUiRegularAL.CLIPBOARD_TEXT_20));
+        rightTabPane.getTabs().add(tab);
+        rightTabPane.getSelectionModel().select(tab);
     }
 
     public void openScriptEditor(ScriptDescriptor descriptor, ScriptEditorPane editorPane) {

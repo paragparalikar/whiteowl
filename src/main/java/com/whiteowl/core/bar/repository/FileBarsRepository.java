@@ -202,6 +202,25 @@ public final class FileBarsRepository implements BarsRepository {
         log.debug("Deleted bar file for {} {} at {}", scripId, timeframe.name(), path);
     }
 
+    @Override
+    public void rename(String oldScripId, String newScripId) throws IOException {
+        Path oldDir = resolveScripDir(oldScripId);
+        if (!Files.exists(oldDir)) return;
+        Path newDir = resolveScripDir(newScripId);
+        if (Files.exists(newDir)) {
+            log.warn("Target bar directory already exists for {}, skipping rename from {}", newScripId, oldScripId);
+            return;
+        }
+        ensureParentExists(newDir);
+        Files.move(oldDir, newDir);
+        log.info("Renamed bar data directory from {} to {}", oldDir, newDir);
+    }
+
+    private Path resolveScripDir(String scripId) {
+        String sanitized = scripId.replace(':', File.separatorChar);
+        return baseDir.resolve(sanitized);
+    }
+
     private int skipDuplicatesForAppend(String scripId, Timeframe timeframe, Bars bars, int fromIndex, int toIndex)
             throws IOException {
         Optional<Long> latestTs = findLatestTimestamp(scripId, timeframe);

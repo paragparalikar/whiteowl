@@ -1,7 +1,10 @@
 package com.whiteowl.workbench.charting;
 
+import static com.whiteowl.core.collection.ObservableListMerger.merge;
+
 import com.whiteowl.core.gtt.model.GttOrder;
 import com.whiteowl.core.gtt.model.GttStatus;
+import com.whiteowl.core.gtt.model.OcoGttOrder;
 import com.whiteowl.core.order.model.LimitType;
 import com.whiteowl.core.order.model.Order;
 import com.whiteowl.core.order.model.OrderSide;
@@ -12,18 +15,27 @@ import com.whiteowl.core.order.model.Variety;
 import com.whiteowl.core.portfolio.model.Funds;
 import com.whiteowl.core.portfolio.model.Holding;
 import com.whiteowl.core.portfolio.model.Position;
+import com.whiteowl.core.review.model.AutofixContext;
+import com.whiteowl.core.review.model.ReviewConfig;
+import com.whiteowl.core.review.model.ReviewFinding;
+import com.whiteowl.core.review.model.ReviewFindingCode;
+import com.whiteowl.core.review.service.AccountReviewService;
 import com.whiteowl.core.scrip.model.Scrip;
+import com.whiteowl.core.scrip.repository.ScripRepository;
 import com.whiteowl.workbench.StatusBar;
 import com.whiteowl.workbench.common.ConfirmationDialog;
 import com.whiteowl.workbench.common.ScripCellGraphic;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
@@ -48,6 +60,8 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -68,11 +82,17 @@ public final class OrderBookPanel extends VBox {
     private static final String TAB_POSITIONS = "Positions";
     private static final String TAB_HOLDINGS = "Holdings";
     private static final String TAB_FUNDS = "Funds";
+    private static final String TAB_REVIEW = "Review";
     private static final String EMPTY_NO_ACCOUNT = "Connect an account to view orders";
     private static final String EMPTY_NO_ORDERS = "No orders for today";
     private static final String EMPTY_NO_GTTS = "No GTT orders";
     private static final String EMPTY_NO_POSITIONS = "No open positions";
     private static final String EMPTY_NO_HOLDINGS = "No holdings";
+    private static final String EMPTY_NO_REVIEW = "Click Run to generate review report";
+    private static final String REVIEW_LOADING = "Running review...";
+    private static final String REVIEW_COMPLETED = "Review completed: %d finding(s)";
+    private static final String REVIEW_FAILED = "Failed to run review: %s";
+    private static final String REVIEW_NO_ACCOUNT = "Connect an account to run review";
     private static final String LOADING_TEXT = "Loading...";
     private static final String REFRESHED_ORDERS = "Loaded %d orders";
     private static final String REFRESH_ORDERS_FAILED = "Failed to refresh orders: %s";
@@ -107,6 +127,7 @@ public final class OrderBookPanel extends VBox {
     private static final String EXIT_HOLDING_CONFIRM = "Exit Holding";
     private static final String EXIT_HOLDING_PLACED = "Exit order placed for holding";
     private static final String EXIT_HOLDING_FAILED = "Failed to exit holding: %s";
+    private static final long ORDER_REFRESH_DELAY_MS = 2000;
     private static final String COL_SCRIP = "Scrip";
     private static final String COL_SIDE = "Side";
     private static final String COL_TYPE = "Type";
@@ -118,6 +139,7 @@ public final class OrderBookPanel extends VBox {
     private static final String COL_ORDER_PRICE = "Order Price";
     private static final String COL_LTP = "LTP";
     private static final String COL_PNL = "P&L";
+    private static final String COL_PNL_PCT = "P&L%";
     private static final String COL_EXCHANGE = "Exchange";
     private static final String COL_ISIN = "ISIN";
     private static final String COL_CLOSE = "Close";
@@ -128,7 +150,10 @@ public final class OrderBookPanel extends VBox {
     private static final String COL_MESSAGE = "Message";
     private static final String COL_CREATED = "Created";
     private static final String COL_ACTIONS = "";
+    private static final String COL_CODE = "Code";
+    private static final String COL_FINDING = "Finding";
     private static final String DASH = "\u2014";
+    private static final String SCRIP_ID_SEPARATOR = ":";
     private static final int ICON_SIZE = 14;
     private static final int ACTION_ICON_SIZE = 12;
     private static final int ACTION_COLUMN_WIDTH = 70;
@@ -146,7 +171,30 @@ public final class OrderBookPanel extends VBox {
     private static final String COLOR_ERROR = "#ff6b68";
     private static final String COLOR_POSITIVE = "#6a8759";
     private static final String COLOR_NEGATIVE = "#ff6b68";
+    private static final String COLOR_REVIEW_CODE = "#cc7832";
     private static final String STYLE_TEXT_FILL = "-fx-text-fill: %s;";
+    private static final String REVIEW_RUN_BUTTON_STYLE = "review-run-button";
+    private static final String REVIEW_CLEAR_BUTTON_STYLE = "review-clear-button";
+    private static final String REVIEW_TABLE_STYLE = "review-table";
+    private static final String REVIEW_REMOVE_BUTTON_STYLE = "review-remove-button";
+    private static final String REVIEW_AUTOFIX_BUTTON_STYLE = "review-autofix-button";
+    private static final String REVIEW_RUN_LABEL = "Run";
+    private static final String REVIEW_CLEAR_LABEL = "Clear";
+    private static final String REVIEW_AUTOFIX_LABEL = "Autofix";
+    private static final String REVIEW_REMOVE_LABEL = "Remove";
+    private static final String AUTOFIX_TITLE = "Confirm Autofix";
+    private static final String AUTOFIX_CONFIRM = "Apply Fix";
+    private static final String AUTOFIX_NO_ACCOUNT = "Connect an account to run autofix";
+    private static final String AUTOFIX_SUCCESS = "Autofix applied successfully";
+    private static final String AUTOFIX_FAILED = "Autofix failed: %s";
+    private static final String AUTOFIX_BULK_TITLE = "Confirm Autofix (%d finding(s))";
+    private static final String AUTOFIX_BULK_CONFIRM = "Apply All";
+    private static final String AUTOFIX_BULK_NONE = "No findings selected for autofix";
+    private static final String AUTOFIX_BULK_SUCCESS = "Autofix applied to %d finding(s)";
+    private static final String AUTOFIX_IN_PROGRESS = "Applying autofix...";
+    private static final int REVIEW_SELECT_COL_WIDTH = 30;
+    private static final int REVIEW_CODE_COL_WIDTH = 100;
+    private static final int REVIEW_ACTION_COL_WIDTH = 240;
     private static final String FUNDS_EQUITY_CASH = "Equity Available Cash";
     private static final String FUNDS_EQUITY_COLLATERAL = "Equity Collateral";
     private static final String FUNDS_EQUITY_INTRADAY = "Intraday Payin";
@@ -161,22 +209,37 @@ public final class OrderBookPanel extends VBox {
     private static final String FUNDS_COMMODITY_COLLATERAL = "Commodity Collateral";
     private static final String FUNDS_COMMODITY_NET = "Commodity Net";
 
+    private final ObservableList<Order> ordersData = FXCollections.observableArrayList();
+    private final ObservableList<GttOrder> gttData = FXCollections.observableArrayList();
+    private final ObservableList<Position> positionsData = FXCollections.observableArrayList();
+    private final ObservableList<Holding> holdingsData = FXCollections.observableArrayList();
+    private final ObservableList<ReviewFinding> reviewData = FXCollections.observableArrayList();
     private final TableView<Order> ordersTable;
     private final TableView<GttOrder> gttTable;
     private final TableView<Position> positionsTable;
     private final TableView<Holding> holdingsTable;
+    private final TableView<ReviewFinding> reviewTable;
     private final GridPane fundsGrid;
     private final TabPane tabPane;
+    private final ScripRepository scripRepository;
+    private final AccountReviewService reviewService;
     private ChartOrderService chartOrderService;
+    private double stopLossPercentage;
+    private ReviewConfig reviewConfig;
     private Consumer<String> onNavigateToScrip;
     private Runnable onCloseRequested;
+    private Runnable onGttChanged;
+    private boolean suppressNavigation;
 
-    public OrderBookPanel() {
+    public OrderBookPanel(ScripRepository scripRepository) {
+        this.scripRepository = scripRepository;
+        this.reviewService = new AccountReviewService(scripRepository);
         getStyleClass().add(PANEL_STYLE);
         ordersTable = buildOrdersTable();
         gttTable = buildGttTable();
         positionsTable = buildPositionsTable();
         holdingsTable = buildHoldingsTable();
+        reviewTable = buildReviewTable();
         fundsGrid = buildFundsGrid();
         tabPane = buildTabPane();
         HBox headerButtons = buildHeaderButtons();
@@ -209,12 +272,28 @@ public final class OrderBookPanel extends VBox {
         }
     }
 
+    public void setStopLossPercentage(double stopLossPercentage) {
+        this.stopLossPercentage = stopLossPercentage;
+    }
+
+    public void setReviewConfig(ReviewConfig reviewConfig) {
+        this.reviewConfig = reviewConfig;
+    }
+
     public void setOnNavigateToScrip(Consumer<String> handler) {
         this.onNavigateToScrip = handler;
     }
 
     public void setOnCloseRequested(Runnable handler) {
         this.onCloseRequested = handler;
+    }
+
+    public void setOnGttChanged(Runnable handler) {
+        this.onGttChanged = handler;
+    }
+
+    private void fireGttChanged() {
+        if (onGttChanged != null) onGttChanged.run();
     }
 
     public void refreshAll() {
@@ -237,7 +316,12 @@ public final class OrderBookPanel extends VBox {
                 return List.<Order>of();
             }
         }).thenAccept(orders -> Platform.runLater(() -> {
-            ordersTable.setItems(FXCollections.observableArrayList(orders));
+            suppressNavigation = true;
+            try {
+                merge(ordersData, orders, Order::getId);
+            } finally {
+                suppressNavigation = false;
+            }
             ordersTable.setPlaceholder(new Label(EMPTY_NO_ORDERS));
         }));
     }
@@ -254,7 +338,13 @@ public final class OrderBookPanel extends VBox {
                 return List.<GttOrder>of();
             }
         }).thenAccept(gtts -> Platform.runLater(() -> {
-            gttTable.setItems(FXCollections.observableArrayList(gtts));
+            suppressNavigation = true;
+            try {
+                merge(gttData, gtts, GttOrder::getId);
+                gttTable.sort();
+            } finally {
+                suppressNavigation = false;
+            }
             gttTable.setPlaceholder(new Label(EMPTY_NO_GTTS));
         }));
     }
@@ -271,7 +361,12 @@ public final class OrderBookPanel extends VBox {
                 return List.<Position>of();
             }
         }).thenAccept(positions -> Platform.runLater(() -> {
-            positionsTable.setItems(FXCollections.observableArrayList(positions));
+            suppressNavigation = true;
+            try {
+                merge(positionsData, positions, p -> p.getScrip().getId() + p.getProduct());
+            } finally {
+                suppressNavigation = false;
+            }
             positionsTable.setPlaceholder(new Label(EMPTY_NO_POSITIONS));
         }));
     }
@@ -288,7 +383,13 @@ public final class OrderBookPanel extends VBox {
                 return List.<Holding>of();
             }
         }).thenAccept(holdings -> Platform.runLater(() -> {
-            holdingsTable.setItems(FXCollections.observableArrayList(holdings));
+            suppressNavigation = true;
+            try {
+                merge(holdingsData, holdings, h -> h.getScrip().getId() + h.getExchange());
+                holdingsTable.sort();
+            } finally {
+                suppressNavigation = false;
+            }
             holdingsTable.setPlaceholder(new Label(EMPTY_NO_HOLDINGS));
         }));
     }
@@ -307,14 +408,21 @@ public final class OrderBookPanel extends VBox {
     }
 
     private void clearAll() {
-        ordersTable.setItems(FXCollections.observableArrayList());
-        gttTable.setItems(FXCollections.observableArrayList());
-        positionsTable.setItems(FXCollections.observableArrayList());
-        holdingsTable.setItems(FXCollections.observableArrayList());
+        suppressNavigation = true;
+        try {
+            ordersData.clear();
+            gttData.clear();
+            positionsData.clear();
+            holdingsData.clear();
+            reviewData.clear();
+        } finally {
+            suppressNavigation = false;
+        }
         ordersTable.setPlaceholder(new Label(EMPTY_NO_ACCOUNT));
         gttTable.setPlaceholder(new Label(EMPTY_NO_ACCOUNT));
         positionsTable.setPlaceholder(new Label(EMPTY_NO_ACCOUNT));
         holdingsTable.setPlaceholder(new Label(EMPTY_NO_ACCOUNT));
+        reviewTable.setPlaceholder(new Label(REVIEW_NO_ACCOUNT));
         populateFundsGrid(Funds.builder().build());
     }
 
@@ -346,12 +454,14 @@ public final class OrderBookPanel extends VBox {
         ScrollPane fundsScroll = new ScrollPane(fundsGrid);
         fundsScroll.setFitToWidth(true);
         fundsScroll.setStyle("-fx-background-color: transparent;");
+        VBox reviewContent = buildReviewContent();
         pane.getTabs().addAll(
                 createTab(TAB_ORDERS, FluentUiRegularAL.LIST_20, ordersTable),
                 createTab(TAB_GTTS, FluentUiRegularAL.CLOCK_ALARM_20, gttTable),
                 createTab(TAB_POSITIONS, FluentUiRegularAL.ARROW_TRENDING_20, positionsTable),
                 createTab(TAB_HOLDINGS, FluentUiRegularAL.BRIEFCASE_20, holdingsTable),
-                createTab(TAB_FUNDS, FluentUiRegularMZ.MONEY_20, fundsScroll));
+                createTab(TAB_FUNDS, FluentUiRegularMZ.MONEY_20, fundsScroll),
+                createTab(TAB_REVIEW, FluentUiRegularMZ.SHIELD_20, reviewContent));
         return pane;
     }
 
@@ -366,13 +476,17 @@ public final class OrderBookPanel extends VBox {
 
     @SuppressWarnings("unchecked")
     private TableView<Order> buildOrdersTable() {
-        TableView<Order> table = new TableView<>();
+        TableView<Order> table = new TableView<>(ordersData);
         table.getStyleClass().add(TABLE_STYLE);
         table.setPlaceholder(new Label(EMPTY_NO_ACCOUNT));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        TableColumn<Order, String> scripCol = new TableColumn<>(COL_SCRIP);
-        scripCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getScripId()));
+        TableColumn<Order, Scrip> scripCol = new TableColumn<>(COL_SCRIP);
+        scripCol.setCellValueFactory(c -> new SimpleObjectProperty<>(resolveScrip(c.getValue().getScripId())));
+        scripCol.setCellFactory(col -> createScripCell());
         scripCol.setPrefWidth(100);
+        TableColumn<Order, String> exchCol = new TableColumn<>(COL_EXCHANGE);
+        exchCol.setCellValueFactory(c -> new SimpleStringProperty(extractExchange(c.getValue().getScripId())));
+        exchCol.setPrefWidth(55);
         TableColumn<Order, OrderSide> sideCol = new TableColumn<>(COL_SIDE);
         sideCol.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getSide()));
         sideCol.setCellFactory(col -> createSideCell());
@@ -411,7 +525,7 @@ public final class OrderBookPanel extends VBox {
         actionsCol.setCellFactory(col -> createOrderActionCell());
         actionsCol.setPrefWidth(ACTION_COLUMN_WIDTH);
         actionsCol.setSortable(false);
-        table.getColumns().addAll(scripCol, sideCol, typeCol, qtyCol, priceCol,
+        table.getColumns().addAll(scripCol, exchCol, sideCol, typeCol, qtyCol, priceCol,
                 triggerCol, avgCol, statusCol, actionsCol);
         table.setRowFactory(tv -> {
             TableRow<Order> row = new TableRow<>();
@@ -428,13 +542,17 @@ public final class OrderBookPanel extends VBox {
 
     @SuppressWarnings("unchecked")
     private TableView<GttOrder> buildGttTable() {
-        TableView<GttOrder> table = new TableView<>();
+        TableView<GttOrder> table = new TableView<>(gttData);
         table.getStyleClass().add(TABLE_STYLE);
         table.setPlaceholder(new Label(EMPTY_NO_ACCOUNT));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        TableColumn<GttOrder, String> scripCol = new TableColumn<>(COL_SCRIP);
-        scripCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getScripId()));
+        TableColumn<GttOrder, Scrip> scripCol = new TableColumn<>(COL_SCRIP);
+        scripCol.setCellValueFactory(c -> new SimpleObjectProperty<>(resolveScrip(c.getValue().getScripId())));
+        scripCol.setCellFactory(col -> createScripCell());
         scripCol.setPrefWidth(100);
+        TableColumn<GttOrder, String> exchCol = new TableColumn<>(COL_EXCHANGE);
+        exchCol.setCellValueFactory(c -> new SimpleStringProperty(extractExchange(c.getValue().getScripId())));
+        exchCol.setPrefWidth(55);
         TableColumn<GttOrder, OrderSide> sideCol = new TableColumn<>(COL_SIDE);
         sideCol.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getSide()));
         sideCol.setCellFactory(col -> createGttSideCell());
@@ -464,8 +582,9 @@ public final class OrderBookPanel extends VBox {
         actionsCol.setCellFactory(col -> createGttActionCell());
         actionsCol.setPrefWidth(ACTION_COLUMN_WIDTH);
         actionsCol.setSortable(false);
-        table.getColumns().addAll(scripCol, sideCol, typeCol, qtyCol, triggerCol,
+        table.getColumns().addAll(scripCol, exchCol, sideCol, typeCol, qtyCol, triggerCol,
                 orderPriceCol, ltpCol, statusCol, actionsCol);
+        table.getSortOrder().add(sideCol);
         table.setRowFactory(tv -> {
             TableRow<GttOrder> row = new TableRow<>();
             row.setOnMouseClicked(e -> {
@@ -481,7 +600,7 @@ public final class OrderBookPanel extends VBox {
 
     @SuppressWarnings("unchecked")
     private TableView<Position> buildPositionsTable() {
-        TableView<Position> table = new TableView<>();
+        TableView<Position> table = new TableView<>(positionsData);
         table.getStyleClass().add(TABLE_STYLE);
         table.setPlaceholder(new Label(EMPTY_NO_ACCOUNT));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
@@ -489,6 +608,12 @@ public final class OrderBookPanel extends VBox {
         scripCol.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getScrip()));
         scripCol.setCellFactory(col -> createScripCell());
         scripCol.setPrefWidth(100);
+        TableColumn<Position, String> exchCol = new TableColumn<>(COL_EXCHANGE);
+        exchCol.setCellValueFactory(c -> {
+            Scrip s = c.getValue().getScrip();
+            return new SimpleStringProperty(s != null && s.getExchange() != null ? s.getExchange().name() : DASH);
+        });
+        exchCol.setPrefWidth(55);
         TableColumn<Position, String> productCol = new TableColumn<>(COL_PRODUCT);
         productCol.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getProduct() != null ? c.getValue().getProduct().name() : DASH));
@@ -506,12 +631,21 @@ public final class OrderBookPanel extends VBox {
         pnlCol.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getPnl()));
         pnlCol.setCellFactory(col -> createPnlCell());
         pnlCol.setPrefWidth(80);
+        TableColumn<Position, Float> pnlPctCol = new TableColumn<>(COL_PNL_PCT);
+        pnlPctCol.setCellValueFactory(c -> {
+            Position p = c.getValue();
+            float cost = p.getAveragePrice() * Math.abs(p.getQuantity());
+            float pct = cost != 0 ? (p.getPnl() / cost) * 100 : 0;
+            return new SimpleObjectProperty<>(pct);
+        });
+        pnlPctCol.setCellFactory(col -> createPercentChangeCell());
+        pnlPctCol.setPrefWidth(70);
         TableColumn<Position, Position> actionsCol = new TableColumn<>(COL_ACTIONS);
         actionsCol.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue()));
         actionsCol.setCellFactory(col -> createPositionActionCell());
         actionsCol.setPrefWidth(40);
         actionsCol.setSortable(false);
-        table.getColumns().addAll(scripCol, productCol, qtyCol, avgCol, ltpCol, pnlCol, actionsCol);
+        table.getColumns().addAll(scripCol, exchCol, productCol, qtyCol, avgCol, ltpCol, pnlCol, pnlPctCol, actionsCol);
         table.setRowFactory(tv -> {
             TableRow<Position> row = new TableRow<>();
             row.setOnMouseClicked(e -> {
@@ -527,7 +661,7 @@ public final class OrderBookPanel extends VBox {
 
     @SuppressWarnings("unchecked")
     private TableView<Holding> buildHoldingsTable() {
-        TableView<Holding> table = new TableView<>();
+        TableView<Holding> table = new TableView<>(holdingsData);
         table.getStyleClass().add(TABLE_STYLE);
         table.setPlaceholder(new Label(EMPTY_NO_ACCOUNT));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
@@ -552,12 +686,21 @@ public final class OrderBookPanel extends VBox {
         closeCol.setPrefWidth(70);
         TableColumn<Holding, String> valueCol = new TableColumn<>(COL_CURRENT_VALUE);
         valueCol.setCellValueFactory(c -> new SimpleStringProperty(
-                formatPrice(c.getValue().getLastPrice() * c.getValue().getQuantity())));
+                formatPrice(c.getValue().getLastPrice() * (c.getValue().getQuantity() + c.getValue().getT1Quantity()))));
         valueCol.setPrefWidth(80);
         TableColumn<Holding, Float> pnlCol = new TableColumn<>(COL_PNL);
         pnlCol.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getPnl()));
         pnlCol.setCellFactory(col -> createPnlCell());
         pnlCol.setPrefWidth(80);
+        TableColumn<Holding, Float> pnlPctCol = new TableColumn<>(COL_PNL_PCT);
+        pnlPctCol.setCellValueFactory(c -> {
+            Holding h = c.getValue();
+            float cost = h.getAveragePrice() * (h.getQuantity() + h.getT1Quantity());
+            float pct = cost != 0 ? (h.getPnl() / cost) * 100 : 0;
+            return new SimpleObjectProperty<>(pct);
+        });
+        pnlPctCol.setCellFactory(col -> createPercentChangeCell());
+        pnlPctCol.setPrefWidth(70);
         TableColumn<Holding, Float> dayChgCol = new TableColumn<>(COL_DAY_CHG);
         dayChgCol.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getDayChangePercentage()));
         dayChgCol.setCellFactory(col -> createPercentChangeCell());
@@ -577,7 +720,9 @@ public final class OrderBookPanel extends VBox {
         actionsCol.setPrefWidth(40);
         actionsCol.setSortable(false);
         table.getColumns().addAll(scripCol, exchCol, qtyCol, avgCol, ltpCol, closeCol,
-                valueCol, pnlCol, dayChgCol, t1Col, productCol, isinCol, actionsCol);
+                valueCol, pnlCol, pnlPctCol, dayChgCol, t1Col, productCol, isinCol, actionsCol);
+        pnlPctCol.setSortType(TableColumn.SortType.DESCENDING);
+        table.getSortOrder().add(pnlPctCol);
         table.setRowFactory(tv -> {
             TableRow<Holding> row = new TableRow<>();
             row.setOnMouseClicked(e -> {
@@ -770,7 +915,11 @@ public final class OrderBookPanel extends VBox {
                 try {
                     chartOrderService.cancelOrder(order);
                     StatusBar.showSuccess(ORDER_CANCELLED);
-                    Platform.runLater(this::refreshOrders);
+                    Platform.runLater(() -> {
+                        order.setStatus(OrderStatus.CANCELLED);
+                        ordersTable.refresh();
+                    });
+                    scheduleDelayedRefresh();
                 } catch (Exception ex) {
                     log.error("Failed to cancel order", ex);
                     StatusBar.showError(String.format(ORDER_CANCEL_FAILED, extractMessage(ex)));
@@ -907,7 +1056,7 @@ public final class OrderBookPanel extends VBox {
     }
 
     private void navigateToScrip(String scripId) {
-        if (onNavigateToScrip != null && scripId != null) {
+        if (!suppressNavigation && onNavigateToScrip != null && scripId != null) {
             onNavigateToScrip.accept(scripId);
         }
     }
@@ -1028,6 +1177,28 @@ public final class OrderBookPanel extends VBox {
         return String.format("%,.2f", value);
     }
 
+    private void scheduleDelayedRefresh() {
+        CompletableFuture.delayedExecutor(ORDER_REFRESH_DELAY_MS, TimeUnit.MILLISECONDS)
+                .execute(this::refreshOrders);
+    }
+
+    private Scrip resolveScrip(String scripId) {
+        if (scripId == null) return null;
+        return scripRepository.findById(scripId).orElse(null);
+    }
+
+    private String extractExchange(String scripId) {
+        if (scripId == null) return DASH;
+        int idx = scripId.indexOf(SCRIP_ID_SEPARATOR);
+        return idx > 0 ? scripId.substring(0, idx) : DASH;
+    }
+
+    private String extractSymbol(String scripId) {
+        if (scripId == null) return DASH;
+        int idx = scripId.indexOf(SCRIP_ID_SEPARATOR);
+        return idx > 0 ? scripId.substring(idx + 1) : scripId;
+    }
+
     private String extractMessage(Exception ex) {
         String msg = ex.getMessage();
         if (msg == null) return ex.getClass().getSimpleName();
@@ -1038,6 +1209,245 @@ public final class OrderBookPanel extends VBox {
             if (end > start) return msg.substring(start, end);
         }
         return msg.length() > 80 ? msg.substring(0, 80) : msg;
+    }
+
+    @SuppressWarnings("unchecked")
+    private TableView<ReviewFinding> buildReviewTable() {
+        TableView<ReviewFinding> table = new TableView<>(reviewData);
+        table.getStyleClass().addAll(TABLE_STYLE, REVIEW_TABLE_STYLE);
+        table.setPlaceholder(new Label(EMPTY_NO_REVIEW));
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        CheckBox selectAllCheckBox = new CheckBox();
+        selectAllCheckBox.setFocusTraversable(false);
+        selectAllCheckBox.setOnAction(e -> reviewData.forEach(
+                f -> f.selectedProperty().set(selectAllCheckBox.isSelected())));
+        TableColumn<ReviewFinding, Boolean> selectCol = new TableColumn<>();
+        selectCol.setGraphic(selectAllCheckBox);
+        selectCol.setCellValueFactory(c -> c.getValue().selectedProperty());
+        selectCol.setCellFactory(col -> new TableCell<>() {
+            private final CheckBox checkBox = new CheckBox();
+            private BooleanProperty boundProperty;
+            {
+                checkBox.setFocusTraversable(false);
+            }
+            @Override
+            protected void updateItem(Boolean selected, boolean empty) {
+                super.updateItem(selected, empty);
+                if (boundProperty != null) {
+                    checkBox.selectedProperty().unbindBidirectional(boundProperty);
+                    boundProperty = null;
+                }
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    boundProperty = getTableView().getItems().get(getIndex()).selectedProperty();
+                    checkBox.setSelected(boundProperty.get());
+                    checkBox.selectedProperty().bindBidirectional(boundProperty);
+                    setGraphic(checkBox);
+                }
+            }
+        });
+        selectCol.setPrefWidth(REVIEW_SELECT_COL_WIDTH);
+        selectCol.setSortable(false);
+        TableColumn<ReviewFinding, Scrip> scripCol = new TableColumn<>(COL_SCRIP);
+        scripCol.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getScrip()));
+        scripCol.setCellFactory(col -> createScripCell());
+        scripCol.setPrefWidth(100);
+        TableColumn<ReviewFinding, String> exchCol = new TableColumn<>(COL_EXCHANGE);
+        exchCol.setCellValueFactory(c -> {
+            Scrip scrip = c.getValue().getScrip();
+            String exchange = scrip != null && scrip.getExchange() != null ? scrip.getExchange().name() : DASH;
+            return new SimpleStringProperty(exchange);
+        });
+        exchCol.setPrefWidth(55);
+        TableColumn<ReviewFinding, String> codeCol = new TableColumn<>(COL_CODE);
+        codeCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCode().name()));
+        codeCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String code, boolean empty) {
+                super.updateItem(code, empty);
+                if (empty || code == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(code);
+                    setStyle(String.format(STYLE_TEXT_FILL, COLOR_REVIEW_CODE));
+                }
+            }
+        });
+        codeCol.setPrefWidth(REVIEW_CODE_COL_WIDTH);
+        TableColumn<ReviewFinding, String> findingCol = new TableColumn<>(COL_FINDING);
+        findingCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getMessage()));
+        Button runBtn = new Button(REVIEW_RUN_LABEL);
+        FontIcon runIcon = new FontIcon(FluentUiRegularMZ.PLAY_20);
+        runIcon.setIconSize(ACTION_ICON_SIZE);
+        runBtn.setGraphic(runIcon);
+        runBtn.getStyleClass().add(REVIEW_RUN_BUTTON_STYLE);
+        runBtn.setFocusTraversable(false);
+        runBtn.setOnAction(e -> runReview());
+        Button clearBtn = new Button(REVIEW_CLEAR_LABEL);
+        FontIcon clearIcon = new FontIcon(FluentUiRegularAL.DELETE_16);
+        clearIcon.setIconSize(ACTION_ICON_SIZE);
+        clearBtn.setGraphic(clearIcon);
+        clearBtn.getStyleClass().add(REVIEW_CLEAR_BUTTON_STYLE);
+        clearBtn.setFocusTraversable(false);
+        clearBtn.setOnAction(e -> reviewData.removeIf(f -> f.selectedProperty().get()));
+        Button autoFixAllBtn = new Button(REVIEW_AUTOFIX_LABEL);
+        FontIcon autoFixAllIcon = new FontIcon(FluentUiRegularMZ.WRENCH_16);
+        autoFixAllIcon.setIconSize(ACTION_ICON_SIZE);
+        autoFixAllBtn.setGraphic(autoFixAllIcon);
+        autoFixAllBtn.getStyleClass().add(REVIEW_AUTOFIX_BUTTON_STYLE);
+        autoFixAllBtn.setFocusTraversable(false);
+        autoFixAllBtn.setOnAction(e -> autofixSelected(autoFixAllBtn));
+        HBox headerButtons = new HBox(4, runBtn, autoFixAllBtn, clearBtn);
+        TableColumn<ReviewFinding, ReviewFinding> actionsCol = new TableColumn<>();
+        actionsCol.setGraphic(headerButtons);
+        actionsCol.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue()));
+        actionsCol.setCellFactory(col -> new TableCell<>() {
+            private final Button autoFixBtn = new Button(REVIEW_AUTOFIX_LABEL);
+            private final FontIcon autoFixIcon = new FontIcon(FluentUiRegularMZ.WRENCH_16);
+            private final Button removeBtn = new Button(REVIEW_REMOVE_LABEL);
+            private final FontIcon removeIcon = new FontIcon(FluentUiRegularAL.DELETE_16);
+            private final HBox box = new HBox(4, removeBtn, autoFixBtn);
+            {
+                autoFixIcon.setIconSize(ACTION_ICON_SIZE);
+                autoFixBtn.setGraphic(autoFixIcon);
+                autoFixBtn.getStyleClass().add(REVIEW_AUTOFIX_BUTTON_STYLE);
+                autoFixBtn.setFocusTraversable(false);
+                removeIcon.setIconSize(ACTION_ICON_SIZE);
+                removeBtn.setGraphic(removeIcon);
+                removeBtn.getStyleClass().add(REVIEW_REMOVE_BUTTON_STYLE);
+                removeBtn.setFocusTraversable(false);
+                removeBtn.setOnAction(e -> {
+                    ReviewFinding finding = getTableView().getItems().get(getIndex());
+                    reviewData.remove(finding);
+                });
+                autoFixBtn.setOnAction(e -> {
+                    ReviewFinding finding = getTableView().getItems().get(getIndex());
+                    autofixSingle(finding, autoFixBtn);
+                });
+            }
+            @Override
+            protected void updateItem(ReviewFinding finding, boolean empty) {
+                super.updateItem(finding, empty);
+                setGraphic(empty || finding == null ? null : box);
+            }
+        });
+        actionsCol.setPrefWidth(REVIEW_ACTION_COL_WIDTH);
+        actionsCol.setSortable(false);
+        table.getColumns().addAll(selectCol, scripCol, exchCol, codeCol, findingCol, actionsCol);
+        table.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal.getScrip() != null) {
+                navigateToScrip(newVal.getScrip().getId());
+            }
+        });
+        return table;
+    }
+
+    private VBox buildReviewContent() {
+        VBox content = new VBox(reviewTable);
+        VBox.setVgrow(reviewTable, Priority.ALWAYS);
+        return content;
+    }
+
+    private void runReview() {
+        if (chartOrderService == null) {
+            StatusBar.showError(REVIEW_NO_ACCOUNT);
+            return;
+        }
+        reviewTable.setPlaceholder(new Label(REVIEW_LOADING));
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                List<Holding> holdings = chartOrderService.fetchHoldings();
+                List<Position> positions = chartOrderService.fetchPositions();
+                List<GttOrder> gtts = chartOrderService.fetchGtts();
+                List<OcoGttOrder> ocoGtts = chartOrderService.fetchOcoGtts();
+                List<Order> orders = chartOrderService.fetchOrders();
+                return reviewService.runReview(holdings, positions, gtts, ocoGtts, orders, reviewConfig);
+            } catch (Exception ex) {
+                log.error("Failed to run review", ex);
+                StatusBar.showError(String.format(REVIEW_FAILED, extractMessage(ex)));
+                return List.<ReviewFinding>of();
+            }
+        }).thenAccept(findings -> Platform.runLater(() -> {
+            reviewData.setAll(findings);
+            reviewTable.setPlaceholder(new Label(EMPTY_NO_REVIEW));
+            StatusBar.showSuccess(String.format(REVIEW_COMPLETED, findings.size()));
+        }));
+    }
+
+    private void autofixSingle(ReviewFinding finding, Button button) {
+        if (chartOrderService == null) {
+            StatusBar.showError(AUTOFIX_NO_ACCOUNT);
+            return;
+        }
+        AutofixContext autofixContext = new AutofixContext(chartOrderService, stopLossPercentage);
+        String description = finding.describeAction(autofixContext);
+        Window owner = getScene().getWindow();
+        ConfirmationDialog dialog = new ConfirmationDialog(AUTOFIX_TITLE, description, AUTOFIX_CONFIRM);
+        dialog.show(owner);
+        if (!dialog.isConfirmed()) return;
+        button.setDisable(true);
+        StatusBar.showInfo(AUTOFIX_IN_PROGRESS);
+        CompletableFuture.runAsync(() -> finding.fix(autofixContext))
+                .thenRun(() -> Platform.runLater(() -> {
+                    button.setDisable(false);
+                    reviewData.remove(finding);
+                    StatusBar.showSuccess(AUTOFIX_SUCCESS);
+                    fireGttChanged();
+                }))
+                .exceptionally(ex -> {
+                    log.error("Autofix failed for finding: {}", finding.getMessage(), ex);
+                    Platform.runLater(() -> {
+                        button.setDisable(false);
+                        StatusBar.showError(String.format(AUTOFIX_FAILED, extractMessage((Exception) ex.getCause())));
+                    });
+                    return null;
+                });
+    }
+
+    private void autofixSelected(Button button) {
+        if (chartOrderService == null) {
+            StatusBar.showError(AUTOFIX_NO_ACCOUNT);
+            return;
+        }
+        List<ReviewFinding> selected = reviewData.stream()
+                .filter(f -> f.selectedProperty().get())
+                .collect(Collectors.toList());
+        if (selected.isEmpty()) {
+            StatusBar.showInfo(AUTOFIX_BULK_NONE);
+            return;
+        }
+        AutofixContext autofixContext = new AutofixContext(chartOrderService, stopLossPercentage);
+        StringBuilder summary = new StringBuilder();
+        for (ReviewFinding finding : selected) {
+            if (summary.length() > 0) summary.append("\n");
+            summary.append("\u2022 ").append(finding.describeAction(autofixContext));
+        }
+        Window owner = getScene().getWindow();
+        String title = String.format(AUTOFIX_BULK_TITLE, selected.size());
+        ConfirmationDialog dialog = new ConfirmationDialog(title, summary.toString(), AUTOFIX_BULK_CONFIRM);
+        dialog.show(owner);
+        if (!dialog.isConfirmed()) return;
+        button.setDisable(true);
+        StatusBar.showInfo(AUTOFIX_IN_PROGRESS);
+        CompletableFuture.runAsync(() -> {
+            for (ReviewFinding finding : selected) {
+                finding.fix(autofixContext);
+            }
+        }).thenRun(() -> Platform.runLater(() -> {
+            button.setDisable(false);
+            reviewData.removeAll(selected);
+            StatusBar.showSuccess(String.format(AUTOFIX_BULK_SUCCESS, selected.size()));
+            fireGttChanged();
+        })).exceptionally(ex -> {
+            log.error("Bulk autofix failed", ex);
+            Platform.runLater(() -> {
+                button.setDisable(false);
+                StatusBar.showError(String.format(AUTOFIX_FAILED, extractMessage((Exception) ex.getCause())));
+            });
+            return null;
+        });
     }
 
 }

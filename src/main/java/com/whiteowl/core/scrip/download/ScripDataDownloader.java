@@ -5,10 +5,12 @@ import com.whiteowl.client.kite.model.KiteExchange;
 import com.whiteowl.client.kite.model.KiteSymbol;
 import com.whiteowl.client.kite.symbol.KiteFileSystemScripLoader;
 import com.whiteowl.client.kite.symbol.KiteScripLoader;
+import com.whiteowl.core.scrip.migration.ScripMigrationService;
 import com.whiteowl.core.scrip.model.Exchange;
 import com.whiteowl.core.scrip.model.Scrip;
 import com.whiteowl.core.scrip.repository.ScripRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -20,6 +22,7 @@ public final class ScripDataDownloader {
     private final KiteScripLoader scripLoader;
     private final ScripRepository scripRepository;
     private final KiteMapper mapper;
+    @Setter private ScripMigrationService migrationService;
 
     public ScripDataDownloader(ScripRepository scripRepository) {
         this(new KiteFileSystemScripLoader(), scripRepository, KiteMapper.INSTANCE);
@@ -45,12 +48,23 @@ public final class ScripDataDownloader {
             List<Scrip> scrips = kiteSymbols.stream()
                     .map(mapper::toScrip)
                     .toList();
+            List<Scrip> previousScrips = scripRepository.findByExchange(exchange);
             scripRepository.saveAll(scrips);
             log.info("Saved {} scrips for {}", scrips.size(), exchange.name());
+            runMigration(previousScrips, scrips);
             return scrips.size();
         } catch (Exception e) {
             log.error("Scrip download failed for {}", exchange.name(), e);
             return 0;
+        }
+    }
+
+    private void runMigration(List<Scrip> previousScrips, List<Scrip> currentScrips) {
+        if (migrationService == null) return;
+        try {
+            migrationService.migrate(previousScrips, currentScrips);
+        } catch (Exception e) {
+            log.error("Scrip migration failed", e);
         }
     }
 
