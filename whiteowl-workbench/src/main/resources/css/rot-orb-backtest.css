@@ -1,0 +1,316 @@
+/* ═══════════════════════════════════════════════════════════════
+   Rotational ORB Backtest UI Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Left config pane ─────────────────────────────────────────── */
+
+.rot-orb-pane {
+    -fx-padding: 4 0 0 0;
+    -fx-spacing: 0;
+}
+
+.rot-orb-scroll {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.rot-orb-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.rot-orb-section {
+    -fx-padding: 4 10 4 10;
+}
+
+.rot-orb-section-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.rot-orb-config-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+}
+
+.rot-orb-config-field {
+    -fx-font-size: 11px;
+    -fx-pref-height: 24;
+    -fx-background-color: #282a36;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: #44475a;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.rot-orb-config-combo {
+    -fx-font-size: 11px;
+    -fx-pref-height: 24;
+}
+
+.rot-orb-checkbox {
+    -fx-font-size: 11px;
+}
+
+.rot-orb-button {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #e0e0e0;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.rot-orb-button:hover {
+    -fx-background-color: #35689e;
+}
+
+.rot-orb-button:disabled {
+    -fx-opacity: 0.5;
+}
+
+.rot-orb-button-icon {
+    -fx-icon-color: #e0e0e0;
+}
+
+.rot-orb-stop-button {
+    -fx-background-color: #3c2020;
+    -fx-text-fill: #ef5350;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-border-color: #ef5350;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.rot-orb-stop-button:hover {
+    -fx-background-color: #4a2525;
+}
+
+.rot-orb-stop-button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.rot-orb-stop-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.rot-orb-progress-container {
+    -fx-padding: 8 10 12 10;
+    -fx-spacing: 6;
+}
+
+.rot-orb-progress-bar {
+    -fx-pref-height: 8;
+}
+
+.rot-orb-progress-bar > .bar {
+    -fx-background-color: #4ec9b0;
+}
+
+.rot-orb-progress-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+}
+
+.rot-orb-message-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+/* ── Report pane (left side of result) ────────────────────────── */
+
+.rot-orb-report-scroll {
+    -fx-background-color: transparent;
+}
+
+.rot-orb-report-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.rot-orb-report-content {
+    -fx-background-color: transparent;
+}
+
+.rot-orb-report-card {
+    -fx-background-color: rgba(255, 255, 255, 0.03);
+    -fx-background-radius: 4;
+}
+
+.rot-orb-report-section-header {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+}
+
+.rot-orb-report-metric-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 1 8 1 0;
+}
+
+.rot-orb-report-metric-value {
+    -fx-font-family: "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 1 0 1 8;
+}
+
+.rot-orb-report-value-positive {
+    -fx-text-fill: #3fb68b;
+}
+
+.rot-orb-report-value-negative {
+    -fx-text-fill: #ef5350;
+}
+
+.rot-orb-report-value-neutral {
+    -fx-text-fill: #9da5b0;
+}
+
+/* ── Result pane ──────────────────────────────────────────────── */
+
+.rot-orb-result-pane {
+    -fx-background-color: #1e1f22;
+}
+
+.rot-orb-result-progress-section {
+    -fx-background-color: #1e1f22;
+}
+
+.rot-orb-result-progress-bar {
+    -fx-pref-height: 8;
+    -fx-pref-width: 400;
+}
+
+.rot-orb-result-progress-bar > .bar {
+    -fx-background-color: #4ec9b0;
+}
+
+.rot-orb-result-progress-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+}
+
+.rot-orb-result-split {
+    -fx-background-color: transparent;
+}
+
+.rot-orb-result-error-label {
+    -fx-text-fill: #f85149;
+    -fx-font-family: "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 20;
+}
+
+/* ── Equity curve pane ────────────────────────────────────────── */
+
+.rot-orb-equity-pane {
+    -fx-background-color: #1e1f22;
+}
+
+/* ── Monthly returns pane ─────────────────────────────────────── */
+
+.rot-orb-monthly-pane {
+    -fx-background-color: #1e1f22;
+}
+
+/* ── Trade table ──────────────────────────────────────────────── */
+
+.rot-orb-trade-table {
+    -fx-background-color: transparent;
+    -fx-table-cell-border-color: #2b2d30;
+}
+
+.rot-orb-trade-table .column-header {
+    -fx-background-color: #2b2d30;
+    -fx-border-color: transparent transparent #3c3f41 transparent;
+}
+
+.rot-orb-trade-table .column-header .label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+}
+
+.rot-orb-trade-table .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #2b2d30 transparent;
+}
+
+.rot-orb-trade-table .table-row-cell:selected {
+    -fx-background-color: #2d5c88;
+}
+
+.rot-orb-trade-table .table-row-cell:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+}
+
+.rot-orb-trade-table .table-cell {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 2 6 2 6;
+}
+
+.rot-orb-trade-toolbar {
+    -fx-background-color: transparent;
+    -fx-padding: 2 6 2 6;
+}
+
+.rot-orb-toolbar-button {
+    -fx-background-color: transparent;
+    -fx-padding: 3 6 3 6;
+    -fx-cursor: hand;
+}
+
+.rot-orb-toolbar-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-background-radius: 3;
+}
+
+.rot-orb-toolbar-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.rot-orb-toolbar-button:hover .rot-orb-toolbar-icon {
+    -fx-icon-color: #bbbbbb;
+}
+
+/* ── Bottom tab pane in result ────────────────────────────────── */
+
+.rot-orb-result-bottom-tabs > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: transparent;
+    -fx-padding: 4 12 4 12;
+}
+
+.rot-orb-result-bottom-tabs > .tab-header-area > .headers-region > .tab > .tab-container > .tab-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.rot-orb-result-bottom-tabs > .tab-header-area > .headers-region > .tab:selected > .tab-container > .tab-label {
+    -fx-text-fill: #bbbbbb;
+}
+
+.rot-orb-result-bottom-tabs > .tab-header-area > .headers-region > .tab:selected {
+    -fx-border-color: transparent transparent #4A78C2 transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.rot-orb-result-bottom-tabs > .tab-header-area {
+    -fx-background-color: #2b2d30;
+    -fx-padding: 0;
+}
+
+.rot-orb-result-bottom-tabs > .tab-content-area {
+    -fx-background-color: #1e1f22;
+}

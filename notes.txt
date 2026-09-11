@@ -1,0 +1,162 @@
+1. Market breadth has been a very good filter. ALWAYS use it.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+** Feature selection for trading **
+1. Create groups of multiple configurations of a single indicator ie some kind of filter for trend, volatility, efficiency, region etc.
+2. Select one configuration from each group with highest Spearman Rank correlation with percentage returns.
+3. Collect all most optimal configurations from each filter.
+4. select the  filter with highest Spearman Rank correlation with percentage returns.
+5. Incrementally select / rank all other filters by ratio of their own correlation with percentage returns to their correction with already selected feature set.
+
+**Pattern discovery/Mining:**
+1. Random Forest
+2. XGBoost, LightGBM
+3. Neural Nets(LSTM, CNN)
+4. Clustering(DBSCAN, K-means, Hierarchical)
+5. Apriori, FPGrowth - Association Rule Mining
+6. Sequence mining(Hidden Markov Models, SPADE, PrefixSpan)
+7. Reinforcement learning
+8. Gaussian Mixture Models
+9. Principal Component Analysis
+10. t-SNE (t-distributed Stochastic Neighbor Embedding)
+11. Autoencoders
+12. Isolation Forest / One class SVM
+
+Question:
+1. Can we use above method to maximize MFE ?
+2. How to implement hierarchical clustering for feature selection? (Described by Ernest Chan)
+3. What is variance inflation factor and how to use it for feature selection?
+
+==> Filter out all features having p-value > 0.05 ie those features are statistically not significant and are just noise.
+
+Trading Strategy Ideas:
+
+## 1
+For any given entry condition:
+Using feature selection method described above,
+1. Select 3 best indicator configs for each indicator
+2. Select 3 best indicators for feature like trend, volatility, efficiency, region etc.
+3. Using 5 such features, construct ensemble trading strategy for entry rule only.
+Then using backtesting, find the best exit method and config for optimal Sharpe ratio.
+
+## 2
+1. Cluster 1 -> 5 bars in a bar series by 6th bar's close - open spread.
+2. Use each bar's cluster id instead of the bar to form a time series.
+3. Use SPMF library to predict next item in the sequence for each 1 -> 5 series.
+5. Provide these 5 inputs to the XGBoost to get final prediction for next bar's close - open spread.
+6. Use multiple such models as input for ListNet to rank option trades for next day.
+
+## 3
+1. Cluster symbols as per below features to find which trading strategy to trade for which cluster.
+2. Trading strategy backtested returns ie equity curve as feature ie 1 strategy equity curve = 1 feature
+3. Other statistical features:
+Volatility - High is MR
+Autocorrelation - Negative is MR
+Hurst Exponent - H < 0.05 is MR
+Skewness & Kurtosis - Fat tail is MR
+
+## 4
+Intraday Ranking Strategy:
+1. Generate a feature file with symbol as rows and date as column. This data file should specify percentage change from open to (close - open) / open
+This very same procedure is to be adopted for creating data files for ORB strategies. Our code should be able to ingest these files and conduct the training and evaluation process on each.
+2. Cluster all these symbols using DBSCAN algorithm. We want dense clusters, thus keep sigma a little lower where we get maximum silhouette score.
+To achieve this we will have to perfrom clustering on multiple sigma values and vsualize the curve with silhouette score.
+3. From each cluster, select top N symbols for below metric: avg(abs(C-O) x sqrt(CxV))
+Here we are trying to select symbols with highest movement on average at the same time has good liquidity.
+4. Use ListNet to rank these symbols using below features:
+ (O-C1)/C1
+ (O-TP1)/TP1
+ C1/O1
+ H1/L1
+ TR1/ATR1
+ RANGE/ADR
+ IBS
+ RSI2, RSI3, RSI5, RSI8
+ # OF C > O
+ # OF C > C1
+ # OF O > C
+ # OF C < C1
+ C1/SMA
+ V/SMA(V)
+ RS1, RS2, RS3, RS5, RS8
+ ATR1, ATR2, ATR3, ATR5, ATR8
+ STDDEV1, STDDEV2, STDDEV3, STDDEV5, STDDEV8
+ 5. Convert each individual feature listed above into feature rank for entire symbol set. eg [(O-C1)/C1]/[sumOneToN (O-C1)/C1)]
+ 6. Standardize entire feature set
+ 7. Use Spearman Rank Correlation to select features with absolute correlation > 0.5
+ 8. Remove all features with near 0 correlation
+ 9. Rank features by mutual information score and keep only top N features
+ 10. Visualze feature importance by plotting NDCG or MAP against each feature. This is to be done by adding most important feature found in previous point and taking the results of ListNet.
+ Add one feature at a time and get the NDCG number.
+ 11. Use XGBoost along with all the composite features created in step 5. Use feature engineering to select most relevent features along with below additional features.
+ C/SMA
+ SMA1/SMA2
+ RSI2, RSI3, RSI5, RSI8
+ UPCOUNT/DOWNCOUNT
+ UPVOLUME/DOWNVOLUME
+ UPTURNOVER/DOWNTURNOVER
+
+** Position Sizing **
+Predict the returns of long and short sides separately for each day. To achieve this:
+1. Calculate historic percentage returns we would have had, if we followed ListNet's ranking and allocated same amount for each position on both long and short side.
+2. Apply Kelly Criteria to these historical returns to generate target variables. ie What fraction of portfolio value we should have assigned to long and short side.
+No allocation for 0 or negative returns.
+3. Use XGBoost to predict the fractional allocation.
+
+
+Steps in rotational strategy generation:
+1. Symbol universe selection:
+    a. Raw data generation
+    b. Raw data cleaning
+    c. Raw data normalization
+    d. Symbol clustering
+    e. Symbol selection
+2. Feature engineering:
+    a. Individual symbol's feature extraction
+    b. Composite feature computation
+    c. Relative feature computation
+    d. Feature standardization and normalization
+    e. Drop features with 0 variance
+    f. Feature ranking - Using Spearman Rank Correlation and Mutual Information
+    g. Feature selection - Using Forward selection
+3. Training ListNet and generating historical rankings
+4. Capital allocation strategy:
+    a. Additional composite or breadth wise feature generation
+    b. Feature standardization and normalization
+    c. Target variable generation
+5. Out of sample testing
+
+
+
+
+
+
+
+
+For an ORB Strategy:
+1. Average Daily Spread, ATR, Overnight gap should be more. 
+2. Turnover should be less

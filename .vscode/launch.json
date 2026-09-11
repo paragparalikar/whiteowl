@@ -1,0 +1,36 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "NiftyOrbDriver",
+            "request": "launch",
+            "mainClass": "com.whiteowl.workbench.driver.NiftyOrbDriver",
+            "projectName": "whiteowl-workbench"
+        },
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "com.whiteowl.Main",
+            "projectName": "whiteowl",
+            "vmArgs": "-Dhttp.proxyHost=inproxy2.bnymellon.net -Dhttp.proxyPort=8080 -Dhttps.proxyHost=inproxy2.bnymellon.net -Dhttps.proxyPort=8080 -Dhttps.proxyUser=XBBNN7A -Dhttps.proxyPassword=DarkHorseWelcome@3"
+        },
+        {
+            "type": "java",
+            "name": "BarDataDeduplicator",
+            "request": "launch",
+            "mainClass": "com.whiteowl.core.bar.repository.BarDataDeduplicator",
+            "projectName": "whiteowl"
+        }
+    ]
+}

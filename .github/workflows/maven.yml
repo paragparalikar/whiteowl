@@ -37,5 +37,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: whiteOwl
-        path: target/*-jar-with-dependencies.jar
+        path: whiteowl-workbench/target/*-jar-with-dependencies.jar
         if-no-files-found: error

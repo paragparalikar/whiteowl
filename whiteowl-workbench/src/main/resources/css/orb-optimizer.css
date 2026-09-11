@@ -1,0 +1,167 @@
+.orb-optimizer-pane {
+    -fx-padding: 4 0 0 0;
+    -fx-spacing: 0;
+}
+
+.orb-optimizer-scroll {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.orb-optimizer-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.orb-optimizer-section {
+    -fx-padding: 8 10 8 10;
+}
+
+.orb-optimizer-section-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.orb-optimizer-config-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+}
+
+.orb-optimizer-config-field {
+    -fx-font-size: 11px;
+    -fx-pref-height: 24;
+    -fx-background-color: #282a36;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: #44475a;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.orb-optimizer-config-combo {
+    -fx-font-size: 11px;
+    -fx-pref-height: 24;
+}
+
+.orb-optimizer-checkbox {
+    -fx-font-size: 11px;
+}
+
+.orb-optimizer-opt-checkbox {
+    -fx-font-size: 10px;
+}
+
+.orb-optimizer-opt-grid {
+    -fx-padding: 0;
+}
+
+.orb-optimizer-opt-header {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 10px;
+}
+
+.orb-optimizer-button {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #e0e0e0;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.orb-optimizer-button:hover {
+    -fx-background-color: #35689e;
+}
+
+.orb-optimizer-button:disabled {
+    -fx-opacity: 0.5;
+}
+
+.orb-optimizer-button-icon {
+    -fx-icon-color: #e0e0e0;
+}
+
+.orb-optimizer-stop-button {
+    -fx-background-color: #3c2020;
+    -fx-text-fill: #ef5350;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-border-color: #ef5350;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.orb-optimizer-stop-button:hover {
+    -fx-background-color: #4a2525;
+}
+
+.orb-optimizer-stop-button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.orb-optimizer-stop-icon {
+    -fx-icon-color: #ef5350;
+}
+
+.orb-optimizer-progress-container {
+    -fx-padding: 8 10 12 10;
+    -fx-spacing: 6;
+}
+
+.orb-optimizer-progress-bar {
+    -fx-pref-height: 8;
+}
+
+.orb-optimizer-progress-bar > .bar {
+    -fx-background-color: #4ec9b0;
+}
+
+.orb-optimizer-progress-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 11px;
+}
+
+.orb-optimizer-message-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+/* ── Result pane styles ────────────────────────────────────────── */
+
+.opt-result-pane {
+    -fx-padding: 0;
+}
+
+.opt-result-header {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+}
+
+.opt-result-config-summary {
+    -fx-padding: 8 10 4 10;
+}
+
+.opt-result-metric-combo {
+    -fx-font-size: 12px;
+    -fx-pref-height: 28;
+}
+
+.opt-result-chart-container {
+    -fx-padding: 4 10 10 10;
+}
+
+.opt-result-heatmap-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 10px;
+}
+
+.opt-result-legend {
+    -fx-padding: 4 0 4 0;
+}
