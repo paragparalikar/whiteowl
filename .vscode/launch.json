@@ -22,8 +22,7 @@
             "name": "Main",
             "request": "launch",
             "mainClass": "com.whiteowl.Main",
-            "projectName": "whiteowl",
-            "vmArgs": "-Dhttp.proxyHost=inproxy2.bnymellon.net -Dhttp.proxyPort=8080 -Dhttps.proxyHost=inproxy2.bnymellon.net -Dhttps.proxyPort=8080 -Dhttps.proxyUser=XBBNN7A -Dhttps.proxyPassword=DarkHorseWelcome@3"
+            "projectName": "whiteowl"
         },
         {
             "type": "java",
