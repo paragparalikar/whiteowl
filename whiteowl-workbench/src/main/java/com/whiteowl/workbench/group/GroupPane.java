@@ -100,7 +100,7 @@ public final class GroupPane extends VBox implements ScripNavigable {
     private BreadthComputer breadthComputer;
     private RSComputer rsComputer;
     private final VBox sectionsContainer;
-    private final Set<String> expandedGroups = new HashSet<>();
+    private final Set<String> expandedGroupIds = new HashSet<>();
     private String searchText = "";
     private Consumer<Scrip> onScripSelected;
     private WatchlistPane watchlistPane;
@@ -318,7 +318,7 @@ public final class GroupPane extends VBox implements ScripNavigable {
     private VBox buildGroupSection(Group group) {
         VBox section = new VBox();
         section.getStyleClass().add(SECTION_STYLE);
-        boolean expanded = expandedGroups.contains(group.getName());
+        boolean expanded = expandedGroupIds.contains(group.getId());
         ListView<String> listView = buildScripListView(group);
         listView.setVisible(expanded);
         listView.setManaged(expanded);
@@ -334,9 +334,9 @@ public final class GroupPane extends VBox implements ScripNavigable {
         listView.setManaged(expanded);
         chevron.setIconCode(expanded ? FluentUiRegularAL.CHEVRON_DOWN_12 : FluentUiRegularAL.CHEVRON_RIGHT_12);
         if (expanded) {
-            expandedGroups.add(group.getName());
+            expandedGroupIds.add(group.getId());
         } else {
-            expandedGroups.remove(group.getName());
+            expandedGroupIds.remove(group.getId());
         }
     }
 
@@ -344,7 +344,7 @@ public final class GroupPane extends VBox implements ScripNavigable {
         HBox header = new HBox(4);
         header.getStyleClass().add(SECTION_HEADER_STYLE);
         header.setPadding(new Insets(2, 4, 2, 4));
-        boolean expanded = expandedGroups.contains(group.getName());
+        boolean expanded = expandedGroupIds.contains(group.getId());
         FontIcon chevron = new FontIcon(expanded ? FluentUiRegularAL.CHEVRON_DOWN_12 : FluentUiRegularAL.CHEVRON_RIGHT_12);
         chevron.setIconSize(CHEVRON_SIZE);
         chevron.getStyleClass().add(SECTION_CHEVRON_STYLE);

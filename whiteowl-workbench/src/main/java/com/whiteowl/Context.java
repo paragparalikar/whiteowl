@@ -21,6 +21,8 @@ import com.whiteowl.workbench.group.repository.FileGroupRepository;
 import com.whiteowl.workbench.group.repository.GroupRepository;
 import com.whiteowl.workbench.note.repository.FileNoteRepository;
 import com.whiteowl.workbench.note.repository.NoteRepository;
+import com.whiteowl.workbench.alert.AlertRepository;
+import com.whiteowl.workbench.alert.FileAlertRepository;
 import com.whiteowl.workbench.scrip.download.ScripDataDownloader;
 import com.whiteowl.workbench.scrip.migration.ScripMigrationService;
 import com.whiteowl.core.scrip.repository.FileScripRepository;
@@ -40,6 +42,7 @@ public final class Context implements AutoCloseable {
     private final GroupRepository groupRepository;
     private final ExampleGroupRepository exampleGroupRepository;
     private final NoteRepository noteRepository;
+    private final AlertRepository alertRepository;
     private final AccountService accountService;
     private final BrokerAdapterFactory brokerAdapterFactory;
     private final ActiveAccountManager activeAccountManager;
@@ -59,6 +62,7 @@ public final class Context implements AutoCloseable {
         this.groupRepository = new FileGroupRepository();
         this.exampleGroupRepository = new FileExampleGroupRepository();
         this.noteRepository = new FileNoteRepository();
+        this.alertRepository = new FileAlertRepository();
         this.accountService = new AccountService(new FileAccountRepository());
         this.brokerAdapterFactory = KiteBrokerAdapterFactory.getInstance();
         this.activeAccountManager = new ActiveAccountManager(accountService, brokerAdapterFactory);

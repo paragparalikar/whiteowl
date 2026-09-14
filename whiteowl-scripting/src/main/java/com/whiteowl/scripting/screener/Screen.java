@@ -24,4 +24,8 @@ public interface Screen {
     default void updateSetting(String name, Object value) {
     }
 
+    default String getId() {
+        return getClass().getName();
+    }
+
 }

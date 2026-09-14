@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -71,11 +72,27 @@ public final class FileGroupRepository implements GroupRepository {
         try {
             String name = toGroupName(file.getFileName().toString());
             List<String> lines = Files.readAllLines(file);
-            List<String> scripIds = lines.stream()
-                    .map(String::trim)
-                    .filter(l -> !l.isEmpty())
-                    .toList();
-            return new Group(name, scripIds);
+            if (lines.isEmpty()) {
+                return new Group(name);
+            }
+            String firstLine = lines.get(0).trim();
+            List<String> scripIds;
+            String id;
+            if (firstLine.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
+                id = firstLine;
+                scripIds = lines.stream()
+                        .skip(1)
+                        .map(String::trim)
+                        .filter(l -> !l.isEmpty())
+                        .toList();
+            } else {
+                id = UUID.randomUUID().toString();
+                scripIds = lines.stream()
+                        .map(String::trim)
+                        .filter(l -> !l.isEmpty())
+                        .toList();
+            }
+            return new Group(id, name, scripIds);
         } catch (Exception e) {
             log.error("Failed to load group from {}", file, e);
             return null;
@@ -84,7 +101,10 @@ public final class FileGroupRepository implements GroupRepository {
 
     private void saveGroup(Group g) throws IOException {
         Path file = dirPath.resolve(toFileName(g.getName()));
-        Files.write(file, g.getScripIds());
+        List<String> lines = new ArrayList<>();
+        lines.add(g.getId());
+        lines.addAll(g.getScripIds());
+        Files.write(file, lines);
     }
 
     private void deleteOrphanFiles(Set<String> activeFiles) throws IOException {

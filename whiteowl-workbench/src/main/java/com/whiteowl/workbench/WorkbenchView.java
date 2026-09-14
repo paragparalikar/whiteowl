@@ -41,6 +41,12 @@ import com.whiteowl.workbench.note.NoteEditorPane;
 import com.whiteowl.workbench.note.NoteListPane;
 import com.whiteowl.workbench.ranker.RankerPane;
 import com.whiteowl.workbench.screener.ScreenerPane;
+import com.whiteowl.workbench.alert.AlertPane;
+import com.whiteowl.workbench.alert.AlertEngine;
+import com.whiteowl.workbench.alert.FileAlertRepository;
+import com.whiteowl.workbench.alert.AlertRepository;
+import com.whiteowl.scripting.screener.Screen;
+import com.whiteowl.scripting.screener.ScreenRegistry;
 import com.whiteowl.workbench.watchlist.WatchlistPane;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -78,6 +84,7 @@ public final class WorkbenchView {
     private static final String TAB_BACKTEST = "Backtest";
     private static final String TAB_ORB_OPTIMIZER = "ORB Optimizer";
     private static final String TAB_ORB_BACKTEST = "ORB Backtest";
+    private static final String TAB_ALERTS = "Alerts";
 
     private static final String TAB_CHARTING = "Charting";
     private static final String TAB_SCRIPTS = "Scripts";
@@ -116,6 +123,8 @@ public final class WorkbenchView {
     private BacktestPane backtestPane;
     private OrbOptimizerPane orbOptimizerPane;
     private RotationalOrbBacktestPane orbBacktestPane;
+    private AlertPane alertPane;
+    private AlertEngine alertEngine;
 
     private ScriptsPane scriptsPane;
     private NoteListPane noteListPane;
@@ -290,6 +299,33 @@ public final class WorkbenchView {
         return orbBacktestPane;
     }
 
+    private AlertPane ensureAlertPane() {
+        if (alertPane == null) {
+            AlertRepository alertRepository = new FileAlertRepository();
+            ScreenRegistry screenRegistry = new ScreenRegistry(screenerScriptRepo,
+                    java.util.List.of(new com.whiteowl.scripting.screener.BreakoutScreen()));
+            alertEngine = new AlertEngine(alertRepository, context.getGroupRepository(),
+                    context.getScripRepository(), context.getBarsRepository(), screenRegistry);
+            alertPane = new AlertPane(alertEngine, context.getGroupRepository(), screenRegistry);
+            alertPane.setOnScripSelected(scrip -> {
+                ensureChartingTab();
+                chartPane.showChart(scrip);
+            });
+            alertPane.setOnAlertChartRequested(alertMatch -> {
+                ensureChartingTab();
+                Screen screen = screenRegistry.getScreens().stream()
+                        .filter(s -> s.getId().equals(alertMatch.getAlertDefinition().getScreenId()))
+                        .findFirst()
+                        .orElse(null);
+                if (screen != null) {
+                    chartPane.showChart(alertMatch.getScrip(), alertMatch.getAlertDefinition().getTimeframe(), screen);
+                }
+            });
+            context.getLiveDataManager().addBarListener(alertEngine);
+        }
+        return alertPane;
+    }
+
     private void openOrbBacktestResultTab(
             com.whiteowl.core.backtest.rotational.RotationalBacktestReport report) {
         RotationalOrbResultPane resultPane = new RotationalOrbResultPane();
@@ -353,9 +389,11 @@ public final class WorkbenchView {
                 () -> addLeftTab(TAB_ORB_BACKTEST, FluentUiRegularAL.DATA_BAR_VERTICAL_20, ensureOrbBacktestPane()));
         MenuItem viewOrbOptimizer = createViewMenuItem(TAB_ORB_OPTIMIZER, FluentUiRegularAL.DATA_AREA_24,
                 () -> addLeftTab(TAB_ORB_OPTIMIZER, FluentUiRegularAL.DATA_AREA_24, ensureOrbOptimizerPane()));
+        MenuItem viewAlerts = createViewMenuItem(TAB_ALERTS, FluentUiRegularAL.ALERT_24,
+                () -> addLeftTab(TAB_ALERTS, FluentUiRegularAL.ALERT_24, ensureAlertPane()));
         Menu modulesMenu = new Menu(MENU_MODULES, null,
                 viewCharting, viewScreener, viewRanker, viewDownloader, viewBacktest,
-                viewOrbBacktest, viewOrbOptimizer);
+                viewOrbBacktest, viewOrbOptimizer, viewAlerts);
         MenuItem scriptRefItem = new MenuItem(MENU_SCRIPT_REFERENCE);
         scriptRefItem.setOnAction(e -> scriptReferenceWindow.show());
         MenuItem viewLogs = createViewMenuItem(MENU_LOGS, FluentUiRegularAL.CLIPBOARD_TEXT_20,

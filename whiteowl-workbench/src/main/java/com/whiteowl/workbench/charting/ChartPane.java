@@ -334,6 +334,29 @@ public final class ChartPane extends BorderPane {
         subscribeForLiveData(scrip);
     }
 
+    public void showChart(Scrip scrip, Timeframe timeframe, Screen screen) {
+        exampleCutoffTimestamp = -1;
+        this.activeScrip = scrip;
+        this.activeTimeframe = timeframe;
+        canvas.setScrip(scrip);
+        drawingManager.loadDrawings(drawingRepository.loadDrawings(scrip.getId()));
+        resetVolumeProfileIndicators();
+        loadData(scrip.getId(), timeframe);
+        filterGttOrdersForActiveScrip();
+        filterOcoOrdersForActiveScrip();
+        filterRegularOrdersForActiveScrip();
+        updateOcoButtonState();
+        refreshWatchlistPills();
+        subscribeForLiveData(scrip);
+        if (screen != null) {
+            applyScreen(screen);
+        }
+    }
+
+    public Scrip getActiveScrip() {
+        return activeScrip;
+    }
+
     private com.whiteowl.core.bar.aggregation.LiveDataManager liveDataManager;
     private com.whiteowl.core.broker.BrokerAdapter brokerAdapter;
     private com.whiteowl.core.bar.aggregation.BarCompletionListener activeBarListener;
@@ -1619,6 +1642,12 @@ public final class ChartPane extends BorderPane {
             refreshScreenTag();
             computeScreenMarkersAsync();
         }
+    }
+
+    private void applyScreen(Screen screen) {
+        activeScreen = screen;
+        refreshScreenTag();
+        computeScreenMarkersAsync();
     }
 
     private void computeScreenMarkers() {

@@ -42,6 +42,7 @@ public final class WhiteOwlApp extends Application {
     private static final String LOG_VIEWER_CSS = "/css/log-viewer.css";
     private static final String ORB_OPTIMIZER_CSS = "/css/orb-optimizer.css";
     private static final String ROT_ORB_BACKTEST_CSS = "/css/rot-orb-backtest.css";
+    private static final String ALERT_CSS = "/css/alert.css";
     private static final String FONT_LOADER_THREAD = "font-loader";
     private static final String CONTEXT_INIT_THREAD = "whiteowl-init";
     private static final String INIT_LOGGING = "Logging configured";
@@ -161,7 +162,8 @@ public final class WhiteOwlApp extends Application {
                 resolveStylesheet(NOTE_LIST_CSS),
                 resolveStylesheet(LOG_VIEWER_CSS),
                 resolveStylesheet(ORB_OPTIMIZER_CSS),
-                resolveStylesheet(ROT_ORB_BACKTEST_CSS)
+                resolveStylesheet(ROT_ORB_BACKTEST_CSS),
+                resolveStylesheet(ALERT_CSS)
         );
     }
 
