@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 public final class Watchlist implements NamedScripCollection {
@@ -13,17 +14,27 @@ public final class Watchlist implements NamedScripCollection {
     private static final int MIN_NAME_LENGTH = 1;
     private static final int MAX_NAME_LENGTH = 255;
 
+    private final String id;
     @Setter private String name;
     private final List<String> scripIds;
 
     public Watchlist(String name) {
         validateName(name);
+        this.id = UUID.randomUUID().toString();
         this.name = name;
         this.scripIds = new ArrayList<>();
     }
 
     public Watchlist(String name, List<String> scripIds) {
         validateName(name);
+        this.id = UUID.randomUUID().toString();
+        this.name = name;
+        this.scripIds = new ArrayList<>(scripIds);
+    }
+
+    public Watchlist(String id, String name, List<String> scripIds) {
+        validateName(name);
+        this.id = id;
         this.name = name;
         this.scripIds = new ArrayList<>(scripIds);
     }

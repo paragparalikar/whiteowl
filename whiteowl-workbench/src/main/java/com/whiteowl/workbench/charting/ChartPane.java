@@ -373,11 +373,37 @@ public final class ChartPane extends BorderPane {
         this.brokerAdapter = adapter;
     }
 
+    private com.whiteowl.workbench.bar.download.BarGapBackfillService barGapBackfillService;
+
+    public void setBarGapBackfillService(com.whiteowl.workbench.bar.download.BarGapBackfillService service) {
+        this.barGapBackfillService = service;
+    }
+
+    private void triggerGapBackfill(Scrip scrip, Timeframe timeframe) {
+        if (barGapBackfillService == null || scrip == null) return;
+        java.util.List<Timeframe> timeframes = timeframe == Timeframe.ONE_MINUTE
+                ? java.util.List.of(Timeframe.ONE_MINUTE)
+                : java.util.List.of(Timeframe.ONE_MINUTE, timeframe);
+        barGapBackfillService.backfill(scrip, timeframes).whenComplete((v, err) -> {
+            if (err != null) {
+                log.warn("Gap backfill failed for {} {}", scrip.getSymbol(), timeframe.name(), err);
+                return;
+            }
+            Platform.runLater(() -> {
+                if (activeScrip == null || !scrip.getId().equals(activeScrip.getId())) return;
+                dataProvider.invalidateCache();
+                loadData(scrip.getId(), activeTimeframe);
+                canvas.render();
+            });
+        });
+    }
+
     private void subscribeForLiveData(Scrip scrip) {
         unsubscribeLiveData();
         if (brokerAdapter != null && brokerAdapter.hasInstrumentMapping(scrip)) {
             brokerAdapter.subscribe(java.util.List.of(scrip));
         }
+        triggerGapBackfill(scrip, activeTimeframe);
         if (liveDataManager != null) {
             activeBarListener = new com.whiteowl.core.bar.aggregation.BarCompletionListener() {
                 @Override

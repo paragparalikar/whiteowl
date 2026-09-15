@@ -11,6 +11,7 @@ import com.whiteowl.core.breadth.BreadthComputer;
 import com.whiteowl.core.breadth.BreadthFormulaRegistry;
 import com.whiteowl.core.rs.RSComputer;
 import com.whiteowl.core.rs.RSFormulaRegistry;
+import com.whiteowl.workbench.bar.download.BarGapBackfillService;
 import com.whiteowl.workbench.bar.download.CompositeBarDataDownloader;
 import com.whiteowl.core.bar.repository.BarsRepository;
 import com.whiteowl.core.bar.repository.FileBarsRepository;
@@ -48,6 +49,7 @@ public final class Context implements AutoCloseable {
     private final ActiveAccountManager activeAccountManager;
     private final ScripDataDownloader scripDataDownloader;
     private final CompositeBarDataDownloader compositeBarDataDownloader;
+    private final BarGapBackfillService barGapBackfillService;
     private final LiveDataManager liveDataManager;
     private final BreadthFormulaRegistry breadthFormulaRegistry;
     private final BreadthComputer breadthComputer;
@@ -73,6 +75,8 @@ public final class Context implements AutoCloseable {
                 watchlistRepository, groupRepository, exampleGroupRepository, barsRepository));
         this.compositeBarDataDownloader = new CompositeBarDataDownloader(
                 brokerAdapterFactory, accountService, scripRepository, barsRepository);
+        this.barGapBackfillService = new BarGapBackfillService(
+                activeAccountManager, scripRepository, barsRepository);
         this.liveDataManager = new LiveDataManager(barsRepository);
         this.breadthFormulaRegistry = new BreadthFormulaRegistry();
         this.breadthComputer = new BreadthComputer(barsRepository);
@@ -85,6 +89,7 @@ public final class Context implements AutoCloseable {
     public void close() throws Exception {
         log.info("Shutting down WhiteOwl context");
         liveDataManager.close();
+        barGapBackfillService.shutdown();
         brokerAdapterFactory.closeAll();
         log.info("WhiteOwl context closed");
     }

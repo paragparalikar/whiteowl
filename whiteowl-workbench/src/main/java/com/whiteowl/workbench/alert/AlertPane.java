@@ -8,6 +8,7 @@ import com.whiteowl.workbench.common.BaseDialog;
 import com.whiteowl.workbench.common.ScripBadge;
 import com.whiteowl.workbench.group.model.Group;
 import com.whiteowl.workbench.group.repository.GroupRepository;
+import com.whiteowl.workbench.watchlist.repository.WatchlistRepository;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -56,6 +57,7 @@ public final class AlertPane extends VBox {
 
     private final AlertEngine alertEngine;
     private final GroupRepository groupRepository;
+    private final WatchlistRepository watchlistRepository;
     private final ScreenRegistry screenRegistry;
     private final ComboBox<AlertDefinition> alertDefinitionCombo;
     private final Button createButton;
@@ -67,9 +69,11 @@ public final class AlertPane extends VBox {
     private Consumer<Scrip> onScripSelected;
     private Consumer<AlertMatch> onAlertChartRequested;
 
-    public AlertPane(AlertEngine alertEngine, GroupRepository groupRepository, ScreenRegistry screenRegistry) {
+    public AlertPane(AlertEngine alertEngine, GroupRepository groupRepository,
+                     WatchlistRepository watchlistRepository, ScreenRegistry screenRegistry) {
         this.alertEngine = alertEngine;
         this.groupRepository = groupRepository;
+        this.watchlistRepository = watchlistRepository;
         this.screenRegistry = screenRegistry;
         this.alertDefinitionCombo = buildAlertDefinitionCombo();
         this.createButton = buildCreateButton();
@@ -185,7 +189,7 @@ public final class AlertPane extends VBox {
     }
 
     private void showCreateDialog() {
-        AlertDefinitionDialog dialog = new AlertDefinitionDialog(groupRepository, screenRegistry);
+        AlertDefinitionDialog dialog = new AlertDefinitionDialog(groupRepository, watchlistRepository, screenRegistry);
         dialog.show(getScene().getWindow());
         if (dialog.isConfirmed()) {
             AlertDefinition alertDefinition = dialog.getAlertDefinition();
@@ -198,7 +202,7 @@ public final class AlertPane extends VBox {
     private void showEditDialog() {
         AlertDefinition selected = alertDefinitionCombo.getValue();
         if (selected == null) return;
-        AlertDefinitionDialog dialog = new AlertDefinitionDialog(groupRepository, screenRegistry, selected);
+        AlertDefinitionDialog dialog = new AlertDefinitionDialog(groupRepository, watchlistRepository, screenRegistry, selected);
         dialog.show(getScene().getWindow());
         if (dialog.isConfirmed()) {
             AlertDefinition updated = dialog.getAlertDefinition();

@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -71,11 +72,18 @@ public final class FileWatchlistRepository implements WatchlistRepository {
         try {
             String name = toWatchlistName(file.getFileName().toString());
             List<String> lines = Files.readAllLines(file);
-            List<String> scripIds = lines.stream()
-                    .map(String::trim)
-                    .filter(l -> !l.isEmpty())
-                    .toList();
-            return new Watchlist(name, scripIds);
+            if (lines.isEmpty()) return new Watchlist(name);
+            String firstLine = lines.get(0).trim();
+            String id;
+            List<String> scripIds;
+            if (firstLine.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
+                id = firstLine;
+                scripIds = lines.stream().skip(1).map(String::trim).filter(l -> !l.isEmpty()).toList();
+            } else {
+                id = UUID.randomUUID().toString();
+                scripIds = lines.stream().map(String::trim).filter(l -> !l.isEmpty()).toList();
+            }
+            return new Watchlist(id, name, scripIds);
         } catch (Exception e) {
             log.error("Failed to load watchlist from {}", file, e);
             return null;
@@ -84,7 +92,10 @@ public final class FileWatchlistRepository implements WatchlistRepository {
 
     private void saveWatchlist(Watchlist w) throws IOException {
         Path file = dirPath.resolve(toFileName(w.getName()));
-        Files.write(file, w.getScripIds());
+        List<String> lines = new ArrayList<>();
+        lines.add(w.getId());
+        lines.addAll(w.getScripIds());
+        Files.write(file, lines);
     }
 
     private void deleteOrphanFiles(Set<String> activeFiles) throws IOException {

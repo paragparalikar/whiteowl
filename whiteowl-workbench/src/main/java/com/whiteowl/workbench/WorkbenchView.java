@@ -305,8 +305,11 @@ public final class WorkbenchView {
             ScreenRegistry screenRegistry = new ScreenRegistry(screenerScriptRepo,
                     java.util.List.of(new com.whiteowl.scripting.screener.BreakoutScreen()));
             alertEngine = new AlertEngine(alertRepository, context.getGroupRepository(),
-                    context.getScripRepository(), context.getBarsRepository(), screenRegistry);
-            alertPane = new AlertPane(alertEngine, context.getGroupRepository(), screenRegistry);
+                    context.getWatchlistRepository(),
+                    context.getScripRepository(), context.getBarsRepository(), screenRegistry,
+                    context.getBarGapBackfillService(), context.getActiveAccountManager());
+            alertPane = new AlertPane(alertEngine, context.getGroupRepository(),
+                    context.getWatchlistRepository(), screenRegistry);
             alertPane.setOnScripSelected(scrip -> {
                 ensureChartingTab();
                 chartPane.showChart(scrip);
@@ -635,6 +638,7 @@ public final class WorkbenchView {
 
         chartPane.setLiveDataManager(context.getLiveDataManager());
         chartPane.setBrokerAdapter(brokerAdapter);
+        chartPane.setBarGapBackfillService(context.getBarGapBackfillService());
         context.getLiveDataManager().start(brokerAdapter);
         brokerAdapter.addOrderUpdateListener(order -> Platform.runLater(() -> {
             refreshOrderBook(OrderBookTab.ALL);
