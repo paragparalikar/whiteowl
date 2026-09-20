@@ -2,6 +2,9 @@ package com.whiteowl.scripting.ranker;
 
 import com.whiteowl.core.bar.repository.BarsRepository;
 import com.whiteowl.scripting.examplegroup.repository.ExampleGroupRepository;
+import com.whiteowl.scripting.ranker.builtin.GainersRanker;
+import com.whiteowl.scripting.ranker.builtin.LosersRanker;
+import com.whiteowl.scripting.ranker.builtin.VolatilityContractionRanker;
 import com.whiteowl.scripting.ranker.patternmatch.PatternMatchRanker;
 import com.whiteowl.scripting.ranker.script.GroovyRanker;
 import com.whiteowl.scripting.script.ScriptDescriptor;
@@ -27,6 +30,9 @@ public final class RankerRegistry {
     public List<Ranker> getRankers() {
         List<Ranker> all = new ArrayList<>();
         all.add(new PatternMatchRanker(barsRepository, exampleGroupRepository));
+        all.add(new GainersRanker());
+        all.add(new LosersRanker());
+        all.add(new VolatilityContractionRanker());
         for (ScriptDescriptor descriptor : rankerScriptRepository.findAll()) {
             all.add(new GroovyRanker(descriptor, rankerScriptRepository));
         }
