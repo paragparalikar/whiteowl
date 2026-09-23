@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
 
 public final class OverlayLayer implements ChartLayer {
 
-    private static final double LINE_WIDTH = 1.2;
+    private static final double LINE_WIDTH = 0.5;
 
     @Override
     public void render(GraphicsContext gc, ChartContext ctx) {

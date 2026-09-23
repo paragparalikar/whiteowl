@@ -30,15 +30,6 @@ final class SeriesTransform {
         return returns;
     }
 
-    static float[] toDerivative(float[] series) {
-        if (series.length < 2) return new float[0];
-        float[] derivative = new float[series.length - 1];
-        for (int i = 1; i < series.length; i++) {
-            derivative[i - 1] = series[i] - series[i - 1];
-        }
-        return derivative;
-    }
-
     static float[] zScoreNormalize(float[] values) {
         if (values.length == 0) return values;
         float sum = 0;
@@ -60,19 +51,6 @@ final class SeriesTransform {
             normalized[i] = (values[i] - mean) / stddev;
         }
         return normalized;
-    }
-
-    static float[][] extractMultiChannel(Bars bars, int startIdx, int length) {
-        float[] close = new float[length];
-        float[] volume = new float[length];
-        float[] range = new float[length];
-        for (int i = 0; i < length; i++) {
-            int idx = startIdx + i;
-            close[i] = bars.getClose(idx);
-            volume[i] = bars.getVolume(idx);
-            range[i] = bars.getHigh(idx) - bars.getLow(idx);
-        }
-        return new float[][]{close, volume, range};
     }
 
 }

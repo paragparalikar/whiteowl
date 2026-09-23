@@ -11,7 +11,7 @@ final class PercentileScorer {
     PercentileScorer() {
     }
 
-    void buildBaseline(float[][] normalizedPatterns, DistanceMetric metric) {
+    void buildBaseline(float[][] normalizedPatterns) {
         int patternCount = normalizedPatterns.length;
         if (patternCount < 2) {
             baselineDistances = null;
@@ -23,7 +23,7 @@ final class PercentileScorer {
         int idx = 0;
         for (int i = 0; i < patternCount && idx < sampleSize; i++) {
             for (int j = i + 1; j < patternCount && idx < sampleSize; j++) {
-                baselineDistances[idx++] = computeDistance(normalizedPatterns[i], normalizedPatterns[j], metric);
+                baselineDistances[idx++] = Dtw.compute(normalizedPatterns[i], normalizedPatterns[j]);
             }
         }
         if (idx < sampleSize) {
@@ -39,13 +39,6 @@ final class PercentileScorer {
         int pos = Arrays.binarySearch(baselineDistances, rawDistance);
         if (pos < 0) pos = -(pos + 1);
         return (double) pos / baselineDistances.length * 100.0;
-    }
-
-    private static double computeDistance(float[] a, float[] b, DistanceMetric metric) {
-        return switch (metric) {
-            case SUBSEQUENCE_DTW -> SubsequenceDtw.compute(a, b);
-            case SBD -> ShapeBasedDistance.compute(a, b);
-        };
     }
 
 }

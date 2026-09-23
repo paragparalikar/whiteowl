@@ -23,10 +23,6 @@ public final class PatternMatchRanker implements Ranker {
     private static final String RANKER_NAME = "Pattern Match";
     private static final String BAR_COUNT_SETTING = "Bar Count";
     private static final String EXAMPLE_GROUP_SETTING = "Example Group";
-    private static final String DISTANCE_METRIC_SETTING = "Distance Metric";
-    private static final String USE_LOG_RETURNS_SETTING = "Use Log Returns";
-    private static final String USE_DERIVATIVE_SETTING = "Use Derivative";
-    private static final String USE_MULTI_CHANNEL_SETTING = "Use Multi Channel";
     private static final int DEFAULT_BAR_COUNT = 34;
 
     private final BarsRepository barsRepository;
@@ -34,10 +30,6 @@ public final class PatternMatchRanker implements Ranker {
     private final PercentileScorer percentileScorer = new PercentileScorer();
     private int barCount = DEFAULT_BAR_COUNT;
     private ExampleGroup selectedGroup;
-    private DistanceMetric distanceMetric = DistanceMetric.SUBSEQUENCE_DTW;
-    private boolean useLogReturns = true;
-    private boolean useDerivative;
-    private boolean useMultiChannel;
     private boolean baselineDirty = true;
     private List<float[]> cachedNormalizedPatterns;
 
@@ -56,10 +48,6 @@ public final class PatternMatchRanker implements Ranker {
         List<RankerSetting> settings = new ArrayList<>();
         settings.add(new RankerSetting(BAR_COUNT_SETTING, Integer.class, DEFAULT_BAR_COUNT));
         settings.add(new RankerSetting(EXAMPLE_GROUP_SETTING, ExampleGroup.class, null));
-        settings.add(new RankerSetting(DISTANCE_METRIC_SETTING, DistanceMetric.class, DistanceMetric.SUBSEQUENCE_DTW));
-        settings.add(new RankerSetting(USE_LOG_RETURNS_SETTING, Boolean.class, true));
-        settings.add(new RankerSetting(USE_DERIVATIVE_SETTING, Boolean.class, false));
-        settings.add(new RankerSetting(USE_MULTI_CHANNEL_SETTING, Boolean.class, false));
         return settings;
     }
 
@@ -68,10 +56,6 @@ public final class PatternMatchRanker implements Ranker {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put(BAR_COUNT_SETTING, barCount);
         values.put(EXAMPLE_GROUP_SETTING, selectedGroup);
-        values.put(DISTANCE_METRIC_SETTING, distanceMetric);
-        values.put(USE_LOG_RETURNS_SETTING, useLogReturns);
-        values.put(USE_DERIVATIVE_SETTING, useDerivative);
-        values.put(USE_MULTI_CHANNEL_SETTING, useMultiChannel);
         return values;
     }
 
@@ -84,22 +68,6 @@ public final class PatternMatchRanker implements Ranker {
             }
             case EXAMPLE_GROUP_SETTING -> {
                 if (value instanceof ExampleGroup g) selectedGroup = g;
-                baselineDirty = true;
-            }
-            case DISTANCE_METRIC_SETTING -> {
-                if (value instanceof DistanceMetric m) distanceMetric = m;
-                baselineDirty = true;
-            }
-            case USE_LOG_RETURNS_SETTING -> {
-                if (value instanceof Boolean b) useLogReturns = b;
-                baselineDirty = true;
-            }
-            case USE_DERIVATIVE_SETTING -> {
-                if (value instanceof Boolean b) useDerivative = b;
-                baselineDirty = true;
-            }
-            case USE_MULTI_CHANNEL_SETTING -> {
-                if (value instanceof Boolean b) useMultiChannel = b;
                 baselineDirty = true;
             }
         }
@@ -132,11 +100,7 @@ public final class PatternMatchRanker implements Ranker {
     }
 
     private float[] transformSeries(float[] closePrices) {
-        float[] series = useLogReturns ? toLogReturns(closePrices) : closePrices;
-        if (useDerivative) {
-            series = toDerivative(series);
-        }
-        return zScoreNormalize(series);
+        return zScoreNormalize(toLogReturns(closePrices));
     }
 
     private void rebuildBaselineIfDirty() {
@@ -151,14 +115,11 @@ public final class PatternMatchRanker implements Ranker {
             if (normalized.length > 0) cachedNormalizedPatterns.add(normalized);
         }
         float[][] patternsArray = cachedNormalizedPatterns.toArray(new float[0][]);
-        percentileScorer.buildBaseline(patternsArray, distanceMetric);
+        percentileScorer.buildBaseline(patternsArray);
     }
 
     private double computeDistance(float[] candidate, float[] pattern) {
-        return switch (distanceMetric) {
-            case SUBSEQUENCE_DTW -> SubsequenceDtw.compute(candidate, pattern);
-            case SBD -> ShapeBasedDistance.compute(candidate, pattern);
-        };
+        return Dtw.compute(candidate, pattern);
     }
 
     private float[] loadPatternClose(Example example) {
