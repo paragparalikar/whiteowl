@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum Timeframe {
 
     ONE_MINUTE(60L, "1min", "1m", "1 Minute", 1, null),
+    TWO_MINUTE(120L, "2min", "2m", "2 Minutes", 1, null),
     THREE_MINUTE(180L, "3min", "3m", "3 Minutes", 1, null),
     FIVE_MINUTE(300L, "5min", "5m", "5 Minutes", 1, null),
     TEN_MINUTE(600L, "10min", "10m", "10 Minutes", 1, null),

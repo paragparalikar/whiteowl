@@ -7,9 +7,10 @@ import java.util.List;
  *
  * @param parameterName    the parameter analyzed
  * @param curve            full curve sorted by parameter value
- * @param region           the chosen stable region, or null if none qualifies
- * @param selectedValue    recommended value (best raw metric inside the
- *                         region; isolated argmax when no region exists)
+ * @param region           the best stable region detected, or null if none
+ *                         qualifies (diagnostic; selection is independent)
+ * @param selectedValue    recommended value — argmax of the leave-one-out
+ *                         neighborhood-smoothed curve over eligible points
  * @param globalBestValue  parameter value with the single highest metric
  * @param globalBestMetric the single highest metric on the curve
  * @param stable           whether a qualifying plateau was found

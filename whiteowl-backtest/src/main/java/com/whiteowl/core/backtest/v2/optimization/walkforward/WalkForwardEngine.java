@@ -63,11 +63,12 @@ public final class WalkForwardEngine {
                                   List<StrategyInput> inputs,
                                   List<ParameterConstraint> constraints,
                                   WalkForwardConfig windows,
+                                  com.whiteowl.core.backtest.v2.engine.StandardExitPolicy exits,
                                   OptimizationProcedure procedure,
                                   OptimizationContext context) {
         OptimizationProcedure proc = procedure != null ? procedure
                 : new GridOptimizationProcedure(strategy, inputs, constraints,
-                        timeframe, config, engine);
+                        timeframe, exits, config, engine);
 
         long tMin = Long.MAX_VALUE;
         long tMax = Long.MIN_VALUE;
@@ -123,7 +124,7 @@ public final class WalkForwardEngine {
                 }
                 ProcedureResult pr = proc.optimize(inSample);
                 OptimizationMetrics oos = engine.evaluateCombination(
-                        strategy, pr.combination(), outOfSample);
+                        strategy, pr.combination(), outOfSample, exits);
                 results.add(new WalkForwardWindowResult(wi, range[0], range[1], range[2],
                         pr.combination(), pr.inSampleMetrics(), oos, null));
             } catch (Exception e) {

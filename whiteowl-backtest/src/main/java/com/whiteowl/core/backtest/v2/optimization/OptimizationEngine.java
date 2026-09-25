@@ -84,7 +84,8 @@ public final class OptimizationEngine {
                 continue;
             }
             List<OptimizationResult> tfResults = evaluateGrid(
-                    request.getStrategy(), grid, slices, tf, request.getListener(), context);
+                    request.getStrategy(), grid, slices, tf, request.getExitPolicy(),
+                    request.getListener(), context);
             all.addAll(tfResults);
             if (context != null) {
                 context.addOptimizationResults(tfResults);
@@ -101,6 +102,7 @@ public final class OptimizationEngine {
                                                   List<ParameterCombination> grid,
                                                   List<ScripSlice> slices,
                                                   Timeframe timeframe,
+                                                  StandardExitPolicy exits,
                                                   OptimizationProgressListener listener,
                                                   OptimizationContext context) {
         int total = grid.size();
@@ -122,7 +124,8 @@ public final class OptimizationEngine {
                     }
                     ParameterCombination combo = grid.get(idx);
                     try {
-                        OptimizationMetrics m = evaluateCombination(strategy, combo, slices);
+                        OptimizationMetrics m = evaluateCombination(strategy, combo,
+                                slices, exits);
                         results[idx] = OptimizationResult.ok(
                                 timeframe, combo, m, config.getMinTradesPerCombination());
                     } catch (Exception e) {

@@ -1,5 +1,6 @@
 package com.whiteowl.core.backtest.driver;
 
+import com.whiteowl.core.backtest.v2.engine.StandardExitPolicy;
 import com.whiteowl.core.backtest.v2.optimization.OptimizationContext;
 import com.whiteowl.core.backtest.v2.optimization.ParameterConstraint;
 import com.whiteowl.core.backtest.v2.optimization.ResearchConfiguration;
@@ -57,6 +58,7 @@ public final class StrategyResearchDriver {
         List<Timeframe> tfs = List.of(DEFAULT_TFS);
         List<ParameterConstraint> constraints = new ArrayList<>();
         WalkForwardConfig wf = WalkForwardConfig.ofMonths(4, 1, 1);
+        StandardExitPolicy baselineExits = null;
         Path outDir = Path.of(".");
 
         for (int i = 0; i < args.length; i++) {
@@ -78,6 +80,7 @@ public final class StrategyResearchDriver {
                             Integer.parseInt(p[2]));
                 }
                 case "-out" -> outDir = Path.of(args[++i]);
+                case "-exits" -> baselineExits = parseExitPolicy(args[++i]);
                 default -> {
                     System.err.println("Unknown arg: " + args[i]);
                     printUsage();
@@ -161,7 +164,7 @@ public final class StrategyResearchDriver {
         // ── Pipeline ─────────────────────────────────────────────────────
         OptimizationContext ctx = new ResearchPipeline(
                 ResearchConfiguration.builder().build())
-                .run(strategy, common, constraints, wf);
+                .run(strategy, common, constraints, wf, baselineExits);
 
         printSummary(ctx);
 
@@ -237,7 +240,9 @@ public final class StrategyResearchDriver {
 
     private static Timeframe parseTimeframe(String code) {
         for (Timeframe tf : Timeframe.values()) {
-            if (tf.getCode().equalsIgnoreCase(code) || tf.name().equalsIgnoreCase(code)) {
+            if (tf.getCode().equalsIgnoreCase(code)
+                    || tf.getLabel().equalsIgnoreCase(code)
+                    || tf.name().equalsIgnoreCase(code)) {
                 return tf;
             }
         }
@@ -275,6 +280,27 @@ public final class StrategyResearchDriver {
             fv[k] = v.get(k); ft[k] = ts.get(k);
         }
         return new BarsArrays(fo, fh, fl, fc, fv, ft, sz);
+    }
+
+    /**
+     * {@code -exits stopAtr,targetAtr,timeStopBars} — a baseline
+     * StandardExitPolicy for strategies that delegate exits to the engine.
+     * Use {@code -} for an unset component, e.g. {@code -, -, 60} = time stop
+     * only. {@code none} disables.
+     */
+    private static StandardExitPolicy parseExitPolicy(String spec) {
+        if (spec.equalsIgnoreCase("none")) {
+            return null;
+        }
+        String[] p = spec.split(",");
+        if (p.length != 3) {
+            throw new IllegalArgumentException(
+                    "-exits must be stopAtr,targetAtr,timeStopBars (use '-' for unset)");
+        }
+        Double stop = p[0].equals("-") ? null : Double.valueOf(p[0]);
+        Double target = p[1].equals("-") ? null : Double.valueOf(p[1]);
+        Integer timeStop = p[2].equals("-") ? null : Integer.valueOf(p[2]);
+        return StandardExitPolicy.of(stop, target, timeStop);
     }
 
     /** Display name = script file name without path/extension. */

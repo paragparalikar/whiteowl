@@ -98,7 +98,7 @@ public final class StrategyOptimizationDriver {
             WalkForwardEngine wf = new WalkForwardEngine(config);
             WalkForwardResult wfResult = wf.run(strategy, Map.of(scripId, full),
                     timeframe, inputs, List.of(),
-                    WalkForwardConfig.ofMonths(4, 2, 2), null, context);
+                    WalkForwardConfig.ofMonths(4, 2, 2), null, null, context);
             System.out.printf("%n[Phase 3] windows=%d WFE=%.2f meanIS=%.2f meanOOS=%.2f%n",
                     wfResult.windows().size(), wfResult.walkForwardEfficiency(),
                     wfResult.meanInSampleSortino(), wfResult.meanOutOfSampleSortino());

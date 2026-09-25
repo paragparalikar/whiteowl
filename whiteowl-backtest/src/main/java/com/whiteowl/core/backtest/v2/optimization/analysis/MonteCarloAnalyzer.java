@@ -74,9 +74,12 @@ public final class MonteCarloAnalyzer {
     private static double maxDrawdownPct(float[] pnls, double initial) {
         double eq = initial, peak = initial, maxDd = 0;
         for (float p : pnls) {
-            eq += p;
+            eq = Math.max(0, eq + p);   // account cannot go below zero
             peak = Math.max(peak, eq);
             maxDd = Math.max(maxDd, (peak - eq) / peak * 100.0);
+            if (eq <= 0) {
+                break;                 // account dead — path ends at ruin
+            }
         }
         return maxDd;
     }

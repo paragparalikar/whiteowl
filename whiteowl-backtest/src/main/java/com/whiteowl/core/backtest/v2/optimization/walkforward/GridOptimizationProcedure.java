@@ -26,18 +26,22 @@ public final class GridOptimizationProcedure implements OptimizationProcedure {
     private final List<StrategyInput> inputs;
     private final List<ParameterConstraint> constraints;
     private final Timeframe timeframe;
+    private final com.whiteowl.core.backtest.v2.engine.StandardExitPolicy exits;
     private final ResearchConfiguration config;
     private final OptimizationEngine engine;
     private final RobustParameterSelector selector;
 
     public GridOptimizationProcedure(StrategySpec strategy, List<StrategyInput> inputs,
                                       List<ParameterConstraint> constraints,
-                                      Timeframe timeframe, ResearchConfiguration config,
+                                      Timeframe timeframe,
+                                      com.whiteowl.core.backtest.v2.engine.StandardExitPolicy exits,
+                                      ResearchConfiguration config,
                                       OptimizationEngine engine) {
         this.strategy = strategy;
         this.inputs = inputs;
         this.constraints = constraints == null ? List.of() : constraints;
         this.timeframe = timeframe;
+        this.exits = exits;
         this.config = config;
         this.engine = engine;
         this.selector = new RobustParameterSelector(config);
@@ -48,7 +52,7 @@ public final class GridOptimizationProcedure implements OptimizationProcedure {
         List<ParameterCombination> grid = ParameterGrid.generate(
                 inputs, constraints, config.getMaxParameterCombinations());
         List<OptimizationResult> results = engine.evaluateGrid(
-                strategy, grid, inSampleSlices, timeframe, null, null);
+                strategy, grid, inSampleSlices, timeframe, exits, null, null);
         SelectionResult selection = selector.select(results, inputs);
         return new ProcedureResult(selection.combination(),
                 selection.selectedResult().metrics());

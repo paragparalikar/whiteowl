@@ -65,11 +65,16 @@ public final class ResearchPipeline {
      * @param constraints grid constraints (e.g. {@code lessThan("a","b")})
      * @param wf          walk-forward window sizing; null → 4m train / 1m
      *                    test / 1m step
+     * @param baselineExits engine-side exit policy applied during Phases 1–3
+     *                    — required for strategies that delegate exits to
+     *                    {@link StandardExitPolicy} ("standard exit
+     *                    conditions"); Phase 4 then optimizes it
      */
     public OptimizationContext run(StrategySpec strategy,
                                    Map<String, Map<Timeframe, BarsArrays>> bars,
                                    List<ParameterConstraint> constraints,
-                                   WalkForwardConfig wf) {
+                                   WalkForwardConfig wf,
+                                   StandardExitPolicy baselineExits) {
         List<String> scripIds = List.copyOf(bars.keySet());
         List<Timeframe> tfs = bars.values().iterator().next().keySet().stream()
                 .sorted().toList();
@@ -85,6 +90,7 @@ public final class ResearchPipeline {
         OptimizationRequest.OptimizationRequestBuilder rb = OptimizationRequest.builder()
                 .strategy(strategy).timeframes(tfs)
                 .barsLoader((id, tf) -> bars.get(id) != null ? bars.get(id).get(tf) : null)
+                .exitPolicy(baselineExits)
                 .parameters(inputs).constraints(constraints);
         scripIds.forEach(rb::scrip);
         engine.optimize(rb.build(), context);
@@ -117,7 +123,7 @@ public final class ResearchPipeline {
             }
             try {
                 WalkForwardResult r = wfEngine.run(strategy, slice, e.getKey(),
-                        inputs, constraints, wfCfg, null, context);
+                        inputs, constraints, wfCfg, baselineExits, null, context);
                 context.recordWalkForward(e.getKey(), r);
                 context.warnAll(r.warnings());
             } catch (IllegalArgumentException ex) {

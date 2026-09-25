@@ -16,17 +16,23 @@ import java.util.List;
  *   <li>Sort points by parameter value.</li>
  *   <li>Compute the global best over eligible points (non-NaN metric and
  *       {@code tradeCount >= minTradesPerCombination}).</li>
- *   <li>Optionally smooth the metric curve with a centered moving average
- *       ({@code smoothingWindow}; 1 disables).</li>
+ *   <li>Smooth the metric curve with a leave-one-out neighborhood average —
+ *       each point becomes the mean of its {@code smoothingWindow} neighbors
+ *       on each side, excluding itself (truncated at the edges). Isolated
+ *       spikes cannot smooth themselves into a plateau.</li>
  *   <li>Plateau membership: eligible points whose smoothed metric is within
  *       {@code plateauThreshold} of the best —
  *       {@code smoothed >= best − (1 − threshold)·|best|}.</li>
  *   <li>A qualifying region is a contiguous run of members with at least
  *       {@code minPlateauPoints} points and raw-metric spread
  *       {@code max − min <= maxPlateauSpreadFraction·|max|}.</li>
- *   <li>Each region gets a {@link RobustnessScore}; the best-scoring region
- *       wins. The selected value is the point with the best raw metric inside
- *       the region — stable region, not isolated spike.</li>
+ *   <li>Selection: argmax of the smoothed curve over eligible points — the
+ *       parameter value whose neighborhood is collectively strongest.</li>
+ *   <li>Plateau regions are still detected and scored
+ *       ({@link RobustnessScore}) — as the diagnostic of whether the
+ *       landscape actually contains a stable zone. {@code stable} is true
+ *       only when the smoothed-argmax selection lies inside a qualifying
+ *       plateau; otherwise the selection is flagged low-confidence.</li>
  * </ol>
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -44,7 +50,7 @@ public final class PlateauDetector {
                     Double.NaN, Double.NaN, false, "no data points");
         }
 
-        // Global best over eligible points only.
+        // Global best over eligible points only (kept for diagnostics).
         int bestIdx = -1;
         double best = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < curve.size(); i++) {
@@ -64,6 +70,19 @@ public final class PlateauDetector {
         double cutoff = best - (1.0 - cfg.getPlateauThreshold()) * Math.max(EPS, Math.abs(best));
 
         double[] smoothed = smooth(curve, cfg.getSmoothingWindow());
+
+        // Selection: argmax of the leave-one-out smoothed curve — the value
+        // whose neighborhood is collectively strongest. The point cannot
+        // vote for itself, so isolated spikes cannot win.
+        int selIdx = -1;
+        double selScore = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < curve.size(); i++) {
+            if (eligible(curve.get(i), cfg) && smoothed[i] > selScore) {
+                selScore = smoothed[i];
+                selIdx = i;
+            }
+        }
+        double selected = curve.get(selIdx).parameterValue();
 
         // Maximal contiguous runs of members.
         List<PlateauRegion> regions = new ArrayList<>();
@@ -85,27 +104,28 @@ public final class PlateauDetector {
         }
 
         if (regions.isEmpty()) {
-            return new PlateauResult(parameterName, curve, null, bestValue,
+            return new PlateauResult(parameterName, curve, null, selected,
                     bestValue, best, false,
-                    String.format("no stable plateau found; isolated optimum %.4g at %s",
-                            best, fmt(bestValue)));
+                    String.format("no stable plateau found (isolated optimum %.4g at %s); "
+                                    + "selected %s = argmax of neighborhood-smoothed curve "
+                                    + "(%.4g) — low confidence",
+                            best, fmt(bestValue), fmt(selected), selScore));
         }
 
         PlateauRegion region = regions.stream()
                 .max(Comparator.comparingDouble(PlateauRegion::robustnessScore))
                 .orElseThrow();
-        double selected = region.points().stream()
-                .max(Comparator.comparingDouble(CurvePoint::metric))
-                .orElseThrow()
-                .parameterValue();
+        boolean inRegion = region.points().stream()
+                .anyMatch(p -> p.parameterValue() == selected);
         String reason = String.format(
                 "stable plateau [%s, %s] (n=%d, mean=%.4g, sd=%.4g, score=%.3f); "
-                        + "selected %s (best raw metric inside region)",
+                        + "selected %s = argmax of neighborhood-smoothed curve (%.4g)%s",
                 fmt(region.lowerBound()), fmt(region.upperBound()), region.size(),
                 region.meanMetric(), region.stdDevMetric(), region.robustnessScore(),
-                fmt(selected));
+                fmt(selected), selScore,
+                inRegion ? " — inside plateau" : " — outside plateau, verify landscape");
         return new PlateauResult(parameterName, curve, region, selected,
-                bestValue, best, true, reason);
+                bestValue, best, inRegion, reason);
     }
 
     /** Build a region if it satisfies minimum-size and maximum-spread rules. */
@@ -149,26 +169,32 @@ public final class PlateauDetector {
                 && p.tradeCount() >= cfg.getMinTradesPerCombination();
     }
 
-    /** Centered moving average over non-NaN metrics; window 1 → raw values. */
-    private static double[] smooth(List<CurvePoint> curve, int window) {
+    /**
+     * Leave-one-out neighborhood smoothing: the transformed value at each
+     * position is the average of up to {@code radius} neighbors on each side,
+     * excluding the point's own value. At the edges only the neighbors that
+     * exist are averaged. This deliberately dampens isolated spikes — a
+     * single lucky parameter value cannot lift itself into a plateau.
+     */
+    private static double[] smooth(List<CurvePoint> curve, int radius) {
         int n = curve.size();
         double[] out = new double[n];
-        if (window <= 1) {
+        if (radius <= 0) {
             for (int i = 0; i < n; i++) out[i] = curve.get(i).metric();
             return out;
         }
-        int half = window / 2;
         for (int i = 0; i < n; i++) {
             double sum = 0;
             int cnt = 0;
-            for (int j = Math.max(0, i - half); j <= Math.min(n - 1, i + half); j++) {
+            for (int j = Math.max(0, i - radius); j <= Math.min(n - 1, i + radius); j++) {
+                if (j == i) continue;
                 double m = curve.get(j).metric();
                 if (!Double.isNaN(m)) {
                     sum += m;
                     cnt++;
                 }
             }
-            out[i] = cnt == 0 ? Double.NaN : sum / cnt;
+            out[i] = cnt == 0 ? curve.get(i).metric() : sum / cnt;
         }
         return out;
     }

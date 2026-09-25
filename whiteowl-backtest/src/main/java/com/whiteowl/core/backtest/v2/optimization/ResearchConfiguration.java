@@ -57,9 +57,14 @@ public final class ResearchConfiguration {
      */
     @Builder.Default
     private final double maxPlateauSpreadFraction = 0.15;
-    /** Centered moving-average window for curve smoothing. 1 disables. */
+    /**
+     * Neighbor radius for leave-one-out curve smoothing: the transformed
+     * value at each grid point is the average of up to this many neighbors
+     * on each side, excluding the point itself. 0 disables. Default 3 →
+     * average of x-3..x-1 and x+1..x+3 (truncated at edges).
+     */
     @Builder.Default
-    private final int smoothingWindow = 1;
+    private final int smoothingWindow = 3;
 
     // ── Robustness score weights (must sum to 1.0) ───────────────────────
     @Builder.Default

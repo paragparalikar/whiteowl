@@ -34,6 +34,13 @@ public final class OptimizationRequest {
     private final List<StrategyInput> parameters;
     /** Validity constraints, e.g. {@code ParameterConstraint.lessThan("fast","slow")}. */
     private final List<ParameterConstraint> constraints;
+
+    /**
+     * Baseline engine-side exit policy applied to every combination — used
+     * when the strategy delegates exits to {@code StandardExitPolicy} rather
+     * than encoding its own.
+     */
+    private final com.whiteowl.core.backtest.v2.engine.StandardExitPolicy exitPolicy;
     /**
      * Optional bar range (e.g. the development split). Null → full loaded
      * history.
