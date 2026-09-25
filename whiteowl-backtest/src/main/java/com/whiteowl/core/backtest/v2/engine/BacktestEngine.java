@@ -31,6 +31,7 @@ public final class BacktestEngine {
     private final float slippagePercent;
     private final float volumeParticipationPercent;
     private final TradeLifecycleCallback lifecycleCallback;
+    private final StandardExitPolicy exitPolicy;
 
     public BacktestEngine(float initialCapital, float costPercent,
                           float slippagePercent, float volumeParticipationPercent) {
@@ -40,11 +41,20 @@ public final class BacktestEngine {
     public BacktestEngine(float initialCapital, float costPercent,
                           float slippagePercent, float volumeParticipationPercent,
                           TradeLifecycleCallback lifecycleCallback) {
+        this(initialCapital, costPercent, slippagePercent, volumeParticipationPercent,
+                lifecycleCallback, null);
+    }
+
+    public BacktestEngine(float initialCapital, float costPercent,
+                          float slippagePercent, float volumeParticipationPercent,
+                          TradeLifecycleCallback lifecycleCallback,
+                          StandardExitPolicy exitPolicy) {
         this.initialCapital = initialCapital;
         this.costPercent = costPercent;
         this.slippagePercent = slippagePercent;
         this.volumeParticipationPercent = volumeParticipationPercent;
         this.lifecycleCallback = lifecycleCallback;
+        this.exitPolicy = exitPolicy;
     }
 
     public ScripResult run(String scripId, BarsArrays arrays, TradingStrategyBase strategy) {
@@ -101,6 +111,14 @@ public final class BacktestEngine {
         IndicatorGraph graph = strategy.getIndicatorGraph();
         strategy.invokeSetup();
         log.info("Setup complete for {}: indicators={}", scripId, graph.size());
+
+        // Engine-side standardized exits (optional): ATR at entry drives
+        // stop/target distances; per-position peak/trough drives trailing stops.
+        float[] exitAtr = exitPolicy != null
+                ? AtrSeries.compute(arrays, exitPolicy.atrPeriod()) : null;
+        Map<Integer, Float> excursionPeak = exitPolicy != null
+                ? new LinkedHashMap<>() : null;
+
         for (int bar = 0; bar < size; bar++) {
             open.push(arrays.open()[bar]);
             high.push(arrays.high()[bar]);
@@ -129,11 +147,18 @@ public final class BacktestEngine {
             List<TradeRecord> currentBarTrades = processCurrentBarSignals(
                     signalQueue, tracker, portfolio, arrays, bar);
             allTrades.addAll(currentBarTrades);
-            if (!fillTrades.isEmpty() || !currentBarTrades.isEmpty()) {
-                log.debug("Bar {} for {}: fills={}, currentBar={}", bar, scripId,
-                        fillTrades.size(), currentBarTrades.size());
+            List<TradeRecord> policyTrades = exitPolicy != null
+                    ? applyExitPolicy(tracker, portfolio, arrays, bar, exitAtr, excursionPeak)
+                    : List.of();
+            allTrades.addAll(policyTrades);
+            if (!fillTrades.isEmpty() || !currentBarTrades.isEmpty() || !policyTrades.isEmpty()) {
+                log.debug("Bar {} for {}: fills={}, currentBar={}, policy={}", bar, scripId,
+                        fillTrades.size(), currentBarTrades.size(), policyTrades.size());
             }
             fireLifecycleEvents(scripId, bar, arrays, tracker, fillTrades, currentBarTrades);
+            if (!policyTrades.isEmpty() && lifecycleCallback != null) {
+                fireExitEvents(scripId, bar, arrays, policyTrades);
+            }
             equityValues[bar] = portfolio.getCash() + tracker.unrealizedPnl(arrays.close()[bar]);
         }
         if (tracker.hasPositions()) {
@@ -268,6 +293,85 @@ public final class BacktestEngine {
         } else {
             portfolio.adjustCash(-trade.getExitPrice() * trade.getQuantity());
         }
+    }
+
+    /**
+     * Evaluate engine-side standardized exits for every open position on this
+     * bar. Check order is conservative: stop (initial or trailing, whichever
+     * is tighter) → target → time stop. Gap-throughs fill at the open.
+     */
+    private List<TradeRecord> applyExitPolicy(PositionTracker tracker,
+                                               PortfolioState portfolio,
+                                               BarsArrays arrays, int bar,
+                                               float[] atr, Map<Integer, Float> excursionPeak) {
+        List<TradeRecord> trades = new ArrayList<>();
+        float o = arrays.open()[bar];
+        float h = arrays.high()[bar];
+        float l = arrays.low()[bar];
+        float c = arrays.close()[bar];
+        for (OpenPosition pos : new ArrayList<>(tracker.getPositions())) {
+            float atrAtEntry = pos.getEntryBarIndex() < atr.length
+                    ? atr[pos.getEntryBarIndex()] : Float.NaN;
+            Float exitPrice = resolvePolicyExit(pos, arrays, bar, o, h, l, c,
+                    atrAtEntry, excursionPeak);
+            if (exitPrice == null) {
+                continue;
+            }
+            TradeRecord trade = tracker.closePosition(pos, exitPrice,
+                    arrays.timestamp()[bar], bar);
+            portfolio.addPnl(trade.getNetPnl());
+            applyExitCash(portfolio, trade, pos.getSide());
+            excursionPeak.remove(pos.getId());
+            trades.add(trade);
+        }
+        return trades;
+    }
+
+    private Float resolvePolicyExit(OpenPosition pos, BarsArrays arrays, int bar,
+                                     float o, float h, float l, float c,
+                                     float atrAtEntry, Map<Integer, Float> excursionPeak) {
+        boolean isLong = pos.getSide() == Side.LONG;
+        float entry = pos.getEntryPrice();
+        int barsInTrade = bar - pos.getEntryBarIndex();
+
+        // Track the favorable extreme since entry for the trailing stop.
+        float extreme = excursionPeak.getOrDefault(pos.getId(), entry);
+        extreme = isLong ? Math.max(extreme, h) : Math.min(extreme, l);
+        excursionPeak.put(pos.getId(), extreme);
+
+        if (!Float.isNaN(atrAtEntry)) {
+            float stopLevel = Float.NaN;
+            if (exitPolicy.initialStopAtr() != null) {
+                float d = (float) (exitPolicy.initialStopAtr() * atrAtEntry);
+                stopLevel = isLong ? entry - d : entry + d;
+            }
+            if (exitPolicy.trailingStopAtr() != null) {
+                float d = (float) (exitPolicy.trailingStopAtr() * atrAtEntry);
+                float trail = isLong ? extreme - d : extreme + d;
+                stopLevel = Float.isNaN(stopLevel)
+                        ? trail
+                        : (isLong ? Math.max(stopLevel, trail) : Math.min(stopLevel, trail));
+            }
+            if (!Float.isNaN(stopLevel)) {
+                boolean hit = isLong ? l <= stopLevel : h >= stopLevel;
+                if (hit) {
+                    // Gap-through fills at the open rather than the stop price.
+                    return isLong ? Math.min(o, stopLevel) : Math.max(o, stopLevel);
+                }
+            }
+            if (exitPolicy.targetAtr() != null) {
+                float d = (float) (exitPolicy.targetAtr() * atrAtEntry);
+                float target = isLong ? entry + d : entry - d;
+                boolean hit = isLong ? h >= target : l <= target;
+                if (hit) {
+                    return isLong ? Math.max(o, target) : Math.min(o, target);
+                }
+            }
+        }
+        if (exitPolicy.timeStopBars() != null && barsInTrade >= exitPolicy.timeStopBars()) {
+            return c;
+        }
+        return null;
     }
 
     private void fireLifecycleEvents(String scripId, int bar, BarsArrays arrays,
