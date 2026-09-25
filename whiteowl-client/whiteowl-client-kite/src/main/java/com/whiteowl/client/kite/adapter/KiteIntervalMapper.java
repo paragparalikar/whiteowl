@@ -9,6 +9,7 @@ final class KiteIntervalMapper {
         if (timeframe == null) return null;
         return switch (timeframe) {
             case ONE_MINUTE -> KiteInterval.MINUTE;
+            case TWO_MINUTE -> null;
             case THREE_MINUTE -> KiteInterval.THREE_MINUTE;
             case FIVE_MINUTE -> KiteInterval.FIVE_MINUTE;
             case TEN_MINUTE -> KiteInterval.TEN_MINUTE;
