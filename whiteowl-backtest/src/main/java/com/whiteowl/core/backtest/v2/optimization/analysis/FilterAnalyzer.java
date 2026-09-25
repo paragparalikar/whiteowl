@@ -82,7 +82,8 @@ public final class FilterAnalyzer {
             bins.add(BucketStats.of(bLo, bHi, null, inBin));
         }
 
-        // Contiguous profitable runs above baseline.
+        // Contiguous runs whose per-bin trade-level Sortino (computed on the
+        // filtered trade subset alone) beats the unfiltered baseline.
         double bestImprovement = 0;
         double bestLo = Double.NaN, bestHi = Double.NaN;
         String reason = "no stable improving region";
@@ -93,11 +94,11 @@ public final class FilterAnalyzer {
                 double sum = 0;
                 int cnt = 0;
                 while (i < bins.size() && qualifies(bins.get(i), baseline)) {
-                    sum += bins.get(i).avgPnlPercent();
+                    sum += bins.get(i).sortino();
                     cnt++;
                     i++;
                 }
-                double improvement = sum / cnt - baseline.avgPnlPercent();
+                double improvement = sum / cnt - baseline.sortino();
                 if (improvement > bestImprovement) {
                     bestImprovement = improvement;
                     bestLo = bins.get(start).lowerBound();
@@ -110,17 +111,18 @@ public final class FilterAnalyzer {
         boolean accepted = !Double.isNaN(bestLo) && bestImprovement >= improvementThreshold;
         if (accepted) {
             reason = String.format(
-                    "region [%.4g, %.4g] improves avg trade by %.4f%% over baseline %.4f%%",
-                    bestLo, bestHi, bestImprovement, baseline.avgPnlPercent());
+                    "region [%.4g, %.4g] improves trade Sortino by %+.3f over baseline %.3f",
+                    bestLo, bestHi, bestImprovement, baseline.sortino());
         }
         return new FilterAnalysis(feature.name(), bins, accepted,
                 bestLo, bestHi, bestImprovement, reason);
     }
 
+    /** A bin qualifies when the trades inside it (and only those trades)
+     *  would have produced a better trade-level Sortino than the whole set. */
     private boolean qualifies(BucketStats bin, BucketStats baseline) {
         return bin.tradeCount() >= minTradesPerBin
-                && bin.avgPnlPercent() > baseline.avgPnlPercent()
-                && bin.profitFactor() > 1.0;
+                && bin.sortino() > baseline.sortino();
     }
 
     /**

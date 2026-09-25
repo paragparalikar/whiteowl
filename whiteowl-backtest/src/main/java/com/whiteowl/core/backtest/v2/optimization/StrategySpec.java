@@ -39,16 +39,29 @@ public abstract class StrategySpec {
     /** Stable identifier for audit output (class name or source hash). */
     public abstract String strategyId();
 
+    /** Human-readable display name for reports. Defaults to {@link #strategyId()}. */
+    public String name() {
+        return strategyId();
+    }
+
     public static StrategySpec script(String source) {
-        return new ScriptSpec(source);
+        return new ScriptSpec(source, null);
+    }
+
+    public static StrategySpec script(String source, String name) {
+        return new ScriptSpec(source, name);
     }
 
     public static StrategySpec of(Supplier<TradingStrategyBase> factory) {
-        return new JavaSpec(factory, null);
+        return new JavaSpec(factory, null, null);
     }
 
     public static StrategySpec of(Supplier<TradingStrategyBase> factory, List<StrategyInput> inputs) {
-        return new JavaSpec(factory, inputs);
+        return new JavaSpec(factory, inputs, null);
+    }
+
+    public static StrategySpec of(Supplier<TradingStrategyBase> factory, String name) {
+        return new JavaSpec(factory, null, name);
     }
 
     /**
@@ -77,10 +90,12 @@ public abstract class StrategySpec {
 
     private static final class ScriptSpec extends StrategySpec {
         private final String source;
+        private final String name;
         private volatile Class<? extends Script> compiled;
 
-        ScriptSpec(String source) {
+        ScriptSpec(String source, String name) {
             this.source = source;
+            this.name = name;
         }
 
         @Override
@@ -112,15 +127,23 @@ public abstract class StrategySpec {
         public String strategyId() {
             return "script#" + Integer.toHexString(source.hashCode());
         }
+
+        @Override
+        public String name() {
+            return name != null ? name : strategyId();
+        }
     }
 
     private static final class JavaSpec extends StrategySpec {
         private final Supplier<TradingStrategyBase> factory;
         private final List<StrategyInput> inputs;
+        private final String name;
 
-        JavaSpec(Supplier<TradingStrategyBase> factory, List<StrategyInput> inputs) {
+        JavaSpec(Supplier<TradingStrategyBase> factory, List<StrategyInput> inputs,
+                 String name) {
             this.factory = factory;
             this.inputs = inputs;
+            this.name = name;
         }
 
         @Override
@@ -136,6 +159,11 @@ public abstract class StrategySpec {
         @Override
         public String strategyId() {
             return newInstance().getClass().getName();
+        }
+
+        @Override
+        public String name() {
+            return name != null ? name : newInstance().getClass().getSimpleName();
         }
     }
 

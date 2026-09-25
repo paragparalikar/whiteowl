@@ -118,7 +118,7 @@ final class Svg {
                     "<text x='%.1f' y='%d' class='lbl'>w%d</text>",
                     x, H - 6, i));
         }
-        sb.append("<text x='").append(W - PAD - 150).append("' y='16' class='lbl'>")
+        sb.append("<text x='").append(W - PAD - 150).append("' y='34' class='lbl'>")
                 .append("■ in-sample&nbsp;&nbsp;<tspan class='oosT'>■ out-of-sample</tspan></text>");
         sb.append("</svg>");
         return sb.toString();
@@ -227,6 +227,170 @@ final class Svg {
             sb.append(String.format(Locale.ROOT,
                     "<text x='%d' y='%.1f' class='lbl' text-anchor='end'>%s</text>",
                     left - 4, top + r * ch + ch / 2 + 3, esc(rowLabels.get(r))));
+        }
+        sb.append("</svg>");
+        return sb.toString();
+    }
+
+    /**
+     * Equity curve (top) and drawdown-% profile (bottom) in ONE chart sharing
+     * the X axis — drawdown mirrored below the equity line.
+     */
+    static String equityDrawdownChart(float[] equity, String title) {
+        if (equity == null || equity.length < 2) return "";
+        float[] dd = drawdownSeries(equity);
+        double eMin = Double.POSITIVE_INFINITY, eMax = Double.NEGATIVE_INFINITY,
+                dMax = 0;
+        for (int i = 0; i < equity.length; i++) {
+            eMin = Math.min(eMin, equity[i]);
+            eMax = Math.max(eMax, equity[i]);
+            dMax = Math.max(dMax, dd[i]);
+        }
+        if (eMax <= eMin) eMax = eMin + 1;
+        if (dMax <= 0) dMax = 1;
+        double eSpan = eMax - eMin;
+        int n = equity.length;
+        int splitY = H / 2 + 10;   // boundary between the two panes
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(Locale.ROOT,
+                "<svg viewBox='0 0 %d %d' class='chart wide'><text x='%d' y='16' class='title'>%s</text>",
+                W, H, PAD, esc(title)));
+        // pane separator + axes
+        sb.append(String.format(Locale.ROOT,
+                "<line x1='%d' y1='%d' x2='%d' y2='%d' class='axis' stroke-dasharray='3,3'/>",
+                PAD, splitY, W - PAD, splitY));
+        sb.append(String.format(Locale.ROOT,
+                "<line x1='%d' y1='%d' x2='%d' y2='%d' class='axis'/>",
+                PAD, PAD, PAD, H - PAD));
+        sb.append(String.format(Locale.ROOT,
+                "<text x='4' y='%d' class='lbl'>%.0f</text>"
+                        + "<text x='4' y='%d' class='lbl'>%.0f</text>"
+                        + "<text x='4' y='%d' class='lbl'>0%%</text>"
+                        + "<text x='4' y='%d' class='lbl'>%.1f%%</text>",
+                PAD + 6, eMax, splitY - 4, eMin, splitY + 14, H - PAD, dMax));
+
+        // equity polyline (top pane)
+        StringBuilder eq = new StringBuilder();
+        // dd area (bottom pane, grows downward)
+        StringBuilder ddPoly = new StringBuilder();
+        for (int i = 0; i < n; i++) {
+            double x = PAD + (double) i / (n - 1) * (W - 2 * PAD);
+            double ye = PAD + 14 + (eMax - equity[i]) / eSpan * (splitY - PAD - 24);
+            double yd = splitY + 10 + dd[i] / dMax * (H - PAD - splitY - 16);
+            eq.append(String.format(Locale.ROOT, "%.1f,%.1f ", x, ye));
+            ddPoly.append(String.format(Locale.ROOT, "%.1f,%.1f ", x, yd));
+        }
+        sb.append(String.format(Locale.ROOT,
+                "<polyline points='%s' class='eqLine'/>", eq));
+        sb.append(String.format(Locale.ROOT,
+                "<polygon points='%d,%d %s %d,%d' class='ddArea'/>",
+                PAD, splitY + 10, ddPoly, W - PAD, splitY + 10));
+        sb.append(String.format(Locale.ROOT,
+                "<polyline points='%s' class='ddLine'/>", ddPoly));
+        sb.append("</svg>");
+        return sb.toString();
+    }
+
+    /** Generic vertical bar chart for bucketed metrics. */
+    static String barChart(List<String> labels, double[] values, String title) {
+        if (labels == null || labels.isEmpty() || values == null) return "";
+        int n = Math.min(labels.size(), values.length);
+        double vMin = 0, vMax = 0;
+        for (int i = 0; i < n; i++) {
+            vMin = Math.min(vMin, values[i]);
+            vMax = Math.max(vMax, values[i]);
+        }
+        if (vMax <= vMin) vMax = vMin + 1;
+        double zeroY = H - PAD - (0 - vMin) / (vMax - vMin) * (H - 2 * PAD);
+        zeroY = Math.max(PAD, Math.min(H - PAD, zeroY));
+        double slot = (W - 2.0 * PAD) / n;
+        double bw = Math.min(slot * 0.7, 28);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(Locale.ROOT,
+                "<svg viewBox='0 0 %d %d' class='chart'><text x='%d' y='16' class='title'>%s</text>",
+                W, H, PAD, esc(title)));
+        sb.append(String.format(Locale.ROOT,
+                "<line x1='%d' y1='%.1f' x2='%d' y2='%.1f' class='axis'/>",
+                PAD, zeroY, W - PAD, zeroY));
+        for (int i = 0; i < n; i++) {
+            double v = values[i];
+            double x = PAD + i * slot + (slot - bw) / 2;
+            double h = Math.abs(v) / (vMax - vMin) * (H - 2 * PAD);
+            double y = v >= 0 ? zeroY - h : zeroY;
+            sb.append(String.format(Locale.ROOT,
+                    "<rect x='%.1f' y='%.1f' width='%.1f' height='%.1f' "
+                            + "class='%s'><title>%s: %.3g</title></rect>",
+                    x, y, bw, Math.max(h, 1), v >= 0 ? "barPos" : "barNeg",
+                    esc(labels.get(i)), v));
+            if (n <= 20) {
+                sb.append(String.format(Locale.ROOT,
+                        "<text x='%.1f' y='%d' class='lbl' text-anchor='middle'>%s</text>",
+                        x + bw / 2, H - 6, esc(labels.get(i))));
+            }
+        }
+        sb.append("</svg>");
+        return sb.toString();
+    }
+
+    /** Multi-series line chart — one line per named series. */
+    static String multiLineChart(String[] xLabels,
+                                  java.util.Map<String, double[]> series,
+                                  String title) {
+        if (series == null || series.isEmpty()) return "";
+        double yMin = Double.POSITIVE_INFINITY, yMax = Double.NEGATIVE_INFINITY;
+        for (double[] s : series.values()) {
+            for (double v : s) {
+                if (Double.isNaN(v)) continue;
+                yMin = Math.min(yMin, v);
+                yMax = Math.max(yMax, v);
+            }
+        }
+        if (yMax <= yMin) yMax = yMin + 1;
+        double ySpan = yMax - yMin;
+        String[] colors = {"#5aa2ff", "#f0a35e", "#7bd88f", "#c792ea", "#ff7a7a"};
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(Locale.ROOT,
+                "<svg viewBox='0 0 %d %d' class='chart'><text x='%d' y='16' class='title'>%s</text>",
+                W, H, PAD, esc(title)));
+        sb.append(String.format(Locale.ROOT,
+                "<line x1='%d' y1='%d' x2='%d' y2='%d' class='axis'/>"
+                        + "<line x1='%d' y1='%d' x2='%d' y2='%d' class='axis'/>",
+                PAD, H - PAD, W - PAD, H - PAD, PAD, PAD, PAD, H - PAD));
+        sb.append(String.format(Locale.ROOT,
+                "<text x='4' y='%d' class='lbl'>%.2f</text>"
+                        + "<text x='4' y='%d' class='lbl'>%.2f</text>",
+                PAD + 6, yMax, H - PAD, yMin));
+        int li = 0;
+        for (var e : series.entrySet()) {
+            double[] s = e.getValue();
+            int n = s.length;
+            String color = colors[li % colors.length];
+            StringBuilder poly = new StringBuilder();
+            for (int i = 0; i < n; i++) {
+                if (Double.isNaN(s[i])) continue;
+                double x = PAD + (n == 1 ? 0.5 : (double) i / (n - 1)) * (W - 2 * PAD);
+                double y = H - PAD - (s[i] - yMin) / ySpan * (H - 2 * PAD);
+                poly.append(String.format(Locale.ROOT, "%.1f,%.1f ", x, y));
+            }
+            sb.append(String.format(Locale.ROOT,
+                    "<polyline points='%s' fill='none' stroke='%s' stroke-width='1.5'/>",
+                    poly, color));
+            sb.append(String.format(Locale.ROOT,
+                    "<text x='%d' y='%d' class='lbl' fill='%s'>■ %s</text>",
+                    W - PAD - 10 - 14 * Math.min(10, e.getKey().length()),
+                    32 + li * 13, color, esc(e.getKey())));
+            li++;
+        }
+        if (xLabels != null && xLabels.length > 0) {
+            int step = Math.max(1, xLabels.length / 8);
+            for (int i = 0; i < xLabels.length; i += step) {
+                sb.append(String.format(Locale.ROOT,
+                        "<text x='%.1f' y='%d' class='lbl' text-anchor='middle'>%s</text>",
+                        PAD + (double) i / Math.max(1, xLabels.length - 1) * (W - 2 * PAD),
+                        H - 6, esc(xLabels[i])));
+            }
         }
         sb.append("</svg>");
         return sb.toString();

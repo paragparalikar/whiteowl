@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -19,6 +20,7 @@ public final class MetricsCalculator {
     private static final float TRADING_DAYS_PER_YEAR = 252f;
     private static final float MS_PER_DAY = 86_400_000f;
     private static final float DAYS_PER_YEAR = 365f;
+    private static final java.time.ZoneId IST = java.time.ZoneId.of("Asia/Kolkata");
 
     public static BacktestReport compute(List<ScripResult> results, BacktestConfig config) {
         List<TradeRecord> allTrades = mergeAndSortTrades(results);
@@ -230,13 +232,41 @@ public final class MetricsCalculator {
         return maxDurationDays;
     }
 
+    /**
+     * Daily returns: the equity curve is resampled to end-of-day values
+     * (IST calendar day) so that the √252 annualization in Sharpe/Sortino is
+     * correct regardless of bar frequency. Before this fix, raw per-bar
+     * steps were annualized as if each step were a day.
+     */
     private static float[] computeDailyReturns(EquityCurve curve) {
         int size = curve.getSize();
         if (size < 2) return new float[0];
-        float[] returns = new float[size - 1];
         float[] values = curve.getValues();
+        long[] timestamps = curve.getTimestamps();
+        List<Float> eod = new ArrayList<>();
+        java.time.LocalDate day = java.time.Instant.ofEpochMilli(timestamps[0])
+                .atZone(IST).toLocalDate();
+        float lastValue = values[0];
         for (int i = 1; i < size; i++) {
-            returns[i - 1] = values[i - 1] > 0 ? (values[i] - values[i - 1]) / values[i - 1] : 0f;
+            java.time.LocalDate d = java.time.Instant.ofEpochMilli(timestamps[i])
+                    .atZone(IST).toLocalDate();
+            if (!d.equals(day)) {
+                eod.add(lastValue);
+                day = d;
+            }
+            lastValue = values[i];
+        }
+        eod.add(lastValue);
+        if (eod.size() < 2) return new float[0];
+        // Truncate at ruin: once equity is non-positive the account is dead and
+        // subsequent flat days would mask the real return distribution.
+        float[] returns = new float[eod.size() - 1];
+        for (int i = 1; i < eod.size(); i++) {
+            float prev = eod.get(i - 1);
+            if (prev <= 0) {
+                return Arrays.copyOf(returns, i - 1);
+            }
+            returns[i - 1] = (eod.get(i) - prev) / prev;
         }
         return returns;
     }

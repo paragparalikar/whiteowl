@@ -25,6 +25,7 @@ public final class OptimizationContext {
 
     private final ResearchJob job = new ResearchJob();
     private final String strategyId;
+    private String strategyName;
     private final List<String> scripIds;
     private final List<Timeframe> timeframes;
     private final ResearchConfiguration configuration;
@@ -165,6 +166,15 @@ public final class OptimizationContext {
 
     public synchronized void setFinalConfiguration(FinalConfiguration c) {
         this.finalConfiguration = c;
+    }
+
+    public synchronized void setStrategyName(String name) {
+        this.strategyName = name;
+    }
+
+    /** Display name for reports — falls back to the strategy id. */
+    public String displayName() {
+        return strategyName != null ? strategyName : strategyId;
     }
 
     public synchronized void warn(ResearchWarning warning) {

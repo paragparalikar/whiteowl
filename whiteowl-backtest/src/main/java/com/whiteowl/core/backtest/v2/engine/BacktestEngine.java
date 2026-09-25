@@ -159,7 +159,9 @@ public final class BacktestEngine {
             if (!policyTrades.isEmpty() && lifecycleCallback != null) {
                 fireExitEvents(scripId, bar, arrays, policyTrades);
             }
-            equityValues[bar] = portfolio.getCash() + tracker.unrealizedPnl(arrays.close()[bar]);
+            // Floor at zero — equity cannot go negative in a real account.
+            equityValues[bar] = Math.max(0f,
+                    portfolio.getCash() + tracker.unrealizedPnl(arrays.close()[bar]));
         }
         if (tracker.hasPositions()) {
             int lastBar = size - 1;
@@ -171,7 +173,7 @@ public final class BacktestEngine {
             }
             fireForceCloseEvents(scripId, lastBar, arrays, closeTrades);
             allTrades.addAll(closeTrades);
-            equityValues[lastBar] = portfolio.getCash();
+            equityValues[lastBar] = Math.max(0f, portfolio.getCash());
         }
         float totalNetPnl = 0f;
         for (TradeRecord trade : allTrades) {
@@ -250,6 +252,11 @@ public final class BacktestEngine {
                 }
                 trades.addAll(reversalTrades);
             }
+            // Account-dead gate: an account with non-positive equity cannot
+            // take new positions (no leverage modeled).
+            if (portfolio.getCash() + tracker.unrealizedPnl(c) <= 0) {
+                return trades;
+            }
             OpenPosition pos = tracker.openPosition(entrySide, signal.getQuantity(),
                     rawPrice, ts, bar, vol, volumeParticipationPercent);
             if (pos != null) {
@@ -279,20 +286,20 @@ public final class BacktestEngine {
         return trades;
     }
 
+    /**
+     * Cash models realized equity: the position's notional is NOT debited
+     * (positions are tracked separately and valued via
+     * {@link PositionTracker#unrealizedPnl}), and all trading costs are
+     * realized through {@link TradeRecord#getNetPnl()} at exit. Debiting
+     * the notional while carrying only P&amp;L as unrealized would make
+     * equity plunge by the position size on every entry.
+     */
     private void applyEntryCash(PortfolioState portfolio, OpenPosition pos) {
-        if (pos.getSide() == Side.LONG) {
-            portfolio.adjustCash(-pos.getEntryPrice() * pos.getQuantity());
-        } else {
-            portfolio.adjustCash(pos.getEntryPrice() * pos.getQuantity());
-        }
+        // no-op — realized-equity model
     }
 
     private void applyExitCash(PortfolioState portfolio, TradeRecord trade, Side side) {
-        if (side == Side.LONG) {
-            portfolio.adjustCash(trade.getExitPrice() * trade.getQuantity());
-        } else {
-            portfolio.adjustCash(-trade.getExitPrice() * trade.getQuantity());
-        }
+        portfolio.adjustCash(trade.getNetPnl());
     }
 
     /**
