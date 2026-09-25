@@ -1,0 +1,20 @@
+{
+  "strategy": "script#19c9ef67",
+  "instruments": ["NSE:ACC"],
+  "direction": "LONG",
+  "timeframe": "10m",
+  "parameters": {
+    "longEma": 28.0,
+    "quantity": 50,
+    "shortEma": 3.0
+  },
+  "exit": {
+    "initialStopAtr": 2.25,
+    "targetAtr": 3.0,
+    "trailingStopAtr": null,
+    "timeStopBars": 5
+  },
+  "costs": {"costPercent": 0.1, "slippagePercent": 0.05},
+  "inSample": {"sortino": 2656.709, "cagr": -16.359, "maxDrawdown": -100.34761, "trades": 250},
+  "warnings": ["HIGH_PARAMETER_SENSITIVITY", "HIGH_PARAMETER_SENSITIVITY", "HIGH_PARAMETER_SENSITIVITY", "HIGH_PARAMETER_SENSITIVITY", "HIGH_PARAMETER_SENSITIVITY", "HIGH_PARAMETER_SENSITIVITY", "HIGH_PARAMETER_SENSITIVITY", "HIGH_PARAMETER_SENSITIVITY", "HIGH_PARAMETER_SENSITIVITY", "HIGH_PARAMETER_SENSITIVITY", "POOR_OUT_OF_SAMPLE_PERFORMANCE", "POSSIBLE_OVERFITTING", "HIGH_TRANSACTION_COST_SENSITIVITY", "HIGH_DRAWDOWN"]
+}
