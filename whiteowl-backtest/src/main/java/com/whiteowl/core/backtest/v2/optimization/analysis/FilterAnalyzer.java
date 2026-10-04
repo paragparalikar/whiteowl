@@ -11,11 +11,13 @@ import java.util.function.ToDoubleFunction;
  * Phase 5 — univariate filter analysis.
  *
  * <p>For each entry-time feature: order observations into equal-width bins,
- * compute per-bin trade statistics, then look for a contiguous region whose
- * bins beat the baseline trade-level metric with adequate samples and stable
- * neighbors — the same "plateau over spike" philosophy as parameter
- * selection. A region is accepted only when it shows meaningful, stable
- * improvement over the unfiltered baseline.</p>
+ * compute per-bin trade statistics, then find contiguous runs of bins that
+ * individually beat the unfiltered baseline. Each run seeds a candidate
+ * region which is expanded in both directions while the pooled trades of
+ * the expanded region still beat the baseline — the widest stable plateau,
+ * not the single hottest bin (the same "plateau over spike" philosophy as
+ * parameter selection). The region with the largest pooled improvement is
+ * reported; it is accepted only when that improvement is meaningful.</p>
  */
 @Slf4j
 public final class FilterAnalyzer {
@@ -70,6 +72,7 @@ public final class FilterAnalyzer {
             return new FilterAnalysis(feature.name(), List.of(), false,
                     Double.NaN, Double.NaN, 0, "constant feature value");
         }
+        List<List<TradeObservation>> binTrades = new ArrayList<>();
         for (int i = 0; i < binCount; i++) {
             double bLo = lo + i * width;
             double bHi = i == binCount - 1 ? hi + 1e-9 : lo + (i + 1) * width;
@@ -79,43 +82,84 @@ public final class FilterAnalyzer {
                         double v = feature.accessor().applyAsDouble(t);
                         return v >= flo && v < fhi;
                     }).toList();
+            binTrades.add(inBin);
             bins.add(BucketStats.of(bLo, bHi, null, inBin));
         }
 
-        // Contiguous runs whose per-bin trade-level Sortino (computed on the
-        // filtered trade subset alone) beats the unfiltered baseline.
-        double bestImprovement = 0;
+        // Seeds: contiguous runs of bins that individually beat the baseline.
+        // Each seed is expanded into the widest contiguous region whose
+        // pooled trades still beat the baseline — the plateau around the
+        // seed, not just the hottest bin. The candidate with the largest
+        // pooled improvement wins; wider coverage breaks ties.
+        double bestImprovement = 0, bestCoverage = 0;
         double bestLo = Double.NaN, bestHi = Double.NaN;
+        int bestTrades = 0;
         String reason = "no stable improving region";
         int i = 0;
         while (i < bins.size()) {
-            if (qualifies(bins.get(i), baseline)) {
-                int start = i;
-                double sum = 0;
-                int cnt = 0;
-                while (i < bins.size() && qualifies(bins.get(i), baseline)) {
-                    sum += bins.get(i).sortino();
-                    cnt++;
-                    i++;
-                }
-                double improvement = sum / cnt - baseline.sortino();
-                if (improvement > bestImprovement) {
-                    bestImprovement = improvement;
-                    bestLo = bins.get(start).lowerBound();
-                    bestHi = bins.get(i - 1).upperBound();
-                }
-            } else {
+            if (!qualifies(bins.get(i), baseline)) {
+                i++;
+                continue;
+            }
+            int start = i;
+            while (i < bins.size() && qualifies(bins.get(i), baseline)) {
                 i++;
             }
+            int end = i - 1;
+
+            int rLo = start, rHi = end;
+            while (rLo > 0 && pooledSortino(binTrades, rLo - 1, rHi)
+                    > baseline.sortino()) {
+                rLo--;
+            }
+            while (rHi < bins.size() - 1 && pooledSortino(binTrades, rLo, rHi + 1)
+                    > baseline.sortino()) {
+                rHi++;
+            }
+            double improvement = pooledSortino(binTrades, rLo, rHi)
+                    - baseline.sortino();
+            int regionTrades = pooledTradeCount(binTrades, rLo, rHi);
+            double coverage = (double) regionTrades / valid.size();
+            if (improvement > bestImprovement
+                    || (improvement == bestImprovement
+                            && coverage > bestCoverage)) {
+                bestImprovement = improvement;
+                bestCoverage = coverage;
+                bestLo = bins.get(rLo).lowerBound();
+                bestHi = bins.get(rHi).upperBound();
+                bestTrades = regionTrades;
+            }
         }
-        boolean accepted = !Double.isNaN(bestLo) && bestImprovement >= improvementThreshold;
+        boolean accepted = !Double.isNaN(bestLo)
+                && bestImprovement >= improvementThreshold;
         if (accepted) {
             reason = String.format(
-                    "region [%.4g, %.4g] improves trade Sortino by %+.3f over baseline %.3f",
-                    bestLo, bestHi, bestImprovement, baseline.sortino());
+                    "region [%.4g, %.4g] (%d trades, %.0f%% of population) "
+                            + "improves trade Sortino by %+.3f over baseline %.3f",
+                    bestLo, bestHi, bestTrades, bestCoverage * 100,
+                    bestImprovement, baseline.sortino());
         }
         return new FilterAnalysis(feature.name(), bins, accepted,
                 bestLo, bestHi, bestImprovement, reason);
+    }
+
+    /** Sortino of all trades pooled from bins {@code lo..hi} inclusive. */
+    private double pooledSortino(List<List<TradeObservation>> binTrades,
+                                 int lo, int hi) {
+        List<TradeObservation> pooled = new ArrayList<>();
+        for (int j = lo; j <= hi; j++) {
+            pooled.addAll(binTrades.get(j));
+        }
+        return BucketStats.of(Double.NaN, Double.NaN, null, pooled).sortino();
+    }
+
+    private int pooledTradeCount(List<List<TradeObservation>> binTrades,
+                                 int lo, int hi) {
+        int n = 0;
+        for (int j = lo; j <= hi; j++) {
+            n += binTrades.get(j).size();
+        }
+        return n;
     }
 
     /** A bin qualifies when the trades inside it (and only those trades)

@@ -3,8 +3,26 @@
 
 
 
+algotest-SENSEX-20261003-154701.csv
+1. MaxDrawdown capped at -10%
+- Max Closest Premium we can use is 250
+- 25% and 30% show consistent drawdown lower than this threshold.
+2. Drawdown and Sortino Ratio keeps improving as we lower the stop loss and premium linearly.
+3. AnnualReturnOnMargin keeps decreasing as we lower the stop loss and premium linearly.
+4. For AnnualReturnOnMargin [only 0DTE], Premium of 250 and stop loss of 45% is stable as per the above constraint.
 
+SENSEX - 0DTE
+Chosen Strategy: Premium = 350, Stop Loss = 35%
+MaxDrawdown                     = -7.73%
+AnnualReturnOnMargin            = 21.1%
+ReturnOverMaximumDrawdown	    = 2.73
 
+NIFTY - 0DTE
+algotest-NIFTY-20261003-195251.csv
+Chosen Strategy: Premium = 85, Stop Loss = 75%
+MaxDrawdown                     = -7.34%
+AnnualReturnOnMargin            = 17.83%
+ReturnOverMaximumDrawdown	    = 2.43
 
 
 

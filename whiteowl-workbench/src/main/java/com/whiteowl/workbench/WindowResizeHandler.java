@@ -1,8 +1,10 @@
 package com.whiteowl.workbench;
 
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 public final class WindowResizeHandler {
@@ -72,29 +74,44 @@ public final class WindowResizeHandler {
     }
 
     private void applyWidth(double newWidth) {
-        double clamped = Math.max(newWidth, stage.getMinWidth());
+        double maxWidth = screenBounds().getMaxX() - stage.getX();
+        double clamped = Math.min(Math.max(newWidth, stage.getMinWidth()), maxWidth);
         stage.setWidth(clamped);
     }
 
     private void applyHeight(double newHeight) {
-        double clamped = Math.max(newHeight, stage.getMinHeight());
+        double maxHeight = screenBounds().getMaxY() - stage.getY();
+        double clamped = Math.min(Math.max(newHeight, stage.getMinHeight()), maxHeight);
         stage.setHeight(clamped);
     }
 
     private void applyLeftResize(double dx) {
-        double newWidth = startWidth - dx;
+        double minDx = screenBounds().getMinX() - startStageX;
+        double effectiveDx = Math.max(dx, minDx);
+        double newWidth = startWidth - effectiveDx;
         if (newWidth >= stage.getMinWidth()) {
             stage.setWidth(newWidth);
-            stage.setX(startStageX + dx);
+            stage.setX(startStageX + effectiveDx);
         }
     }
 
     private void applyTopResize(double dy) {
-        double newHeight = startHeight - dy;
+        double minDy = screenBounds().getMinY() - startStageY;
+        double effectiveDy = Math.max(dy, minDy);
+        double newHeight = startHeight - effectiveDy;
         if (newHeight >= stage.getMinHeight()) {
             stage.setHeight(newHeight);
-            stage.setY(startStageY + dy);
+            stage.setY(startStageY + effectiveDy);
         }
+    }
+
+    private Rectangle2D screenBounds() {
+        return Screen.getScreensForRectangle(
+                        stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight())
+                .stream()
+                .findFirst()
+                .map(Screen::getVisualBounds)
+                .orElse(Screen.getPrimary().getVisualBounds());
     }
 
     private Cursor computeCursor(double x, double y) {

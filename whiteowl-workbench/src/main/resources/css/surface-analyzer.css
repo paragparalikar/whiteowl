@@ -1,0 +1,152 @@
+.surface-analyzer-pane {
+    -fx-padding: 4 10 10 10;
+}
+
+.sa-toolbar {
+    -fx-padding: 4 8 4 8;
+    -fx-spacing: 8;
+}
+
+.sa-button {
+    -fx-background-color: #2d5c88;
+    -fx-text-fill: #e0e0e0;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+    -fx-padding: 5 14 5 10;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.sa-button:hover {
+    -fx-background-color: #35689e;
+}
+
+.sa-button:disabled {
+    -fx-opacity: 0.5;
+}
+
+.sa-file-label {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-size: 12px;
+}
+
+.sa-stats-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.sa-section-label {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+}
+
+.sa-controls {
+    -fx-spacing: 6;
+    -fx-padding: 8;
+}
+
+.sa-scroll {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.sa-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.sa-combo {
+    -fx-font-size: 11px;
+    -fx-pref-height: 24;
+}
+
+.sa-field {
+    -fx-font-size: 11px;
+    -fx-pref-height: 24;
+    -fx-background-color: #282a36;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: #44475a;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.sa-collapse-strip {
+    -fx-background-color: #26282e;
+    -fx-min-width: 20;
+    -fx-max-width: 20;
+    -fx-pref-width: 20;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.sa-collapse-strip:hover {
+    -fx-background-color: #2d5c88;
+}
+
+.sa-collapse-strip .ikonli-font-icon {
+    -fx-icon-color: #6e7681;
+}
+
+.sa-collapse-strip:hover .ikonli-font-icon {
+    -fx-icon-color: #e0e0e0;
+}
+
+.sa-filter-row {
+    -fx-spacing: 4;
+}
+
+.sa-remove-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6e7681;
+    -fx-font-size: 13px;
+    -fx-padding: 0 6 0 6;
+    -fx-cursor: hand;
+}
+
+.sa-remove-button:hover {
+    -fx-text-fill: #ef5350;
+}
+
+.sa-legend-label {
+    -fx-text-fill: #8b949e;
+    -fx-font-size: 10px;
+}
+
+.sa-legend {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat Medium", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 11px;
+    -fx-padding: 6 0 0 10;
+}
+
+.sa-hint {
+    -fx-text-fill: #4d5566;
+    -fx-font-size: 10px;
+    -fx-padding: 0 0 6 10;
+}
+
+.sa-placeholder {
+    -fx-text-fill: #6e7681;
+    -fx-font-family: "Montserrat Light", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 14px;
+}
+
+.sa-detail-header {
+    -fx-text-fill: #bbbbbb;
+    -fx-font-family: "Montserrat SemiBold", "Montserrat", "Segoe UI", system;
+    -fx-font-size: 12px;
+}
+
+.sa-detail-name {
+    -fx-text-fill: #6e7681;
+    -fx-font-size: 11px;
+}
+
+.sa-detail-value {
+    -fx-text-fill: #e0e0e0;
+    -fx-font-size: 11px;
+}

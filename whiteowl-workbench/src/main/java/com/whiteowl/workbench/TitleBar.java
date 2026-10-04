@@ -102,8 +102,22 @@ public final class TitleBar extends HBox {
         if (maximized) {
             restoreFromDrag(event);
         }
-        stage.setX(event.getScreenX() - dragOffsetX);
-        stage.setY(event.getScreenY() - dragOffsetY);
+        double newX = event.getScreenX() - dragOffsetX;
+        double newY = event.getScreenY() - dragOffsetY;
+        Rectangle2D bounds = screenBoundsAt(event.getScreenX(), event.getScreenY());
+        stage.setX(clamp(newX, bounds.getMinX(), Math.max(bounds.getMinX(), bounds.getMaxX() - stage.getWidth())));
+        stage.setY(clamp(newY, bounds.getMinY(), Math.max(bounds.getMinY(), bounds.getMaxY() - stage.getHeight())));
+    }
+
+    private static Rectangle2D screenBoundsAt(double screenX, double screenY) {
+        return Screen.getScreensForRectangle(screenX, screenY, 1, 1).stream()
+                .findFirst()
+                .map(Screen::getVisualBounds)
+                .orElse(Screen.getPrimary().getVisualBounds());
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.min(max, Math.max(min, value));
     }
 
     private void handleDoubleClick(MouseEvent event) {

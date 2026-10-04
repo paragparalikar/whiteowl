@@ -6,6 +6,7 @@ import com.whiteowl.core.backtest.v2.feature.TradeLifecycleCallback;
 import com.whiteowl.core.backtest.v2.feature.TradeLifecycleEvent;
 import com.whiteowl.core.backtest.v2.feature.TradeLifecyclePhase;
 import com.whiteowl.core.backtest.v2.model.TradeRecord;
+import com.whiteowl.core.bar.model.BarsArrays;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -93,26 +94,48 @@ public final class EntryFeatureCollector implements TradeLifecycleCallback {
                 tod.get(ChronoField.MINUTE_OF_DAY) - MARKET_OPEN_MINUTES,
                 date.getDayOfWeek().getValue(),
                 (date.getDayOfMonth() - 1) / 7 + 1,
-                date.getMonthValue());
+                date.getMonthValue(),
+                Map.of());
     }
 
     private void ensureSeries(TradeLifecycleEvent e) {
         if (boundArrays == e.getArrays()) return;
         boundArrays = e.getArrays();
-        atr = AtrSeries.compute(e.getArrays(), atrPeriod);
-        rsi = IndicatorSeries.rsi(e.getArrays().close(), rsiPeriod);
-        roc = IndicatorSeries.roc(e.getArrays().close(), rocPeriod);
-        adx = IndicatorSeries.adx(e.getArrays(), adxPeriod);
-        float[] sd = IndicatorSeries.stdDev(e.getArrays().close(), volPeriod);
-        float[] ma = IndicatorSeries.sma(e.getArrays().close(), volPeriod);
-        int n = e.getArrays().size();
-        volRatio = new float[n];
-        atrRatio = new float[n];
+        float[][] s = computeSeries(e.getArrays(), atrPeriod, rsiPeriod,
+                adxPeriod, rocPeriod, volPeriod);
+        adx = s[0];
+        rsi = s[1];
+        roc = s[2];
+        volRatio = s[3];
+        atrRatio = s[4];
+        atr = s[5];
+    }
+
+    /**
+     * Computes the six entry-time feature series over a bar set — the same
+     * series the collector samples at the signal bar.
+     * Index order: {@code {adx, rsi, roc, volStdDevOverMa, atrOverMa, atr}}.
+     * Element {@code i} uses only bars {@code <= i}; warmup entries are NaN.
+     * Exposed for offline feature generation (e.g. imported trade lists).
+     */
+    public static float[][] computeSeries(BarsArrays arrays, int atrPeriod,
+                                          int rsiPeriod, int adxPeriod,
+                                          int rocPeriod, int volPeriod) {
+        float[] atr = AtrSeries.compute(arrays, atrPeriod);
+        float[] rsi = IndicatorSeries.rsi(arrays.close(), rsiPeriod);
+        float[] roc = IndicatorSeries.roc(arrays.close(), rocPeriod);
+        float[] adx = IndicatorSeries.adx(arrays, adxPeriod);
+        float[] sd = IndicatorSeries.stdDev(arrays.close(), volPeriod);
+        float[] ma = IndicatorSeries.sma(arrays.close(), volPeriod);
+        int n = arrays.size();
+        float[] volRatio = new float[n];
+        float[] atrRatio = new float[n];
         for (int i = 0; i < n; i++) {
             boolean ok = !Float.isNaN(ma[i]) && ma[i] != 0;
             volRatio[i] = ok && !Float.isNaN(sd[i]) ? sd[i] / ma[i] : Float.NaN;
             atrRatio[i] = ok && !Float.isNaN(atr[i]) ? atr[i] / ma[i] : Float.NaN;
         }
+        return new float[][]{adx, rsi, roc, volRatio, atrRatio, atr};
     }
 
     private float at(float[] series, int i) {
