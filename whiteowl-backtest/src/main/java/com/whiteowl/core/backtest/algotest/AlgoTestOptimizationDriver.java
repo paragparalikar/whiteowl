@@ -51,9 +51,9 @@ public class AlgoTestOptimizationDriver {
 
         // ---------- strategy template ----------
         AlgoStrategy strategy = new AlgoStrategy();
-        strategy.setTicker(Ticker.NIFTY);
+        strategy.setTicker(Ticker.SENSEX);
         strategy.setEntryTime(9, 20);
-        strategy.setExitTime(15, 25);
+        strategy.setExitTime(15, 14);
 
         LegConfig ce = new LegConfig();
         ce.setPositionType(PositionType.SELL);
@@ -80,9 +80,11 @@ public class AlgoTestOptimizationDriver {
         // Closest Premium 100..400 step 25 x leg SL% 15..85 step 5
         // (applied to every leg; use s.getListOfLegConfigs().get(i) for a specific leg)
         List<ParameterSweep<?>> sweeps = List.of(
-                ParameterSweep.numericRange("ClosestPremium", 20, 100, 5,
+                ParameterSweep.numericRange(SweepParameters.CLOSEST_PREMIUM, 200, 400, 25,
                         (s, v) -> s.forEachLeg(l -> l.setClosestPremium(v))),
-                ParameterSweep.numericRange("LegStopLossPct", 10, 90, 5,
+                ParameterSweep.numericRange(SweepParameters.LEG_STOP_LOSS_PCT, 0, 100, 5,
+                        (s, v) -> s.forEachLeg(l -> l.setStopLoss(LegTgtSLType.PERCENTAGE, v))),
+                ParameterSweep.numericRange(SweepParameters.LEG_TARGET_PCT, 0, 100, 5,
                         (s, v) -> s.forEachLeg(l -> l.setStopLoss(LegTgtSLType.PERCENTAGE, v))));
 
         // ---------- run ----------
@@ -95,7 +97,7 @@ public class AlgoTestOptimizationDriver {
                 .slippagePct(0.5)                                   // 0.5% slippage per side
                 .costConfig(CostConfig.taxesPlusPerOrder(20))       // taxes + Rs20/order + 18% GST
                 .lotSize(10)                                        // SENSEX lot size
-                .dteSets(List.of(Set.of(), Set.of(0), Set.of(0, 1)))// all / 0DTE / 0+1 DTE
+                .dteSets(List.of(Set.of(), Set.of(0), Set.of(1), Set.of(0, 1)))// all / 0DTE / 1DTE / 0+1 DTE
                 .marginEstimate(true)                               // expiry-day margin per config
                 .optimize(template, sweeps, output);
         System.out.println("Results written to " + output.toAbsolutePath());
