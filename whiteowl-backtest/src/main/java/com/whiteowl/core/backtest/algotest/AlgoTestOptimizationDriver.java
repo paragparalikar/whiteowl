@@ -28,6 +28,11 @@ import java.util.Set;
  * The strategy template below mirrors request-sample.txt (SENSEX straddle:
  * sell weekly CE+PE, 10 lots, 25pt SL, entry 09:20, exit 15:25).
  * Edit the sweeps to change what is optimized.
+ *
+ * Restartable: pass the absolute path of an existing results CSV as args[0]
+ * to resume an interrupted run — configs already fully present in the file
+ * are skipped and new rows are appended to it. With no args a fresh
+ * timestamped CSV is created under algotest-results/.
  */
 public class AlgoTestOptimizationDriver {
 
@@ -88,9 +93,12 @@ public class AlgoTestOptimizationDriver {
                         (s, v) -> s.forEachLeg(l -> l.setTarget(LegTgtSLType.PERCENTAGE, v))));
 
         // ---------- run ----------
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
-        Path output = Path.of("algotest-results",
-                "algotest-" + strategy.getTicker().name() + "-" + timestamp + ".csv");
+        // args[0] (optional): existing results CSV to resume/append to
+        Path output = args.length > 0
+                ? Path.of(args[0])
+                : Path.of("algotest-results", "algotest-" + strategy.getTicker().name() + "-"
+                        + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
+                        + ".csv");
 
         AlgoTestClient client = new AlgoTestClient(COOKIE.strip());
         new AlgoTestOptimizer(client)

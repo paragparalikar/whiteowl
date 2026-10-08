@@ -12,9 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -103,7 +105,13 @@ public class AlgoTestOptimizer {
      * {@code csvPath}. Failures are recorded as rows with Status=ERROR rather
      * than aborting the sweep.
      *
-     * @return the rows that were written
+     * <p>Restartable: when {@code csvPath} already exists, its rows are loaded
+     * and a config is skipped once it has a full set of result rows (one per
+     * DTE set) — identity is the flattened input columns. New rows are
+     * appended under the existing header. Configs whose rows are all
+     * Status=ERROR are retried.
+     *
+     * @return the rows written by this run (not rows from a prior run)
      */
     public List<LinkedHashMap<String, String>> optimize(BacktestRequest template,
                                                         List<ParameterSweep<?>> sweeps,
@@ -111,14 +119,33 @@ public class AlgoTestOptimizer {
         List<int[]> combinations = cartesian(sweeps);
         log.info("Running {} backtest combinations -> {}", combinations.size(), csvPath);
 
+        List<LinkedHashMap<String, String>> existing = readExisting(csvPath);
+        Map<Map<String, String>, Integer> doneRowCounts = new HashMap<>();
+        for (LinkedHashMap<String, String> row : existing) {
+            if (!"ERROR".equals(row.get("Status"))) {
+                doneRowCounts.merge(inputKey(row), 1, Integer::sum);
+            }
+        }
+
         List<LinkedHashMap<String, String>> rows = new ArrayList<>(combinations.size());
-        try (OptimizationCsvWriter.RowWriter csvWriter = new OptimizationCsvWriter.RowWriter(csvPath)) {
+        int skipped = 0;
+        try (OptimizationCsvWriter.RowWriter csvWriter = existing.isEmpty()
+                ? new OptimizationCsvWriter.RowWriter(csvPath)
+                : OptimizationCsvWriter.RowWriter.append(csvPath,
+                        List.copyOf(existing.get(0).keySet()))) {
             int i = 0;
             for (int[] combination : combinations) {
                 i++;
                 BacktestRequest request = deepCopy(template);
                 for (int s = 0; s < sweeps.size(); s++) {
                     apply(sweeps.get(s), request.getStrategy(), combination[s]);
+                }
+                if (doneRowCounts.getOrDefault(ResultFlattener.inputColumns(request), 0)
+                        >= dteSets.size()) {
+                    skipped++;
+                    log.info("[{}/{}] {} skipped — already complete in {}", i, combinations.size(),
+                            describe(sweeps, combination), csvPath);
+                    continue;
                 }
                 try {
                     BacktestResult result = client.runAndWait(request, pollInterval, runTimeout);
@@ -156,8 +183,35 @@ public class AlgoTestOptimizer {
         } catch (IOException | UncheckedIOException e) {
             throw new AlgoTestException("Failed writing results CSV to " + csvPath, e);
         }
-        log.info("Wrote {} rows to {}", rows.size(), csvPath);
+        log.info("Wrote {} rows to {} ({} configs skipped as already complete)",
+                rows.size(), csvPath, skipped);
         return rows;
+    }
+
+    /** Prior rows of {@code csvPath}, or empty when the file doesn't exist yet. */
+    private static List<LinkedHashMap<String, String>> readExisting(Path csvPath) {
+        if (!Files.exists(csvPath)) {
+            return List.of();
+        }
+        try {
+            List<LinkedHashMap<String, String>> rows = OptimizationCsvWriter.read(csvPath);
+            log.info("Resuming from {} — {} existing rows", csvPath, rows.size());
+            return rows;
+        } catch (IOException e) {
+            throw new AlgoTestException("Failed reading existing results CSV " + csvPath, e);
+        }
+    }
+
+    /** Config identity of a CSV row: the input columns before "BacktestId". */
+    private static Map<String, String> inputKey(Map<String, String> row) {
+        LinkedHashMap<String, String> key = new LinkedHashMap<>();
+        for (Map.Entry<String, String> e : row.entrySet()) {
+            if ("BacktestId".equals(e.getKey())) {
+                break;
+            }
+            key.put(e.getKey(), e.getValue());
+        }
+        return key;
     }
 
     @SuppressWarnings("unchecked")

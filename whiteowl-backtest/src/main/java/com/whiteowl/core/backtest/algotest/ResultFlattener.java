@@ -122,7 +122,12 @@ public final class ResultFlattener {
         row.put("ReturnOverMaximumDrawdown", s != null ? str(s.getReturnOverMaximumDrawdown()) : "");
     }
 
-    private static LinkedHashMap<String, String> inputColumns(BacktestRequest request) {
+    /**
+     * The input-variable columns of a row — everything before BacktestId.
+     * Also used by {@link AlgoTestOptimizer} as a config's identity when
+     * matching against rows of an existing CSV on restart.
+     */
+    static LinkedHashMap<String, String> inputColumns(BacktestRequest request) {
         LinkedHashMap<String, String> row = new LinkedHashMap<>();
         AlgoStrategy strategy = request.getStrategy();
 

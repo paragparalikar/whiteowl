@@ -9,6 +9,7 @@ import com.whiteowl.core.backtest.algotest.model.BacktestSubmitResponse;
 import com.whiteowl.core.backtest.algotest.model.MarginEstimate;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -44,6 +45,10 @@ public class AlgoTestClient {
 
     /** Max times a single request is retried after an HTTP 429. */
     private static final int MAX_RATE_LIMIT_RETRIES = 10;
+    /** Max times a single request is retried after a transport failure (GOAWAY, reset, timeout). */
+    private static final int MAX_TRANSPORT_RETRIES = 3;
+    /** Base backoff for transport retries; multiplied by the attempt number. */
+    private static final Duration TRANSPORT_RETRY_DELAY = Duration.ofSeconds(2);
     /** Wait used when a 429 carries no Retry-After hint. */
     private static final Duration DEFAULT_RATE_LIMIT_DELAY = Duration.ofSeconds(10);
     /** Matches the api's "Try again in 8 seconds." rate-limit message. */
@@ -179,10 +184,15 @@ public class AlgoTestClient {
 
     /**
      * Sends the request, transparently retrying HTTP 429s after the server's
-     * suggested delay (Retry-After header or "Try again in N seconds" body).
+     * suggested delay (Retry-After header or "Try again in N seconds" body)
+     * and transport failures (HTTP/2 GOAWAY, connection reset, timeouts) with
+     * a short linear backoff — the failed request never completed, so resending
+     * on a fresh connection is safe. Retried submits may leave an orphan
+     * backtest server-side, which only burns the api's quota.
      */
     private HttpResponse<String> send(HttpRequest request) {
         int rateLimitRetries = 0;
+        int transportRetries = 0;
         while (true) {
             HttpResponse<String> response;
             try {
@@ -190,6 +200,17 @@ public class AlgoTestClient {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new AlgoTestException("Interrupted during request to " + request.uri(), e);
+            } catch (IOException e) {
+                if (transportRetries < MAX_TRANSPORT_RETRIES) {
+                    transportRetries++;
+                    Duration delay = TRANSPORT_RETRY_DELAY.multipliedBy(transportRetries);
+                    log.warn("Request to {} failed ({}: {}) — retrying in {}s (attempt {}/{})",
+                            request.uri(), e.getClass().getSimpleName(), e.getMessage(),
+                            delay.toSeconds(), transportRetries, MAX_TRANSPORT_RETRIES);
+                    sleep(delay);
+                    continue;
+                }
+                throw new AlgoTestException("Request to " + request.uri() + " failed: " + e.getMessage(), e);
             } catch (Exception e) {
                 throw new AlgoTestException("Request to " + request.uri() + " failed: " + e.getMessage(), e);
             }
