@@ -17,6 +17,9 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Core-Java client for the AlgoTest backtest api (https://api.algotest.in).
@@ -38,6 +41,14 @@ public class AlgoTestClient {
 
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    /** Max times a single request is retried after an HTTP 429. */
+    private static final int MAX_RATE_LIMIT_RETRIES = 10;
+    /** Wait used when a 429 carries no Retry-After hint. */
+    private static final Duration DEFAULT_RATE_LIMIT_DELAY = Duration.ofSeconds(10);
+    /** Matches the api's "Try again in 8 seconds." rate-limit message. */
+    private static final Pattern RETRY_AFTER_MSG =
+            Pattern.compile("try again in (\\d+) seconds?", Pattern.CASE_INSENSITIVE);
 
     private final HttpClient httpClient;
     private final String cookieHeader;
@@ -166,23 +177,61 @@ public class AlgoTestClient {
         return builder;
     }
 
+    /**
+     * Sends the request, transparently retrying HTTP 429s after the server's
+     * suggested delay (Retry-After header or "Try again in N seconds" body).
+     */
     private HttpResponse<String> send(HttpRequest request) {
-        try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        int rateLimitRetries = 0;
+        while (true) {
+            HttpResponse<String> response;
+            try {
+                response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AlgoTestException("Interrupted during request to " + request.uri(), e);
+            } catch (Exception e) {
+                throw new AlgoTestException("Request to " + request.uri() + " failed: " + e.getMessage(), e);
+            }
             if (response.statusCode() == 401 || response.statusCode() == 403) {
                 throw new AlgoTestException("Auth failed (HTTP " + response.statusCode()
                         + ") — refresh the cookie. Body: " + response.body());
+            }
+            if (response.statusCode() == 429 && rateLimitRetries < MAX_RATE_LIMIT_RETRIES) {
+                Duration delay = rateLimitDelay(response);
+                rateLimitRetries++;
+                log.warn("Rate limited (HTTP 429) on {} — retrying in {}s (attempt {}/{})",
+                        request.uri(), delay.toSeconds(), rateLimitRetries, MAX_RATE_LIMIT_RETRIES);
+                sleep(delay);
+                continue;
             }
             if (response.statusCode() >= 400) {
                 throw new AlgoTestException("HTTP " + response.statusCode() + " from "
                         + request.uri() + ": " + response.body());
             }
             return response;
-        } catch (AlgoTestException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new AlgoTestException("Request to " + request.uri() + " failed: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * How long to wait before retrying a 429: the Retry-After header if valid,
+     * else the "Try again in N seconds" hint in the body (+1s margin), else a
+     * default delay.
+     */
+    private static Duration rateLimitDelay(HttpResponse<String> response) {
+        Optional<String> retryAfter = response.headers().firstValue("Retry-After");
+        if (retryAfter.isPresent()) {
+            try {
+                return Duration.ofSeconds(Math.max(1, Long.parseLong(retryAfter.get().trim())));
+            } catch (NumberFormatException ignored) {
+                // not a seconds value — fall through to the body hint
+            }
+        }
+        Matcher m = RETRY_AFTER_MSG.matcher(String.valueOf(response.body()));
+        if (m.find()) {
+            return Duration.ofSeconds(Long.parseLong(m.group(1)) + 1);
+        }
+        return DEFAULT_RATE_LIMIT_DELAY;
     }
 
     private static Map<String, String> parseCookies(String cookieHeader) {
