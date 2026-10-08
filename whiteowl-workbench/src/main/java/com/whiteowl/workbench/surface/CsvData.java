@@ -10,26 +10,20 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * In-memory representation of an optimization result CSV. Columns before the
- * first known result marker column are treated as strategy inputs; the marker
- * column and everything after it are treated as outputs.
+ * In-memory representation of an arbitrary CSV file. The first record is the
+ * header row; each column is detected as numeric or categorical purely from
+ * its cell contents. No assumptions are made about column names or layout.
  */
 public final class CsvData {
-
-    private static final Set<String> OUTPUT_MARKERS = Set.of(
-            "BacktestId", "OverallProfit", "NetProfit", "TotalProfit", "Status");
 
     private final List<String> headers;
     private final List<String[]> rows;
     private final boolean[] numeric;
-    private final int outputStart;
 
-    private CsvData(List<String> headers, List<String[]> rows,
-                    boolean[] numeric, int outputStart) {
+    private CsvData(List<String> headers, List<String[]> rows, boolean[] numeric) {
         this.headers = headers;
         this.rows = rows;
         this.numeric = numeric;
-        this.outputStart = outputStart;
     }
 
     public static CsvData load(Path path) throws IOException {
@@ -53,7 +47,7 @@ public final class CsvData {
             rows.add(row);
         }
         boolean[] numeric = detectNumeric(headers, rows);
-        return new CsvData(headers, rows, numeric, findOutputStart(headers));
+        return new CsvData(headers, rows, numeric);
     }
 
     public List<String> getHeaders() {
@@ -68,22 +62,16 @@ public final class CsvData {
         return rows.size();
     }
 
+    public int columnCount() {
+        return headers.size();
+    }
+
     public String cell(int rowIndex, int columnIndex) {
         return rows.get(rowIndex)[columnIndex];
     }
 
     public boolean isNumeric(int columnIndex) {
         return numeric[columnIndex];
-    }
-
-    public List<Integer> numericColumns() {
-        List<Integer> indexes = new ArrayList<>();
-        for (int i = 0; i < numeric.length; i++) {
-            if (numeric[i]) {
-                indexes.add(i);
-            }
-        }
-        return indexes;
     }
 
     public double numericValue(int rowIndex, int columnIndex) {
@@ -101,22 +89,6 @@ public final class CsvData {
         }
     }
 
-    public List<Integer> inputColumns() {
-        List<Integer> indexes = new ArrayList<>();
-        for (int i = 0; i < outputStart; i++) {
-            indexes.add(i);
-        }
-        return indexes;
-    }
-
-    public List<Integer> outputColumns() {
-        List<Integer> indexes = new ArrayList<>();
-        for (int i = outputStart; i < headers.size(); i++) {
-            indexes.add(i);
-        }
-        return indexes;
-    }
-
     /**
      * Sorted distinct non-blank values of a column, used to offer value choices
      * for categorical and boolean filters.
@@ -130,15 +102,6 @@ public final class CsvData {
             }
         }
         return List.copyOf(values);
-    }
-
-    private static int findOutputStart(List<String> headers) {
-        for (int i = 0; i < headers.size(); i++) {
-            if (OUTPUT_MARKERS.contains(headers.get(i))) {
-                return i;
-            }
-        }
-        return headers.size();
     }
 
     private static boolean[] detectNumeric(List<String> headers, List<String[]> rows) {

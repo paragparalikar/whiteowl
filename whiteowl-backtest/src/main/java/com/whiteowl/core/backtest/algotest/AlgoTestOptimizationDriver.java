@@ -37,7 +37,7 @@ public class AlgoTestOptimizationDriver {
      * "access_token_cookie=eyJhbG...; csrf_access_token=97ec...; _ga=..."
      */
     public static final String COOKIE = """
-            _fbp=fb.1.1790571712712.19216971637278357; _gid=GA1.2.1804435019.1790952797; _gcl_au=1.1.219425985.1790571713.-.-.1790959846.2137535539.1790959847.1790959846; _ga_MS6Z4BR=GS2.1.s1790998536$o5$g0$t1790998536$j60$l0$h0; _ga=GA1.1.1576540960.1790571713; _uetsid=007ef510be7111f1b114af59a8ca2a70; _uetvid=b8cc43b0baf911f18c7cd12bc23d7b5f; _clck=tp1oru%5E2%5Eg9z%5E0%5E2462; access_token_cookie=eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc5MDk5ODU0NiwianRpIjoiZDJjYjc2NzAtODg2NS00MzA2LWFkMTctZmIxN2I5NmM4ODUzIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjZhYmEyYmY5NDAwZDZlYTQ3MzFmMzJjZiIsIm5iZiI6MTc5MDk5ODU0NiwiY3NyZiI6Ijk3ZWMyNTdlLTVhMjItNDZlMS05NDhlLWNlY2JhN2FhZjU4NyIsImV4cCI6MTc5MTI1Nzc0Nn0.CfYTHwRFT4hS-V5juYepvZi5cWJopCFeRXtCAT5Pd3xxadmbLRs1l30GDHwNh22wQOnVXe6TxLM0dfpVC6n_Cej09w1v5XrThVarvhl19Osl8xMIvE2OFHdVCFQue8ulVN-Z6Tts8a6_dTcGvMt3OgalUbiJjuD_pcgii63OK5Ni8zRCNdiREIo38FX0iFdR4eXs61lwNwm47DzJNjv3rRIGYmH2ZhijcDWY9hhxz1C2WkCz5D4cmMNSSLUI_wrSEy1kg4g84Mdtr8UUfLTJcL5uMFKrJFOw0m_cPDQVe2QfK7flbk5KmyO3ZzDtP6bK-Fd0kaGWlcXJ3aM2uPs7am1TFANnmjN-wHNOGtMlsXE6GJBE3S4NkzD3D5Lvt7f620qmcaFby6_DxmOBGSFPknDk18g4O7Z9CQvXfDp_6k-z92rDnjt7j9rdRQRMJmUYY5xEQPwLPPtXsKLKonxJZohghfkJdrfzJGZ49O0vuhJbZfmWD10cUHzRDGQaAogo; csrf_access_token=97ec257e-5a22-46e1-948e-cecba7aaf587; _ga_Y0EK98JRBT=GS2.1.s1791002974$o5$g1$t1791003018$j16$l0$h0; _clsk=ik0kkx%5E1791003746825%5E5%5E1%5Ee.clarity.ms%2Fcollect
+            _fbp=fb.1.1790571712712.19216971637278357; _gcl_au=1.1.219425985.1790571713.-.-.1790959846.2137535539.1790959847.1790959846; _ga_MS6Z4BR=GS2.1.s1791371904$o8$g0$t1791371904$j60$l0$h0; _gid=GA1.2.1637136777.1791371904; _ga=GA1.1.1576540960.1790571713; _uetsid=cfcc1630c24011f1a47d9330765c3cd2; _uetvid=b8cc43b0baf911f18c7cd12bc23d7b5f; _clck=tp1oru%5E2%5Ega3%5E0%5E2462; access_token_cookie=eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc5MTM3MTkxNCwianRpIjoiZjYyNWEwMzMtYTQyOS00ZjIyLWIzNWUtYTNlZGU3YjdiYjNkIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjZhYmEyYmY5NDAwZDZlYTQ3MzFmMzJjZiIsIm5iZiI6MTc5MTM3MTkxNCwiY3NyZiI6IjQzOTdhYzNjLTBiMzktNGRjYi05ZDAxLWIxYjdmMmJkMTY4MCIsImV4cCI6MTc5MTYzMTExNH0.YOlRRG9ZDTSAPA_Tk6umpvjBQJpXAuOEjwjeh4iwQQmS_1Urd-o-X2iY_OpXA4bjR06HFvEBzpC16ykMbsJ7SwjQgJwA1e9sqKhy4ucYAj2YY-QmJbXEkFPe3R6HdqFixnNAYAFthseM86hUGqO_UWJtYsXlLOpX-TkZBJWQQWQ24mkhCbyqzHPXgJ_G40pEfAqzLsPmU65zju7y4x5GjBlPepuA4is97b57tbX-YOn8QPgaQWEyRS-1kACEkXeJ4M-O5blUF0ClI_bsaAWYOQh9MwP7ltTMoN9Smx_17ld_uGd_P_WTlYsoOfrY2NDuWXy40MIeJh-EgET3MumHAFn_dixktVQznLr63muWTMEy6AGNTe7z8pub8N6FMOiZvrxHI1aOLvMkkh6qnsz-m3JA01F0dhVtUT6NDwFpAbiJGsqSKi7bIPKuUB_ZbM5-jeg4np304acWHfKDCK1JGyuRn6TUgU-snmS_IfH3VSY6IQImDCAErNCeafyJnFbg; csrf_access_token=4397ac3c-0b39-4dcb-9d01-b1b7f2bd1680; _clsk=1y361dc%5E1791371927406%5E3%5E1%5Eu.clarity.ms%2Fcollect; _ga_Y0EK98JRBT=GS2.1.s1791371904$o13$g1$t1791371965$j59$l0$h0
             """;
 
     private static final String START_DATE = "2023-03-01";
@@ -77,15 +77,15 @@ public class AlgoTestOptimizationDriver {
         template.getAttributes().setTemplate("Straddle920");
 
         // ---------- optimization grid ----------
-        // Closest Premium 100..400 step 25 x leg SL% 15..85 step 5
+        // Closest Premium 200..400 step 25 x leg SL% 0..100 step 10 x leg Tgt% 0..100 step 10
         // (applied to every leg; use s.getListOfLegConfigs().get(i) for a specific leg)
         List<ParameterSweep<?>> sweeps = List.of(
                 ParameterSweep.numericRange(SweepParameters.CLOSEST_PREMIUM, 200, 400, 25,
                         (s, v) -> s.forEachLeg(l -> l.setClosestPremium(v))),
-                ParameterSweep.numericRange(SweepParameters.LEG_STOP_LOSS_PCT, 0, 100, 5,
+                ParameterSweep.numericRange(SweepParameters.LEG_STOP_LOSS_PCT, 0, 100, 10,
                         (s, v) -> s.forEachLeg(l -> l.setStopLoss(LegTgtSLType.PERCENTAGE, v))),
-                ParameterSweep.numericRange(SweepParameters.LEG_TARGET_PCT, 0, 100, 5,
-                        (s, v) -> s.forEachLeg(l -> l.setStopLoss(LegTgtSLType.PERCENTAGE, v))));
+                ParameterSweep.numericRange(SweepParameters.LEG_TARGET_PCT, 0, 100, 10,
+                        (s, v) -> s.forEachLeg(l -> l.setTarget(LegTgtSLType.PERCENTAGE, v))));
 
         // ---------- run ----------
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));

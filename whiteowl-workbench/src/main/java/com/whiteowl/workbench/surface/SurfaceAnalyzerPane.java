@@ -25,13 +25,18 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.IntStream;
 
 /**
- * Root content of the surface analyzer window: file loading, numeric filters,
- * axis selection, the 3D surface and the selected-reading detail view.
+ * Root content of the surface analyzer window: file loading, filters, axis
+ * selection, the 3D surface and the selected-row detail view. Any CSV column
+ * can be plotted on any axis; categorical columns are laid out at evenly
+ * spaced positions labeled with their distinct values.
  */
 @Slf4j
 public final class SurfaceAnalyzerPane extends BorderPane {
@@ -59,14 +64,14 @@ public final class SurfaceAnalyzerPane extends BorderPane {
     private static final String REMOVE = "\u00d7";
     private static final String SECTION_AXES = "Axes";
     private static final String SECTION_FILTERS = "Filters";
-    private static final String SECTION_INPUTS = "Inputs";
-    private static final String SECTION_OUTPUTS = "Outputs";
-    private static final String PLACEHOLDER_TEXT = "Open a CSV file to plot the optimization surface";
+    private static final String SECTION_COLUMNS = "Columns";
+    private static final String PLACEHOLDER_TEXT = "Open a CSV file to plot";
+    private static final String SELECT_COLUMNS_TEXT = "Select at least two columns to plot";
+    private static final String NONE_ITEM = "— none —";
     private static final String NO_FILE_TEXT = "No file loaded";
     private static final String AXIS_X = "X";
     private static final String AXIS_Y = "Y";
     private static final String AXIS_Z = "Z";
-    private static final String PROFIT_COLUMN = "OverallProfit";
 
     private static final double LEFT_PANEL_WIDTH = 280;
     private static final double RIGHT_PANEL_WIDTH = 340;
@@ -84,7 +89,8 @@ public final class SurfaceAnalyzerPane extends BorderPane {
     private final VBox detailsBox = new VBox(6);
     private final Label legendLabel = new Label();
     private final Surface3DPane surfacePane = new Surface3DPane();
-    private final StackPane centerPane = new StackPane(surfacePane, placeholder);
+    private final Line2DPane linePane = new Line2DPane();
+    private final StackPane centerPane = new StackPane(surfacePane, linePane, placeholder);
 
     private CsvData data;
     private File lastDirectory;
@@ -96,6 +102,8 @@ public final class SurfaceAnalyzerPane extends BorderPane {
         surfacePane.setOnPointSelected(this::showDetails);
         surfacePane.setVisible(false);
         surfacePane.setMinSize(0, 0);
+        linePane.setOnPointSelected(this::showDetails);
+        linePane.setVisible(false);
         centerPane.setMinSize(0, 0);
         CollapsiblePanel leftPanel = new CollapsiblePanel(
                 buildControlsPanel(), CollapsiblePanel.Side.LEFT, LEFT_PANEL_WIDTH);
@@ -203,7 +211,7 @@ public final class SurfaceAnalyzerPane extends BorderPane {
 
     private void chooseFile() {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Open Optimization Results CSV");
+        chooser.setTitle("Open CSV");
         chooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("CSV files", "*.csv"));
         if (lastDirectory != null && lastDirectory.isDirectory()) {
@@ -233,25 +241,25 @@ public final class SurfaceAnalyzerPane extends BorderPane {
         populateAxisCombos();
         filterRows.clear();
         filterBox.getChildren().clear();
-        placeholder.setVisible(false);
-        surfacePane.setVisible(true);
         showDetails(-1);
         refreshPlot();
     }
 
     private void populateAxisCombos() {
-        List<String> numericNames = data.numericColumns().stream()
-                .map(data.getHeaders()::get).toList();
+        List<String> names = data.getHeaders();
+        List<String> items = new ArrayList<>(names.size() + 1);
+        items.add(NONE_ITEM);
+        items.addAll(names);
         List<String> previous = List.of(
                 String.valueOf(xAxisCombo.getValue()),
                 String.valueOf(yAxisCombo.getValue()),
                 String.valueOf(zAxisCombo.getValue()));
-        setComboItems(xAxisCombo, numericNames);
-        setComboItems(yAxisCombo, numericNames);
-        setComboItems(zAxisCombo, numericNames);
-        restoreOrDefault(xAxisCombo, previous.get(0), defaultAxis(numericNames, 0));
-        restoreOrDefault(yAxisCombo, previous.get(1), defaultAxis(numericNames, 1));
-        restoreOrDefault(zAxisCombo, previous.get(2), defaultZ(numericNames));
+        setComboItems(xAxisCombo, items);
+        setComboItems(yAxisCombo, items);
+        setComboItems(zAxisCombo, items);
+        restoreOrDefault(xAxisCombo, previous.get(0), defaultAxis(names, 0));
+        restoreOrDefault(yAxisCombo, previous.get(1), defaultAxis(names, 1));
+        restoreOrDefault(zAxisCombo, previous.get(2), defaultZ(names));
     }
 
     private void setComboItems(ComboBox<String> combo, List<String> names) {
@@ -266,32 +274,37 @@ public final class SurfaceAnalyzerPane extends BorderPane {
         }
     }
 
-    private String defaultAxis(List<String> numericNames, int skip) {
-        List<String> varying = numericNames.stream()
-                .filter(this::hasMultipleValues)
+    private String defaultAxis(List<String> names, int skip) {
+        List<String> varying = names.stream()
+                .filter(name -> hasVariation(data.columnIndex(name)))
                 .toList();
         return varying.size() > skip ? varying.get(skip)
-                : numericNames.size() > skip ? numericNames.get(skip) : null;
+                : names.size() > skip ? names.get(skip) : null;
     }
 
-    private String defaultZ(List<String> numericNames) {
-        if (numericNames.contains(PROFIT_COLUMN)) {
-            return PROFIT_COLUMN;
+    private String defaultZ(List<String> names) {
+        for (int i = names.size() - 1; i >= 0; i--) {
+            String name = names.get(i);
+            int index = data.columnIndex(name);
+            if (!name.equals(xAxisCombo.getValue())
+                    && !name.equals(yAxisCombo.getValue())
+                    && data.isNumeric(index) && hasVariation(index)) {
+                return name;
+            }
         }
-        return numericNames.isEmpty() ? null : numericNames.get(numericNames.size() - 1);
+        return NONE_ITEM;
     }
 
-    private boolean hasMultipleValues(String column) {
-        int index = data.columnIndex(column);
-        double first = Double.NaN;
+    private boolean hasVariation(int columnIndex) {
+        String first = null;
         for (int r = 0; r < data.rowCount(); r++) {
-            double v = data.numericValue(r, index);
-            if (Double.isNaN(v)) {
+            String cell = data.cell(r, columnIndex);
+            if (cell.isBlank()) {
                 continue;
             }
-            if (Double.isNaN(first)) {
-                first = v;
-            } else if (Double.compare(v, first) != 0) {
+            if (first == null) {
+                first = cell;
+            } else if (!cell.equals(first)) {
                 return true;
             }
         }
@@ -313,17 +326,84 @@ public final class SurfaceAnalyzerPane extends BorderPane {
     }
 
     private String selectedOrDash(ComboBox<String> combo) {
-        return combo.getValue() != null ? combo.getValue() : "-";
+        String value = combo.getValue();
+        return value != null && !NONE_ITEM.equals(value) ? value : "-";
     }
 
+    /**
+     * Three selected axes plot a 3D surface; exactly two plot a line chart
+     * whose horizontal axis is X when selected, otherwise Y, and whose
+     * vertical axis is Z when selected, otherwise the remaining axis.
+     */
     private void refreshPlot() {
         if (data == null) {
             return;
         }
-        List<SurfacePoint> points = aggregate();
-        surfacePane.setData(points);
+        AxisMapping x = axisMapping(xAxisCombo);
+        AxisMapping y = axisMapping(yAxisCombo);
+        AxisMapping z = axisMapping(zAxisCombo);
+        int pointCount;
+        if (x != null && y != null && z != null) {
+            pointCount = showSurface(x, y, z);
+        } else if ((x != null ? 1 : 0) + (y != null ? 1 : 0) + (z != null ? 1 : 0) == 2) {
+            pointCount = showLine(x != null ? x : y, z != null ? z : y);
+        } else {
+            pointCount = showEmpty();
+        }
         int filtered = countFilteredRows();
-        statsLabel.setText(points.size() + " points · " + filtered + "/" + data.rowCount() + " rows");
+        statsLabel.setText(pointCount + " points · " + filtered + "/" + data.rowCount() + " rows");
+    }
+
+    private int showSurface(AxisMapping x, AxisMapping y, AxisMapping z) {
+        List<SurfacePoint> points = aggregate(x, y, z);
+        surfacePane.setData(points, x.scale(), y.scale(), z.scale());
+        surfacePane.setVisible(true);
+        linePane.setVisible(false);
+        placeholder.setVisible(false);
+        return points.size();
+    }
+
+    private int showLine(AxisMapping h, AxisMapping v) {
+        List<Line2DPane.Point> points = aggregate2d(h, v);
+        linePane.setData(points, h.scale(), v.scale(), h.name(), v.name());
+        linePane.setVisible(true);
+        surfacePane.setVisible(false);
+        placeholder.setVisible(false);
+        return points.size();
+    }
+
+    private int showEmpty() {
+        surfacePane.setVisible(false);
+        linePane.setVisible(false);
+        placeholder.setText(SELECT_COLUMNS_TEXT);
+        placeholder.setVisible(true);
+        return 0;
+    }
+
+    /**
+     * Resolves a combo selection to an axis mapping: numeric columns are used
+     * as-is; categorical columns map each distinct value to an integer
+     * position labeled by the {@link AxisScale}. An unselected or
+     * {@code NONE_ITEM} combo maps to null.
+     */
+    private AxisMapping axisMapping(ComboBox<String> combo) {
+        String name = combo.getValue();
+        if (name == null || NONE_ITEM.equals(name)) {
+            return null;
+        }
+        int column = data.columnIndex(name);
+        if (column < 0) {
+            return null;
+        }
+        if (data.isNumeric(column)) {
+            return new AxisMapping(column, name, List.of(), null);
+        }
+        List<String> categories = data.distinctValues(column);
+        Map<String, Double> positions = new HashMap<>();
+        for (int i = 0; i < categories.size(); i++) {
+            positions.put(categories.get(i), (double) i);
+        }
+        return new AxisMapping(column, name, categories, positions);
     }
 
     private int countFilteredRows() {
@@ -341,12 +421,9 @@ public final class SurfaceAnalyzerPane extends BorderPane {
      * are averaged and the row with the highest Z value is kept as the
      * representative reading.
      */
-    private List<SurfacePoint> aggregate() {
-        int xi = axisIndex(xAxisCombo);
-        int yi = axisIndex(yAxisCombo);
-        int zi = axisIndex(zAxisCombo);
+    private List<SurfacePoint> aggregate(AxisMapping xm, AxisMapping ym, AxisMapping zm) {
         List<SurfacePoint> points = new ArrayList<>();
-        if (xi < 0 || yi < 0 || zi < 0) {
+        if (xm == null || ym == null || zm == null) {
             return points;
         }
         Map<String, Aggregate> groups = new LinkedHashMap<>();
@@ -354,9 +431,9 @@ public final class SurfaceAnalyzerPane extends BorderPane {
             if (!passesFilters(r)) {
                 continue;
             }
-            double x = data.numericValue(r, xi);
-            double y = data.numericValue(r, yi);
-            double z = data.numericValue(r, zi);
+            double x = xm.value(data, r);
+            double y = ym.value(data, r);
+            double z = zm.value(data, r);
             if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)) {
                 continue;
             }
@@ -369,8 +446,29 @@ public final class SurfaceAnalyzerPane extends BorderPane {
         return points;
     }
 
-    private int axisIndex(ComboBox<String> combo) {
-        return combo.getValue() == null ? -1 : data.columnIndex(combo.getValue());
+    /**
+     * Two-axis variant of {@link #aggregate}: rows are grouped by their
+     * horizontal value only, averaged, and returned sorted along that axis.
+     */
+    private List<Line2DPane.Point> aggregate2d(AxisMapping hm, AxisMapping vm) {
+        Map<Double, Aggregate> groups = new TreeMap<>();
+        for (int r = 0; r < data.rowCount(); r++) {
+            if (!passesFilters(r)) {
+                continue;
+            }
+            double h = hm.value(data, r);
+            double v = vm.value(data, r);
+            if (Double.isNaN(h) || Double.isNaN(v)) {
+                continue;
+            }
+            groups.computeIfAbsent(h, k -> new Aggregate(h, 0)).add(r, v);
+        }
+        List<Line2DPane.Point> points = new ArrayList<>();
+        for (Aggregate agg : groups.values()) {
+            SurfacePoint p = agg.toPoint();
+            points.add(new Line2DPane.Point(p.rowIndex(), p.x(), p.z()));
+        }
+        return points;
     }
 
     private boolean passesFilters(int rowIndex) {
@@ -386,20 +484,19 @@ public final class SurfaceAnalyzerPane extends BorderPane {
     }
 
     /**
-     * Shows the selected reading's details, split into input and output
-     * columns. Called with {@code -1} to clear.
+     * Shows every column of the selected row. Called with {@code -1} to clear.
      */
     private void showDetails(int rowIndex) {
         detailsBox.getChildren().clear();
         if (data == null || rowIndex < 0) {
-            Label none = new Label("Click a point on the surface to inspect the reading");
+            Label none = new Label("Click a point on the surface to inspect the row");
             none.getStyleClass().add(STATS_LABEL_STYLE);
             none.setWrapText(true);
             detailsBox.getChildren().add(none);
             return;
         }
-        detailsBox.getChildren().add(detailSection(SECTION_INPUTS, data.inputColumns(), rowIndex));
-        detailsBox.getChildren().add(detailSection(SECTION_OUTPUTS, data.outputColumns(), rowIndex));
+        List<Integer> columns = IntStream.range(0, data.columnCount()).boxed().toList();
+        detailsBox.getChildren().add(detailSection(SECTION_COLUMNS, columns, rowIndex));
     }
 
     private VBox detailSection(String title, List<Integer> columns, int rowIndex) {
@@ -439,6 +536,27 @@ public final class SurfaceAnalyzerPane extends BorderPane {
 
         Color color() {
             return color;
+        }
+    }
+
+    /**
+     * One axis resolved against the loaded CSV. {@code positions} is null for
+     * numeric columns; for categorical columns it maps each distinct cell
+     * value to its integer position on the axis.
+     */
+    private record AxisMapping(int column, String name, List<String> categories,
+                               Map<String, Double> positions) {
+
+        private double value(CsvData data, int row) {
+            if (positions == null) {
+                return data.numericValue(row, column);
+            }
+            Double position = positions.get(data.cell(row, column));
+            return position == null ? Double.NaN : position;
+        }
+
+        private AxisScale scale() {
+            return new AxisScale(categories);
         }
     }
 

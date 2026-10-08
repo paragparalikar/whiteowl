@@ -17,7 +17,7 @@ import javafx.stage.StageStyle;
 import java.net.URL;
 
 /**
- * Standalone optimization surface analyzer. Runs on its own undecorated stage
+ * Standalone CSV surface analyzer. Runs on its own undecorated stage
  * (separate from the workbench) while reusing the workbench title bar, resize
  * handling and stylesheet set so it looks and behaves identically.
  *

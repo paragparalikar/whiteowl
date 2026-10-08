@@ -156,9 +156,19 @@ public final class Surface3DPane extends StackPane {
 
     /**
      * Rebuilds the surface. X/Y values are normalized onto the base plane and Z
-     * values onto the surface height.
+     * values onto the surface height. All axes are labeled as numeric.
      */
     public void setData(List<SurfacePoint> points) {
+        setData(points, AxisScale.NUMERIC, AxisScale.NUMERIC, AxisScale.NUMERIC);
+    }
+
+    /**
+     * Rebuilds the surface with per-axis labeling. A categorical
+     * {@link AxisScale} labels ticks with category names; its values are
+     * expected at integer positions {@code 0..categories.size()-1}.
+     */
+    public void setData(List<SurfacePoint> points,
+                        AxisScale xScale, AxisScale yScale, AxisScale zScale) {
         world.getChildren().clear();
         cells.clear();
         tickLabels.clear();
@@ -180,8 +190,8 @@ public final class Surface3DPane extends StackPane {
             maxZ = Math.max(maxZ, p.z());
         }
         addAxesAndGrid();
-        addTicks(minX, maxX, minY, maxY);
-        buildZLegend(minZ, maxZ);
+        addTicks(minX, maxX, minY, maxY, xScale, yScale);
+        buildZLegend(minZ, maxZ, zScale);
         double[] xs = distinctAxisPositions(points, true, minX, maxX);
         double[] ys = distinctAxisPositions(points, false, minY, maxY);
         Map<Long, SurfacePoint> grid = new HashMap<>();
@@ -408,13 +418,15 @@ public final class Surface3DPane extends StackPane {
         }
     }
 
-    private void addTicks(double minX, double maxX, double minY, double maxY) {
-        for (int i = 0; i < TICK_COUNT; i++) {
-            double t = TICK_COUNT > 1 ? (double) i / (TICK_COUNT - 1) : 0.5;
-            addTickLabel(formatTick(minX + t * (maxX - minX)),
-                    normalize(minX + t * (maxX - minX), minX, maxX) * SPAN, 24, SPAN + 14);
-            addTickLabel(formatTick(minY + t * (maxY - minY)),
-                    -SPAN - 26, 14, normalize(minY + t * (maxY - minY), minY, maxY) * SPAN);
+    private void addTicks(double minX, double maxX, double minY, double maxY,
+                          AxisScale xScale, AxisScale yScale) {
+        for (double value : xScale.ticks(minX, maxX, TICK_COUNT)) {
+            addTickLabel(xScale.format(value),
+                    normalize(value, minX, maxX) * SPAN, 24, SPAN + 14);
+        }
+        for (double value : yScale.ticks(minY, maxY, TICK_COUNT)) {
+            addTickLabel(yScale.format(value),
+                    -SPAN - 26, 14, normalize(value, minY, maxY) * SPAN);
         }
         updateTickTransforms();
     }
@@ -423,19 +435,19 @@ public final class Surface3DPane extends StackPane {
      * Z values are shown on a 2D color-scale legend at the right edge: the
      * gradient bar doubles as the color key for the surface cells.
      */
-    private void buildZLegend(double minZ, double maxZ) {
+    private void buildZLegend(double minZ, double maxZ, AxisScale zScale) {
         zLegend.getChildren().clear();
         VBox labels = new VBox();
         labels.setAlignment(Pos.CENTER);
         VBox.setVgrow(labels, Priority.ALWAYS);
         labels.setMinHeight(160);
         labels.setSpacing(0);
-        for (int i = 0; i < TICK_COUNT; i++) {
-            double t = TICK_COUNT > 1 ? (double) i / (TICK_COUNT - 1) : 0.5;
-            Label label = new Label(formatTick(maxZ - t * (maxZ - minZ)));
+        List<Double> ticks = zScale.ticks(minZ, maxZ, TICK_COUNT);
+        for (int i = ticks.size() - 1; i >= 0; i--) {
+            Label label = new Label(zScale.format(ticks.get(i)));
             label.getStyleClass().add(LEGEND_STYLE);
             labels.getChildren().add(label);
-            if (i < TICK_COUNT - 1) {
+            if (i > 0) {
                 Region spacer = new Region();
                 VBox.setVgrow(spacer, Priority.ALWAYS);
                 labels.getChildren().add(spacer);
@@ -506,16 +518,6 @@ public final class Surface3DPane extends StackPane {
             return 0.5;
         }
         return (value - min) / (max - min);
-    }
-
-    private static String formatTick(double value) {
-        if (value == Math.rint(value) && Math.abs(value) < 1e15) {
-            return Long.toString((long) value);
-        }
-        if (Math.abs(value) >= 1000) {
-            return String.format("%,.0f", value);
-        }
-        return String.format("%.4g", value);
     }
 
     private static Color gradient(double t) {
