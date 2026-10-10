@@ -130,7 +130,7 @@ public class ContinuousFutures {
                 }
                 prevExpiry = front.expiry();
 
-                List<Row> dayRows = readRows(front.file());
+                List<Row> dayRows = readRows(front.file(), symbol);
                 // Deduplicate timestamps (vendor files sometimes interleave a sparse
                 // second feed with much lower OI) - keep the higher-OI row.
                 Map<String, Row> byTs = new java.util.LinkedHashMap<>();
@@ -179,7 +179,7 @@ public class ContinuousFutures {
 
     record Row(String dt, String[] cells, long oi) {}
 
-    private static List<Row> readRows(Path file) throws IOException {
+    private static List<Row> readRows(Path file, String symbol) throws IOException {
         List<Row> rows = new ArrayList<>();
         org.apache.hadoop.fs.Path hPath = new org.apache.hadoop.fs.Path(file.toUri());
         try (ParquetReader<Group> reader =
@@ -209,6 +209,8 @@ public class ContinuousFutures {
                             ? formatField(g, idx)
                             : "";
                 }
+                // Continuous series: symbol column is the commodity, not the contract name
+                cells[OUT_COLUMNS.length - 1] = symbol;
                 long oi = Long.MIN_VALUE;
                 if (oiIdx >= 0 && g.getFieldRepetitionCount(oiIdx) > 0) {
                     PrimitiveType p = g.getType().getType(oiIdx).asPrimitiveType();
@@ -347,7 +349,7 @@ public class ContinuousFutures {
     }
 
     private static void catFile(Path file) throws IOException {
-        for (Row r : readRows(file)) {
+        for (Row r : readRows(file, file.getParent().getParent().getFileName().toString())) {
             System.out.println(String.join(",", r.cells()));
         }
     }
