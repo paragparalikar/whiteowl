@@ -17,11 +17,13 @@ import java.util.zip.ZipOutputStream;
  * <p>Sheet layout: hidden {@code Data} tab holds one GOOGLEFINANCE spill per
  * ETF (Date | Close, weekly, last ~100 days); {@code Main} tab picks the last
  * 5 closes per ETF, computes the 4 weekly returns, their sample stdev,
- * 1/vol, normalized weight and the Rs allocation.</p>
+ * 1/vol, normalized weight and the Rs allocation. {@code Lowest Vol} tab is
+ * the winner-take-all variant: 9-week stdev per ETF and a single buy row for
+ * the lowest-vol pick.</p>
  */
 public final class EtfInvVolSheetGenerator {
 
-    private static final Path OUTPUT = Path.of("C:\\trading\\etf_invvol_allocator.xlsx");
+    private static final Path OUTPUT = Path.of("C:\\trading\\ETF Investing\\etf_invvol_allocator.xlsx");
 
     /** File ticker, NSE symbol for GOOGLEFINANCE, Data-tab close column. */
     private record Etf(String ticker, String nseSymbol, char closeCol, char dateCol) {}
@@ -41,6 +43,10 @@ public final class EtfInvVolSheetGenerator {
     private static final int FIRST_ROW = 5;
     private static final int LAST_ROW  = FIRST_ROW + ETFS.size() - 1;
 
+    /** Lowest-Vol tab: weeks of weekly returns in the stdev (plateau peak). */
+    private static final int LV_LOOKBACK = 9;
+    private static final int LV_CLOSES   = LV_LOOKBACK + 1;
+
     public static void main(String[] args) throws IOException {
         try (OutputStream fos = Files.newOutputStream(OUTPUT);
              ZipOutputStream zip = new ZipOutputStream(fos)) {
@@ -52,6 +58,7 @@ public final class EtfInvVolSheetGenerator {
                       <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
                       <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
                       <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+                      <Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
                     </Types>""");
             put(zip, "_rels/.rels", """
                     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -64,6 +71,7 @@ public final class EtfInvVolSheetGenerator {
                       <sheets>
                         <sheet name="Main" sheetId="1" r:id="rId1"/>
                         <sheet name="Data" sheetId="2" r:id="rId2"/>
+                        <sheet name="Lowest Vol" sheetId="3" r:id="rId3"/>
                       </sheets>
                     </workbook>""");
             put(zip, "xl/_rels/workbook.xml.rels", """
@@ -71,9 +79,11 @@ public final class EtfInvVolSheetGenerator {
                     <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
                       <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
                       <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
+                      <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>
                     </Relationships>""");
             put(zip, "xl/worksheets/sheet1.xml", mainSheet());
             put(zip, "xl/worksheets/sheet2.xml", dataSheet());
+            put(zip, "xl/worksheets/sheet3.xml", lowVolSheet());
         }
         System.out.println("Wrote " + OUTPUT);
     }
@@ -149,12 +159,97 @@ public final class EtfInvVolSheetGenerator {
         return sb.toString();
     }
 
+    /**
+     * Lowest-Vol tab: per-ETF 9-week stdev (grid hidden), then a single buy
+     * row — the lowest-vol ETF's symbol, price, amount and integer qty.
+     */
+    private static String lowVolSheet() {
+        // columns: A ticker, B symbol, C.. closes (10), then returns (9), vol (V)
+        int volColIdx = 3 + LV_CLOSES + LV_LOOKBACK;
+        String volCol = col(volColIdx);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(worksheetOpen());
+        sb.append("<cols><col min=\"3\" max=\"").append(volColIdx - 1)
+                .append("\" hidden=\"true\" customWidth=\"1\"/></cols>");
+        sb.append("<sheetData>");
+        row(sb, 1, text("A1", "Weekly allocation (Rs)"), num("B1", "40000"),
+                text("D1", "<- change capital here"));
+        row(sb, 2, text("A2", "Vol lookback (weeks)"), num("B2", String.valueOf(LV_LOOKBACK)));
+
+        String[] header = new String[volColIdx];
+        header[0] = text("A4", "Ticker");
+        header[1] = text("B4", "NSE Symbol");
+        for (int i = 0; i < LV_CLOSES; i++) {
+            header[2 + i] = text(col(3 + i) + "4", "Close T" + (i == 0 ? "" : "-" + i));
+        }
+        for (int i = 0; i < LV_LOOKBACK; i++) {
+            header[2 + LV_CLOSES + i] = text(col(3 + LV_CLOSES + i) + "4", "Ret W-" + (i + 1));
+        }
+        header[volColIdx - 1] = text(volCol + "4", "Vol (" + LV_LOOKBACK + "w)");
+        row(sb, 4, header);
+
+        int r = FIRST_ROW;
+        for (Etf e : ETFS) {
+            String dataCol = String.valueOf(e.closeCol());
+            String[] cells = new String[volColIdx];
+            cells[0] = text("A" + r, e.ticker());
+            cells[1] = text("B" + r, e.nseSymbol());
+            for (int i = 0; i < LV_CLOSES; i++) {
+                String offset = i == 0 ? "+1" : i == 1 ? "" : "-" + (i - 1);
+                cells[2 + i] = formula(col(3 + i) + r, idx(dataCol, offset));
+            }
+            for (int i = 0; i < LV_LOOKBACK; i++) {
+                cells[2 + LV_CLOSES + i] = formula(col(3 + LV_CLOSES + i) + r,
+                        col(3 + i) + r + "/" + col(4 + i) + r + "-1");
+            }
+            cells[volColIdx - 1] = formula(volCol + r,
+                    "IFERROR(STDEV(" + col(3 + LV_CLOSES) + r + ":"
+                            + col(3 + LV_CLOSES + LV_LOOKBACK - 1) + r + "),\"\")");
+            row(sb, r, cells);
+            r++;
+        }
+
+        String match = "MATCH(MIN($" + volCol + "$" + FIRST_ROW + ":$" + volCol + "$" + LAST_ROW
+                + "),$" + volCol + "$" + FIRST_ROW + ":$" + volCol + "$" + LAST_ROW + ",0)";
+        int pr = LAST_ROW + 2;
+        row(sb, pr, text("A" + pr, "This week's buy (lowest " + LV_LOOKBACK + "-week vol):"));
+        row(sb, pr + 1,
+                text("A" + (pr + 1), "Ticker"), text("B" + (pr + 1), "NSE Symbol"),
+                text("C" + (pr + 1), "Price"), text("D" + (pr + 1), "Amount (Rs)"),
+                text("E" + (pr + 1), "Qty"));
+        row(sb, pr + 2,
+                formula("A" + (pr + 2), "IFERROR(INDEX($A$" + FIRST_ROW + ":$A$" + LAST_ROW
+                        + "," + match + "),\"\")"),
+                formula("B" + (pr + 2), "IFERROR(INDEX($B$" + FIRST_ROW + ":$B$" + LAST_ROW
+                        + "," + match + "),\"\")"),
+                formula("C" + (pr + 2), "IFERROR(INDEX($C$" + FIRST_ROW + ":$C$" + LAST_ROW
+                        + "," + match + "),\"\")"),
+                formula("D" + (pr + 2), "$B$1"),
+                formula("E" + (pr + 2), "IFERROR(INT(D" + (pr + 2) + "/C" + (pr + 2) + "),\"\")"));
+        row(sb, pr + 4,
+                text("A" + (pr + 4), "Buy the single ETF with the lowest trailing " + LV_LOOKBACK
+                        + "-week vol. If its market price is >~5% above iNAV (check the AMC "
+                        + "site — happens mostly with international ETFs), skip this week and "
+                        + "hold the amount in cash/Liquidbees until the premium normalizes."));
+        sb.append("</sheetData></worksheet>");
+        return sb.toString();
+    }
+
     // ── Minimal sheet-XML helpers ─────────────────────────────────────
 
-    private static String sheetOpen() {
+    private static String worksheetOpen() {
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-                + "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"
-                + "<sheetData>";
+                + "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">";
+    }
+
+    private static String sheetOpen() {
+        return worksheetOpen() + "<sheetData>";
+    }
+
+    /** Column letter for a 1-based index (all sheets stay within A..Z). */
+    private static String col(int i) {
+        return String.valueOf((char) ('A' + i - 1));
     }
 
     private static void row(StringBuilder sb, int r, String... cells) {

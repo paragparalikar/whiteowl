@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 
 /**
  * Evaluates weekly systematic allocation strategies across the ETF universe
- * in {@code C:\trading\etfs} (Investing.com weekly OHLC exports).
+ * in {@code C:\trading\ETF Investing\etfs} (Investing.com weekly OHLC exports).
  *
  * <h3>Strategies (Rs 40,000 deployed at every week's close)</h3>
  * <ol>
@@ -42,6 +42,8 @@ import java.util.stream.Stream;
  *   <li><b>Below 52W High</b> — all into the ETF furthest below its trailing
  *       52-week high (or full available history if shorter).</li>
  *   <li><b>Inverse Volatility</b> — weighted by 1/(4-week return stdev).</li>
+ *   <li><b>Lowest Vol</b> — all into the single ETF with the lowest 4-week
+ *       return stdev.</li>
  *   <li><b>Vol-Adj Dip</b> — all into the worst weekly return scaled by the
  *       ETF's 4-week volatility.</li>
  *   <li><b>Rebalance to 1/N</b> — tops up the most underweight ETFs toward an
@@ -75,8 +77,8 @@ public final class EtfAllocationDriver {
      */
     private static final int[] WINDOW_WEEKS = {52, 104, 156, 208, 260, Integer.MAX_VALUE};
 
-    private static final Path DATA_DIR    = Path.of("C:\\trading\\etfs");
-    private static final Path OUTPUT_DIR  = Path.of("C:\\trading\\etf-results");
+    private static final Path DATA_DIR    = Path.of("C:\\trading\\ETF Investing\\etfs");
+    private static final Path OUTPUT_DIR  = Path.of("C:\\trading\\ETF Investing\\etf-results");
     private static final Path SUMMARY_CSV = OUTPUT_DIR.resolve("etf_allocation_summary.csv");
     private static final String FILE_SUFFIX = " Historical Data.csv";
 
@@ -185,8 +187,8 @@ public final class EtfAllocationDriver {
                 new EqualSplit(), new BiggestFaller(), new BiggestGainer(),
                 new Top2Momentum(), new Momentum4W(), new TrendFilter(),
                 new Bottom2Dip(), new WeightedDips(), new BelowHigh52(),
-                new InverseVolatility(), new VolAdjDip(), new RebalanceToEqual(),
-                new CoreSatellite());
+                new InverseVolatility(), new LowestVolatility(), new VolAdjDip(),
+                new RebalanceToEqual(), new CoreSatellite());
 
         // strategy name -> window weeks -> metrics
         Map<String, Map<Integer, Metrics>> byStrategy = new LinkedHashMap<>();
@@ -215,6 +217,7 @@ public final class EtfAllocationDriver {
         writeSummary(byStrategy, effectiveWindows);
         runFrequencyStudy(universe, fullCalendar, effectiveWindows);
         runVolLookbackStudy(universe, fullCalendar, effectiveWindows);
+        runLowVolLookbackStudy(universe, fullCalendar, effectiveWindows);
         for (Map.Entry<String, Map<Integer, Metrics>> e : byStrategy.entrySet()) {
             Map<Integer, Metrics> m = e.getValue();
             double meanIrr = m.values().stream().mapToDouble(Metrics::cagr).average().orElse(0);
@@ -276,6 +279,32 @@ public final class EtfAllocationDriver {
             }
         }
         log.info("Lookback sweep written to {}", out);
+    }
+
+    /**
+     * Volatility-lookback sweep for Lowest Vol (winner-take-all): 2..16 weeks
+     * of weekly returns in the stdev estimate, weekly cadence, all windows.
+     */
+    private static void runLowVolLookbackStudy(List<EtfSeries> universe, List<LocalDate> fullCalendar,
+                                               List<Integer> windows) throws IOException {
+        Path out = OUTPUT_DIR.resolve("etf_lowvol_lookback.csv");
+        try (BufferedWriter w = Files.newBufferedWriter(out)) {
+            w.write("Lookback,Window,IRR,XIRR,Max DrawDown,Sharpe,Sortino,Calmar,"
+                    + "Final Equity,Total Invested\n");
+            for (int lookback = 2; lookback <= 16; lookback++) {
+                for (int weeks : windows) {
+                    List<LocalDate> calendar =
+                            fullCalendar.subList(fullCalendar.size() - weeks, fullCalendar.size());
+                    Metrics m = simulate(new LowestVolatility(lookback), universe, calendar,
+                            i -> true);
+                    w.write(String.format("%dw,%dw,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f%n",
+                            lookback, weeks, m.cagr() * 100, m.xirr() * 100,
+                            m.maxDrawdown() * 100, m.sharpe(), m.sortino(), m.calmar(),
+                            m.finalEquity(), m.totalInvested()));
+                }
+            }
+        }
+        log.info("Lowest-Vol lookback sweep written to {}", out);
     }
 
     /** Per-strategy robustness rollup across all windows. */
@@ -464,6 +493,29 @@ public final class EtfAllocationDriver {
             Map<String, Double> w = new LinkedHashMap<>();
             invVol.forEach((name, iv) -> w.put(name, iv / total));
             return w;
+        }
+    }
+
+    /** All into the single ETF with the lowest N-week weekly-return stdev. */
+    private static final class LowestVolatility implements AllocationStrategy {
+        private final int lookback;
+
+        LowestVolatility() { this(VOL_LOOKBACK); }
+        LowestVolatility(int lookback) { this.lookback = lookback; }
+
+        @Override public String name() { return "Lowest Vol"; }
+
+        @Override
+        public Map<String, Double> weights(WeekContext ctx) {
+            String pick = ctx.reporting().entrySet().stream()
+                    .filter(e -> {
+                        Double vol = e.getValue().weeklyVolatility(ctx.date(), lookback);
+                        return vol != null && vol > 0;
+                    })
+                    .min(Comparator.comparingDouble(
+                            e -> e.getValue().weeklyVolatility(ctx.date(), lookback)))
+                    .map(Map.Entry::getKey).orElse(null);
+            return pick == null ? Map.of() : Map.of(pick, 1d);
         }
     }
 
