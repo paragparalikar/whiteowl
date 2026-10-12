@@ -37,6 +37,12 @@
             <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
         </dependency>
+        <!-- Pinned to 3.1.1: last Apache-2.0 release line. Smile 4.x+ is GPL-3.0. -->
+        <dependency>
+            <groupId>com.github.haifengl</groupId>
+            <artifactId>smile-core</artifactId>
+            <version>3.1.1</version>
+        </dependency>
     </dependencies>
 
 </project>

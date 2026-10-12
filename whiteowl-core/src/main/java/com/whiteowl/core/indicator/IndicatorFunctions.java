@@ -76,6 +76,10 @@ public final class IndicatorFunctions {
         return Cci.compute(high, low, close, barCount, period);
     }
 
+    public static float[] choppinessIndex(float[] high, float[] low, float[] close, int barCount, int period) {
+        return Chop.compute(high, low, close, barCount, period);
+    }
+
     public static float[] williamsR(float[] high, float[] low, float[] close, int barCount, int period) {
         return WilliamsR.compute(high, low, close, barCount, period);
     }
